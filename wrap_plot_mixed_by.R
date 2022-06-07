@@ -134,11 +134,11 @@ source('~/vmPFC/plot_emmeans_vmPFC_HC2.R')
 for (i in 1){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-  model_str <- paste0('-vmPFC-HC-network-clock-ranslopes-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-HC-network-testing',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   model_iter <- i
-  totest <- 'ranslopes-1-'
+  totest <- 'testing-peaks'
   #toprocess <- 'symmetry-by-HC'
   toprocess <- 'network-by-HC'
   toalign <- 'clock'
@@ -147,7 +147,7 @@ for (i in 1){
   plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   plot_emmeans_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
-  #plot_emmeans_vmPFC_HC2(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+  plot_emmeans_vmPFC_HC2(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
 }
 
 source('~/vmPFC/plot_mixed_by_vmPFC_HC.R')

@@ -5,19 +5,23 @@
 plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR){
   
   # V = list(outcome='rt_csv_sc', model_name='model1', var='estimate', 
-  #          specs='v_max_wi_lag', at = list(v_max_wi_lag=qVL)),
+  #          specs=formula(~v_max_wi_lag:estimate), at = list(v_max_wi_lag=qVL)),
   # H = list(outcome='rt_csv_sc', model_name='model1', var='estimate',
-  #          specs='v_entropy_wi', at=list(v_entropy_wi=qH)),
+  #          specs=formula(~v_entropy_wi:estimate), at=list(v_entropy_wi=qH)),
   # LO = list(outcome='rt_csv_sc', model_name='model1',var='estimate',
-  #           specs=formula(~last_outcome)),
+  #           specs=formula(~last_outcome:estimate)),
   # Tr = list(outcome='rt_csv_sc', model_name='model1',var='estimate',
-  #           specs=formula(~trial_neg_inv_sc), at=list(trial_neg_inv_sc=qT)),
+  #           specs=formula(~trial_neg_inv_sc:estimate), at=list(trial_neg_inv_sc=qT)),
   # RT = list(outcome='rt_csv_sc', model_name='model1',var='estimate',
-  #           specs=formula(~rt_lag_sc), at=list(rt_lag_sc=qRT)),
+  #           specs=formula(~rt_lag_sc:estimate), at=list(rt_lag_sc=qRT)),
   # RTxLO = list(outcome='rt_csv_sc',model_name='model1',var='estimate',
-  #              specs=formula(~rt_lag_sc:last_outcome),at=list(rt_lag_sc=qRT)),
+  #              specs=formula(~rt_lag_sc:last_outcome:estimate),at=list(rt_lag_sc=qRT)),
   # RTvxTR = list(outcome='rt_csv_sc',model_name='model1',var='estimate',
-  #               specs=formula(~rt_vmax_lag*trial_neg_inv_sc),at=list(trial_neg_inv_sc=qT,rt_vmax_lag=qVL))
+  #               specs=formula(~rt_vmax_lag*trial_neg_inv_sc:estimate),at=list(trial_neg_inv_sc=qT,rt_vmax_lag=qVL)),
+  # RT_RS = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
+  #              specs=formula(~rt_lag_sc:estimate),at=list(qRS)),
+  # RTxLO_RS = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
+  #                 specs=formula(~rt_lag_sc:last_outcome:estimate),at=list(qRS))
   
   if (strcmp(toalign,'feedback')){
     toalign_str <- 'feedback'
@@ -228,7 +232,64 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
   }
   grid.draw(gg2)
   dev.off()   
-      
+  
+  
+  
+# do RT_RS  
+  emt <- ddf$emtrends_list$RT_RS
+  #emt <- emt %>% filter(network=='L')
+  emt <- emt %>% filter(estimate==min(unique(estimate)) | estimate==max(unique(estimate)))
+  emt$levels <- factor(emt$estimate, labels = c("10%","90%"))
+  
+  fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_csv_sc-by-estimate','-',hc_LorR, ".pdf", sep = "")
+  pdf(fname, width = 9, height = 9)
+  gg1 <- ggplot(emt,aes(x=evt_time,y=rt_lag_sc.trend)) + 
+    facet_grid(network~HC_region) +
+    geom_point(aes(color=levels),size=2.5) +
+    geom_errorbar(aes(ymin=rt_lag_sc.trend-std.error, ymax=rt_lag_sc.trend+std.error), width=0.5) +
+    geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+    ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+  
+  gg2 <- ggplot_gtable(ggplot_build(gg1))
+  stripr <- which(grepl('strip-t', gg2$layout$name))
+  k <- 1
+  for (i in stripr) {
+    j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+    k <- k+1
+  }
+  grid.draw(gg2)
+  dev.off()     
+
+  
+  # do RT_RS  
+  emt <- ddf$emtrends_list$RTxLO_RS
+  emt <- emt %>% filter(estimate==min(unique(estimate)) | estimate==max(unique(estimate)))
+  #emt <- emt %>% filter(network=='L')
+  emt$levels <- factor(emt$estimate, labels = c("10%","90%"))
+  
+  fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_csv_sc-by-outcome-by-estimate','-',hc_LorR, ".pdf", sep = "")
+  pdf(fname, width = 9, height = 9)
+  gg1 <- ggplot(emt,aes(x=evt_time,y=rt_lag_sc.trend)) + 
+    facet_grid(network~HC_region) +
+    geom_point(aes(color=levels),shape=as.factor(emt$last_outcome),size=2.5) +
+    geom_line(aes(color=levels,linetype=as.factor(last_outcome)), size=1) + 
+    geom_errorbar(aes(ymin=rt_lag_sc.trend-std.error, ymax=rt_lag_sc.trend+std.error), width=0.5) +
+    geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+    ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+  
+  gg2 <- ggplot_gtable(ggplot_build(gg1))
+  stripr <- which(grepl('strip-t', gg2$layout$name))
+  k <- 1
+  for (i in stripr) {
+    j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+    k <- k+1
+  }
+  grid.draw(gg2)
+  dev.off()    
+  
+        
 }
 
 # gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
