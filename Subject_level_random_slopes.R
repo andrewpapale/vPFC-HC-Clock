@@ -94,7 +94,7 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- relevel(as.factor(Q$female),ref='0')
 Q$age <- scale(Q$age)
 
-Q$HCbetween <- scale(Q$HCbetween)
+Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
 
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
@@ -148,7 +148,7 @@ qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
 
 splits = c('evt_time','network','HC_region')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1:length(decode_formula)){
+for (i in 1){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)

@@ -2666,7 +2666,7 @@ qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
 
 splits = c('evt_time','network','HC_region')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1:length(decode_formula)){
+for (i in 3){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)
@@ -2681,22 +2681,22 @@ for (i in 1:length(decode_formula)){
   qdH[2] <- mean(df$v_entropy_wi_change_lag,na.rm=TRUE) + 2*sd(df$v_entropy_wi_change_lag,na.rm=TRUE)
   ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
-                  # emtrends_spec = list(
-                  #   H_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin', 
-                  #               specs=formula(~peaks:HCwithin)),
-                  #   T_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin', 
-                  #               specs=(~trial_neg_inv_sc:HCwithin), at = list(trial_neg_inv_sc=c(qT))),
-                  #   V_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
-                  #               specs=(~v_max_wi:HCwithin), at=list(v_max_wi=c(qV)))
-                  # ), 
-                  # emmeans_spec = list(
-                  #   H_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ peaks * HCwithin), at=list(HCwithin=qHC1)),
-                  #   T_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ trial_neg_inv_sc * HCwithin), at=list(HCwithin=qHC1,trial_neg_inv_sc=qT)),
-                  #   V_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ v_max_wi * HCwithin), at=list(HCwithin=qHC1,v_max_wi=qV))
-                  # )
+                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                  emtrends_spec = list(
+                    H_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
+                                specs=formula(~peaks:HCwithin)),
+                    T_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
+                                specs=(~trial_neg_inv_sc:HCwithin), at = list(trial_neg_inv_sc=c(qT))),
+                    V_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
+                                specs=(~v_max_wi:HCwithin), at=list(v_max_wi=c(qV)))
+                  ),
+                  emmeans_spec = list(
+                    H_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ peaks * HCwithin), at=list(HCwithin=qHC1)),
+                    T_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ trial_neg_inv_sc * HCwithin), at=list(HCwithin=qHC1,trial_neg_inv_sc=qT)),
+                    V_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ v_max_wi * HCwithin), at=list(HCwithin=qHC1,v_max_wi=qV))
+                  )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-testing',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-testing-wem',i,'.Rdata'))
 }
 
