@@ -15,6 +15,7 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   library(ggplot2)
   library(tidyverse)
   library(viridis)
+  library(grid)
   pal = wes_palette("FantasticFox1", 3, type = "discrete")
   if (strcmp(toalign,'feedback')){
     toalign_str <- 'feedback'
