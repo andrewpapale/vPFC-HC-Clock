@@ -2810,7 +2810,7 @@ qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
 
 splits = c('evt_time','network','HC_region')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 4){
+for (i in 1:3){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)
@@ -2828,7 +2828,7 @@ for (i in 4){
                   tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                   emtrends_spec = list(
                     H_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
-                                specs=formula(~peaks:HCwithin)),
+                                specs=formula(~v_entropy_wi:HCwithin), at=list(v_entropy_wi=qH)),
                     T_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
                                 specs=(~trial_bin:HCwithin)),
                     V_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
