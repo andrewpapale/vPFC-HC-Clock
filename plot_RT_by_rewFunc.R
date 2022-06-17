@@ -2,15 +2,17 @@
 # Plot RT by rewFunc
 
 library(tidyverse)
+library(ggbeeswarm)
 
 repo_directory <- '~/clock_analysis/'
 pal = palette()
 pal[1] <- '#009B72'
 pal[2] <- '#D65B26'
-pal[3] <- '#6F6AB0'
-pal[4] <- '#E50886'
+# pal[3] <- '#6F6AB0'
+# pal[4] <- '#E50886'
+pal[3] <- '#AA399B'
 
-source('~/vmPFC/get_trial_data_vmPFC.R')
+source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_fmri')
 
 dq <- df %>% select(rt_csv,rewFunc,run_trial,v_entropy_wi,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split)
@@ -27,19 +29,19 @@ print(gg1)
 dev.off()
 
 
-dq1 <- df %>% select(rt_swing,rewFunc,run_trial,v_entropy_wi,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split)
-dq1 <- dq1 %>% mutate(entropy_bin = ntile(v_entropy_wi,50))
+dq1 <- df %>% select(rt_swing,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split)
+dq1 <- dq1 %>% mutate(entropy_bin = ntile(v_entropy,50))
 dq1 <- dq1 %>% group_by(rewFunc,entropy_bin) %>% summarize(mRT = mean(rt_swing,na.rm=TRUE), dRT = sd(rt_swing,na.rm=TRUE),N = length(rt_swing)) %>% ungroup()
 dq1 <- dq1 %>% mutate(Contingency = factor(rewFunc,levels=c('IEV','DEV','CEV','CEVR'),ordered=TRUE))
 dq1 <- dq1 %>% filter(!is.na(entropy_bin))
 
-hbin_edge = quantile(df$v_entropy_wi,probs=seq(0,1,length.out=50),na.rm=TRUE)
+hbin_edge = quantile(df$v_entropy,probs=seq(0,1,length.out=50),na.rm=TRUE)
 Hbin_edge <- as_tibble(hbin_edge) %>% rename(hbin_edge=value)
 Hbin_edge <- Hbin_edge %>% mutate(entropy_bin = seq(1,50,length.out=50))
 
 dq1 <- inner_join(dq1,Hbin_edge,by='entropy_bin')
 
-dq1 <- dq1 %>% filter(entropy_bin > 2 & entropy_bin < 48)
+#dq1 <- dq1 %>% filter(entropy_bin > 2 & entropy_bin < 48)
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
 pdf('RTbyRewFunc_H.pdf',height=9,width=12)
@@ -72,7 +74,7 @@ gg1 <- ggplot(dq2, aes(x=run_trial,y=mRT,color=Contingency,group=Contingency)) +
 print(gg1)
 dev.off()
 
-rm(dq3)
+rm(dq4)
 dq3 <- df %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy_wi,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split,rt_change)
 dq3 <- dq3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial <= 15 ~ 'Early',
@@ -114,9 +116,9 @@ dev.off()
 
 
 source('~/vmPFC/get_trial_data_vmPFC.R')
-df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_meg')
+df1 <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_meg')
 rm(dq3)
-dq3 <- df %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy_wi,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split,rt_change)
+dq3 <- df1 %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy_wi,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split,rt_change)
 dq3 <- dq3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial <= 15 ~ 'Early',
   run_trial > 15 & run_trial < 30 ~ 'Middle',
@@ -154,3 +156,126 @@ gg1 <- ggplot(dq3, aes(x=run_trial,y=mRT,color=Contingency,group=Contingency)) +
   theme(axis.text=element_text(size=20),axis.title=element_text(size=40,margin=margin(t=0,r=0,b=10,l=10)), legend.text=element_text(size=20, margin=margin(t=0, r=10, b=8, l=0)), legend.title=element_text(size=40))
 print(gg1)
 dev.off()
+
+
+source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
+df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_fmri')
+rm(dq3)
+dq3 <- df %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,rt_change,rt_vmax)
+dq3 <- dq3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+  run_trial <= 15 ~ 'Early',
+  run_trial > 15 & run_trial < 30 ~ 'Middle',
+  run_trial >=30 ~ 'Late',
+)))
+dq3$trial_bin <- factor(dq3$trial_bin,levels=c('Early','Middle','Late'),ordered=TRUE)
+dq3 <- dq3 %>% group_by(id) %>% mutate(entropy_split = case_when(
+   v_entropy < mean(v_entropy,na.rm=TRUE) ~ 'low',
+   v_entropy > mean(v_entropy,na.rm=TRUE) ~ 'high'
+ )) %>% ungroup()
+#dq3 <- dq3 %>% group_by(rewFunc,entropy_bin,trial_bin,last_outcome) %>% summarize(mRT = mean(rt_change,na.rm=TRUE), dRT = sd(rt_change,na.rm=TRUE),N = length(rt_change)) %>% ungroup()
+dq3 <- dq3 %>% mutate(Contingency1 = factor(rewFunc,levels=c('IEV','DEV','CEV','CEVR'),ordered=TRUE))
+#dq3 <- dq3 %>% filter(!is.na(entropy_bin))
+
+#dq3$entropy_label <- factor(dq3$entropy_label, levels=c('low','mid','high'),ordered=TRUE)
+
+#dq3 <- dq3 %>% filter(entropy_label!='mid')
+dq3 <- dq3 %>% filter(trial_bin!='Middle')
+dq3 <- dq3 %>% mutate(Contingency = case_when(
+  Contingency1=='IEV' ~ 'LEA',
+  Contingency1=='DEV' ~ 'LEA',
+  Contingency1=='CEV' ~ 'UNL',
+  Contingency1=='CEVR' ~ 'UNL'
+))
+
+dq3$Contingency <- factor(dq3$Contingency,levels=c("LEA","UNL"),ordered=TRUE)
+dq3 <- dq3 %>% filter(!is.na(entropy_split))
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RT_swing_by_RewFunc_byH.pdf',height=9,width=12)
+dodge <- position_dodge(width = 0.7)
+gg1 <- ggplot(dq3,aes(x=entropy_split,y=rt_swing)) + 
+  scale_color_manual(values=pal) + 
+  #geom_violin(position=dodge) + 
+  coord_cartesian(ylim=c(0,2.5)) +
+  geom_boxplot(position=dodge,notch=TRUE,outlier.shape='.',width=0.33) + 
+  ylab('Change in RT (s)') + xlab('Entropy') + facet_grid(~trial_bin) +
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=40,margin=margin(t=0,r=0,b=10,l=10)), 
+        legend.text=element_text(size=20, margin=margin(t=0, r=10, b=8, l=0)), legend.title=element_text(size=30))
+print(gg1)
+dev.off()
+ 
+source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
+df1 <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_meg')
+rm(dq4)
+dq4 <- df1 %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,rt_change,rt_vmax)
+dq4 <- dq4 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+  run_trial <= 15 ~ 'Early',
+  run_trial > 15 & run_trial < 42 ~ 'Middle',
+  run_trial >=42 ~ 'Late',
+)))
+dq4$trial_bin <- factor(dq4$trial_bin,levels=c('Early','Middle','Late'),ordered=TRUE)
+dq4 <- dq4 %>% group_by(id) %>% mutate(entropy_split = case_when(
+  v_entropy < mean(v_entropy,na.rm=TRUE) ~ 'low',
+  v_entropy > mean(v_entropy,na.rm=TRUE) ~ 'high'
+)) %>% ungroup()
+# dq4 <- dq4 %>% mutate(entropy_label = case_when(
+#   v_entropy <= mean(v_entropy,na.rm=TRUE)  - 0.5 * sd(v_entropy,na.rm=TRUE) ~ 'low',
+#   v_entropy >= mean(v_entropy,na.rm=TRUE) + 0.5 * sd(v_entropy,na.rm=TRUE) ~ 'high',
+#   v_entropy > mean(v_entropy,na.rm=TRUE) - 0.5 * sd(v_entropy,na.rm=TRUE) & v_entropy < mean(v_entropy,na.rm=TRUE) + 0.5 * sd(v_entropy,na.rm=TRUE) ~ 'mid'
+# ))
+#dq4 <- dq4 %>% group_by(rewFunc,entropy_bin,trial_bin,last_outcome) %>% summarize(mRT = mean(rt_change,na.rm=TRUE), dRT = sd(rt_change,na.rm=TRUE),N = length(rt_change)) %>% ungroup()
+dq4 <- dq4 %>% mutate(Contingency1 = factor(rewFunc,levels=c('IEV','DEV','CEV','CEVR'),ordered=TRUE))
+#dq4 <- dq4 %>% filter(!is.na(entropy_bin))
+
+#dq4$entropy_label <- factor(dq4$entropy_label, levels=c('low','mid','high'),ordered=TRUE)
+
+#dq4 <- dq4 %>% filter(entropy_label!='mid')
+dq4 <- dq4 %>% filter(trial_bin!='Middle')
+dq4 <- dq4 %>% mutate(Contingency = case_when(
+  Contingency1=='IEV' ~ 'LEA',
+  Contingency1=='DEV' ~ 'LEA',
+  Contingency1=='CEV' ~ 'UNL',
+  Contingency1=='CEVR' ~ 'UNL'
+))
+
+dq4$Contingency <- factor(dq4$Contingency,levels=c("LEA","UNL"),ordered=TRUE)
+dq4 <- dq4 %>% filter(!is.na(entropy_split))
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RT_swing_by_RewFunc_byH_rep.pdf',height=9,width=12)
+dodge <- position_dodge(width = 0.7)
+gg1 <- ggplot(dq4,aes(x=entropy_split,y=rt_swing)) + 
+  scale_color_manual(values=pal) + 
+  #geom_violin(position=dodge) + 
+  coord_cartesian(ylim=c(0,2.5)) +
+  geom_boxplot(position=dodge,notch=TRUE,outlier.shape='.',width=0.33) + 
+  ylab('Change in RT (s)') + xlab('Entropy') + facet_grid(~trial_bin) +
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=40,margin=margin(t=0,r=0,b=10,l=10)), 
+        legend.text=element_text(size=20, margin=margin(t=0, r=10, b=8, l=0)), legend.title=element_text(size=30))
+print(gg1)
+dev.off()
+
+
+dq4 <- dq4 %>% select(id,run,run_trial,entropy_split,rt_swing,trial_bin,last_outcome)
+dq3 <- dq3 %>% select(id,run,run_trial,entropy_split,rt_swing,trial_bin,last_outcome)
+dq4$id <- as.double(dq4$id)
+dq3 <- dq3 %>% mutate(Experiment='fMRI')
+dq4 <- dq4 %>% mutate(Experiment='MEG')
+dq5 <- full_join(dq3,dq4)
+outliers <- dq5 %>% group_by(Experiment,entropy_split,trial_bin,last_outcome) %>% filter(rt_swing > quantile(rt_swing,probs=0.75,na.rm=TRUE) + 1.5 * IQR(rt_swing,na.rm=TRUE) |
+                                                                              rt_swing < quantile(rt_swing,probs=0.25,na.rm=TRUE) - 1.5 * IQR(rt_swing,na.rm=TRUE))
+dq5 <- dq5 %>% filter(!is.na(last_outcome))
+  
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RT_swing_fMRI_MEG.pdf',height=12,width=12)
+gg1 <- ggplot(data=dq5,aes(x=trial_bin,y=rt_swing,color=entropy_split)) +
+  coord_cartesian(ylim=c(0,1.5)) +
+  geom_boxplot(notch=TRUE,width=0.5,outlier.shape=NA) +
+  geom_beeswarm(data=outliers,size=0.1,dodge.width=0.5) + 
+  ylab('Change in RT (s)') + xlab('Trial') + facet_grid(last_outcome~Experiment) + 
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=40,margin=margin(t=0,r=0,b=10,l=10)), 
+        legend.text=element_text(size=20, margin=margin(t=0, r=10, b=8, l=0)), legend.title=element_text(size=30))
+print(gg1)
+dev.off() 
+
+
