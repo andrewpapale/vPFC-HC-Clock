@@ -90,6 +90,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
     )
   }
   
+
   if (strcmp(toprocess,"symmetry-by-HC") | strcmp(toprocess,'symmetry-by-bin') | strcmp(toprocess,"symmetry-by-HC-by-outcome") | strcmp(toprocess,'symmetry-group-by-HC-by-rewFunc') | strcmp(toprocess,'symmetry-group-by-HC-by-outcome')){
     ddf <- ddf %>% mutate(symmetry_group1=case_when(
       symmetry_group==1 ~ '11/47',
@@ -123,6 +124,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                                   network=='D'~'DMN',
                                   network=='L'~'LIM'))
   }
+  
   
   if (!strcmp(totest,'anatomy')){
     for (fe in terms) {

@@ -5,14 +5,13 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
-library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
-
+source("~/fmri.pipeline/R/mixed_by.R")
 
 
 
@@ -529,7 +528,6 @@ ncores <- 26
 # decode_formula[[1]] = formula(~ v_max_wi + v_entropy + v_entropy_wi_change + run_trial + rt_vmax_change + log10kld3 + (1|id))
 # decode_formula[[2]] = formula(~ v_max_wi + v_entropy + v_entropy_wi_change + run_trial + rt_vmax_change + log10kld3 + abs_pe_max_sc + (1|id))
 # decode_formula[[3]] = formula(~ v_max_wi + v_entropy + v_entropy_wi_change + run_trial + rt_vmax_change + log10kld3 + pe_max + (1|id))
-# source("~/fmri.pipeline/R/mixed_by.R")
 # for (i in 1:length(decode_formula)){
 #   df0 <- decode_formula[[i]]
 #   print(df0)
@@ -2488,7 +2486,7 @@ hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean
 Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
 Q <- Q %>% select(!decon1)
 source('~/vmPFC/get_trial_data_vmPFC.R')
-df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
+df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
 df <- df %>% select(v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                     v_max_wi, v_entropy_wi,kld3,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
                     rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
@@ -2625,6 +2623,9 @@ for (i in 1){
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-',i,'.Rdata'))
 }
+
+
+splits = c('evt_time','symmetry_group','HC_region')
 for (i in 1){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
