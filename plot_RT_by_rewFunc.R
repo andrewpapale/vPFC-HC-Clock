@@ -161,7 +161,7 @@ dev.off()
 source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_fmri')
 rm(dq3)
-dq3 <- df %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,rt_change,rt_vmax)
+dq3 <- df %>% dplyr::select(trial_neg_inv_sc,v_max,v_max_wi,v_max_above_median,rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax,id,run,rt_change,rt_vmax)
 dq3 <- dq3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial <= 15 ~ 'Early',
   run_trial > 15 & run_trial < 30 ~ 'Middle',
@@ -207,7 +207,7 @@ dev.off()
 source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
 df1 <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_meg')
 rm(dq4)
-dq4 <- df1 %>% select(rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,rt_change,rt_vmax)
+dq4 <- df1 %>% select(v_max_above_median,rt_swing,rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax,id,run,rt_change,rt_vmax)
 dq4 <- dq4 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial <= 15 ~ 'Early',
   run_trial > 15 & run_trial < 42 ~ 'Middle',
@@ -256,8 +256,8 @@ print(gg1)
 dev.off()
 
 
-dq4 <- dq4 %>% select(id,run,run_trial,entropy_split,rt_swing,trial_bin,last_outcome)
-dq3 <- dq3 %>% select(id,run,run_trial,entropy_split,rt_swing,trial_bin,last_outcome)
+dq4 <- dq4 %>% select(id,run,run_trial,entropy_split,rt_csv,rt_vmax,trial_bin,last_outcome)
+dq3 <- dq3 %>% select(id,run,run_trial,entropy_split,rt_csv,rt_vmax,trial_bin,last_outcome)
 dq4$id <- as.double(dq4$id)
 dq3 <- dq3 %>% mutate(Experiment='fMRI')
 dq4 <- dq4 %>% mutate(Experiment='MEG')
@@ -279,3 +279,32 @@ print(gg1)
 dev.off() 
 
 
+
+dq4 <- dq4 %>% select(id,run,run_trial,v_max_above_median,rt_csv,trial_bin,last_outcome,rt_vmax,rt_swing)
+dq3 <- dq3 %>% select(id,run,run_trial,v_max_above_median,rt_csv,trial_bin,last_outcome,rt_vmax,rt_swing)
+dq4$id <- as.double(dq4$id)
+dq3 <- dq3 %>% mutate(Experiment='fMRI')
+dq4 <- dq4 %>% mutate(Experiment='MEG')
+dq5 <- full_join(dq3,dq4)
+dq5 <- dq5 %>% mutate(convergence = abs(rt_csv-rt_vmax))
+#outliers <- dq5 %>% group_by(Experiment,v_max_above_median,trial_bin,last_outcome) %>% filter(convergence > quantile(convergence,probs=0.75,na.rm=TRUE) + 1.5 * IQR(convergence,na.rm=TRUE) |
+ #                                                                                               convergence < quantile(convergence,probs=0.25,na.rm=TRUE) - 1.5 * IQR(convergence,na.rm=TRUE))
+outliers <- dq5 %>% group_by(Experiment,v_max_above_median,trial_bin,last_outcome) %>% filter(rt_swing > quantile(rt_swing,probs=0.75,na.rm=TRUE) + 1.5 * IQR(rt_swing,na.rm=TRUE) |
+                                                                                           rt_swing < quantile(rt_swing,probs=0.25,na.rm=TRUE) - 1.5 * IQR(rt_swing,na.rm=TRUE))
+dq5 <- dq5 %>% filter(!is.na(last_outcome))
+dq5 <- dq5 %>% filter(!is.na(v_max_above_median))
+dq5$v_max_above_median <- factor(dq5$v_max_above_median,levels=c('TRUE','FALSE'))
+outliers <- outliers %>% filter(!is.na(last_outcome))
+outliers <- outliers %>% filter(!is.na(v_max_above_median))
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RTswing_vmax_fMRI_MEG.pdf',height=12,width=12)
+gg1 <- ggplot(data=dq5,aes(x=trial_bin,y=rt_swing,color=v_max_above_median)) +
+  coord_cartesian(ylim=c(0,1.5)) +
+  geom_boxplot(notch=TRUE,width=0.5,outlier.shape=NA) +
+  geom_beeswarm(data=outliers,size=0.1,dodge.width=0.5) + 
+  ylab('Change in RT (s)') + xlab('Trial') + facet_grid(last_outcome~Experiment) + 
+  theme(axis.text=element_text(size=20),axis.title=element_text(size=40,margin=margin(t=0,r=0,b=10,l=10)), 
+        legend.text=element_text(size=20, margin=margin(t=0, r=10, b=8, l=0)), legend.title=element_text(size=30))
+print(gg1)
+dev.off() 
