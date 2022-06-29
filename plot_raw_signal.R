@@ -24,9 +24,7 @@ vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,regio
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-df <- df %>% select(v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                    v_max_wi, v_entropy_wi,kld3,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                    rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+df <- df %>% 
   group_by(id, run) %>% 
   mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
   mutate(v_chosen_sc = scale(v_chosen),
@@ -65,7 +63,11 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial > 15 & run_trial < 30 ~ 'Middle',
   run_trial >=30 ~ 'Late',
 )))
-df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
+df <- df %>% group_by(id) %>% mutate(entropy_split = case_when(
+  v_entropy < mean(v_entropy,na.rm=TRUE) ~ 'low',
+  v_entropy > mean(v_entropy,na.rm=TRUE) ~ 'high'
+)) %>% ungroup()
+df <- df %>% select(entropy_split,v_max_above_median,id,run,trial_bin,rewFunc,rt_bin,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
 Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
 Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -79,11 +81,71 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- relevel(as.factor(Q$female),ref='0')
 Q$age <- scale(Q$age)
 
+dQ <- Q %>% group_by(id,evt_time,network,entropy_split,trial_bin) %>% summarize(vP = mean(vmPFC_decon,na.rm=TRUE),dP = sd(vmPFC_decon,na.rm=TRUE), N = length(vmPFC_decon))
+dQ <- dQ %>% ungroup() %>% group_by(evt_time,network,entropy_split,trial_bin) %>% summarize(vP1 = mean(vP,na.rm=TRUE),dP1 = sd(dP,na.rm=TRUE), N1 = length(N))
+dQ <- dQ %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM'))
+dQ$network1 <- factor(dQ$network1,levels=c('DMN','CTR','LIM'))
+dQ <- dQ %>% filter(!is.na(entropy_split))
+dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
+pal = wes_palette("FantasticFox1", 3, type = "discrete")
+
+dQ$entropy <- dQ$entropy_split
+dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('plot_raw_signal_feedback_ventropy.pdf',height=12,width=24)
+gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=entropy)) + 
+  geom_point(size=5) + geom_line(size=2) + 
+  geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
+  geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
+  facet_wrap(~trial_bin) + 
+  scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
+  xlab('Time relative to feedback (s)') +
+  ylab('Deconvolved Signal (AU)') +
+  theme(legend.text = element_text(size=25)) +
+  theme(legend.title = element_text(size=30)) +
+  theme(axis.title = element_text(size=40)) +
+  theme(axis.text = element_text(size=25)) +
+  theme(strip.text.x = element_text(size=40))
+print(gg1)
+dev.off()
+
+rm(dQ)
+dQ <- Q %>% group_by(id,evt_time,network,v_max_above_median,trial_bin) %>% summarize(vP = mean(vmPFC_decon,na.rm=TRUE),dP = sd(vmPFC_decon,na.rm=TRUE), N = length(vmPFC_decon))
+dQ <- dQ %>% ungroup() %>% group_by(evt_time,network,v_max_above_median,trial_bin) %>% summarize(vP1 = mean(vP,na.rm=TRUE),dP1 = sd(dP,na.rm=TRUE), N1 = length(N))
+dQ <- dQ %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM'))
+dQ$network1 <- factor(dQ$network1,levels=c('DMN','CTR','LIM'))
+dQ <- dQ %>% filter(!is.na(v_max_above_median))
+dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
+pal = wes_palette("FantasticFox1", 3, type = "discrete")
+
+dQ <- dQ %>% mutate(v_max = case_when(v_max_above_median == TRUE ~ 'high', v_max_above_median == FALSE ~ 'low'))
+dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('plot_raw_signal_feedback_vmax.pdf',height=12,width=24)
+gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=v_max)) + 
+  geom_point(size=5) + geom_line(size=2) + 
+  geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
+  geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
+  facet_wrap(~trial_bin) + 
+  scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
+  xlab('Time relative to feedback (s)') +
+  ylab('Deconvolved Signal (AU)') +
+  theme(legend.text = element_text(size=25)) +
+  theme(legend.title = element_text(size=30)) +
+  theme(axis.title = element_text(size=40)) +
+  theme(axis.text = element_text(size=25)) +
+  theme(strip.text.x = element_text(size=40))
+print(gg1)
+dev.off()
+
 
 ####################
 ### vPFC - clock ###
 ####################
-
+rm(Q)
+rm(dQ)
 message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
 load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
 vmPFC <- clock_comb
@@ -93,9 +155,7 @@ vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,regio
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-df <- df %>% select(v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                    v_max_wi, v_entropy_wi,kld3,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                    rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+df <- df %>%
   group_by(id, run) %>% 
   mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
   mutate(v_chosen_sc = scale(v_chosen),
@@ -134,7 +194,11 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial > 15 & run_trial < 30 ~ 'Middle',
   run_trial >=30 ~ 'Late',
 )))
-df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
+df <- df %>% group_by(id) %>% mutate(entropy_split = case_when(
+  v_entropy < mean(v_entropy,na.rm=TRUE) ~ 'low',
+  v_entropy > mean(v_entropy,na.rm=TRUE) ~ 'high'
+)) %>% ungroup()
+df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,entropy_split,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
 Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
 Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -148,7 +212,64 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- relevel(as.factor(Q$female),ref='0')
 Q$age <- scale(Q$age)
 
+dQ <- Q %>% group_by(id,evt_time,network,entropy_split,trial_bin) %>% summarize(vP = mean(vmPFC_decon,na.rm=TRUE),dP = sd(vmPFC_decon,na.rm=TRUE), N = length(vmPFC_decon))
+dQ <- dQ %>% ungroup() %>% group_by(evt_time,network,entropy_split,trial_bin) %>% summarize(vP1 = mean(vP,na.rm=TRUE),dP1 = sd(dP,na.rm=TRUE), N1 = length(N))
+dQ <- dQ %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM'))
+dQ$network1 <- factor(dQ$network1,levels=c('DMN','CTR','LIM'))
+dQ <- dQ %>% filter(!is.na(entropy_split))
+dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
+pal = wes_palette("FantasticFox1", 3, type = "discrete")
 
+dQ$entropy <- dQ$entropy_split
+dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('plot_raw_signal_clock_ventropy.pdf',height=12,width=24)
+gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=entropy)) + 
+  geom_point(size=5) + geom_line(size=2) + 
+  geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
+  geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
+  facet_wrap(~trial_bin) + 
+  scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
+  xlab('Time relative to feedback (s)') +
+  ylab('Deconvolved Signal (AU)') +
+  theme(legend.text = element_text(size=25)) +
+  theme(legend.title = element_text(size=30)) +
+  theme(axis.title = element_text(size=40)) +
+  theme(axis.text = element_text(size=25)) +
+  theme(strip.text.x = element_text(size=40))
+print(gg1)
+dev.off()
+
+rm(dQ)
+dQ <- Q %>% group_by(id,evt_time,network,v_max_above_median,trial_bin) %>% summarize(vP = mean(vmPFC_decon,na.rm=TRUE),dP = sd(vmPFC_decon,na.rm=TRUE), N = length(vmPFC_decon))
+dQ <- dQ %>% ungroup() %>% group_by(evt_time,network,v_max_above_median,trial_bin) %>% summarize(vP1 = mean(vP,na.rm=TRUE),dP1 = sd(dP,na.rm=TRUE), N1 = length(N))
+dQ <- dQ %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM'))
+dQ$network1 <- factor(dQ$network1,levels=c('DMN','CTR','LIM'))
+dQ <- dQ %>% filter(!is.na(v_max_above_median))
+dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
+pal = wes_palette("FantasticFox1", 3, type = "discrete")
+
+dQ <- dQ %>% mutate(v_max = case_when(v_max_above_median == TRUE ~ 'high', v_max_above_median == FALSE ~ 'low'))
+dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('plot_raw_signal_clock_vmax.pdf',height=12,width=24)
+gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=v_max)) + 
+  geom_point(size=5) + geom_line(size=2) + 
+  geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
+  geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
+  facet_wrap(~trial_bin) + 
+  scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
+  xlab('Time relative to feedback (s)') +
+  ylab('Deconvolved Signal (AU)') +
+  theme(legend.text = element_text(size=25)) +
+  theme(legend.title = element_text(size=30)) +
+  theme(axis.title = element_text(size=40)) +
+  theme(axis.text = element_text(size=25)) +
+  theme(strip.text.x = element_text(size=40))
+print(gg1)
+dev.off()
 
 
 
