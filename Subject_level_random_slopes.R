@@ -99,35 +99,33 @@ Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween))
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
 decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
-                                trial_neg_inv_sc*HCwithin + 
+                                trial_bin*HCwithin + 
                                 v_entropy_wi*HCwithin + rt_bin + 
                                 expl_shorter*HCwithin + expl_longer*HCwithin +  # binary expl_code incr / decr separate variables
+                                HCwithin:v_entropy_wi:trial_bin + 
                                 HCbetween +
                                 (1|id))
 decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
-                                trial_neg_inv_sc*HCwithin + 
+                                trial_bin*HCwithin + 
                                 v_entropy_wi*HCwithin + rt_bin + 
                                 expl_shorter*HCwithin + expl_longer*HCwithin +  # binary expl_code incr / decr separate variables
-                                HCbetween +
-                                (v_entropy_wi|id))
-decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
-                                trial_neg_inv_sc*HCwithin + 
-                                v_entropy_wi*HCwithin + rt_bin + 
-                                expl_shorter*HCwithin + expl_longer*HCwithin +  # binary expl_code incr / decr separate variables
+                                HCwithin:v_entropy_wi:trial_bin + 
                                 HCbetween +
                                 (HCwithin|id))
-decode_formula[[4]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
-                                trial_neg_inv_sc*HCwithin + 
+decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
+                                trial_bin*HCwithin + 
                                 v_entropy_wi*HCwithin + rt_bin + 
                                 expl_shorter*HCwithin + expl_longer*HCwithin +  # binary expl_code incr / decr separate variables
+                                HCwithin:v_entropy_wi:trial_bin + 
                                 HCbetween +
                                 (v_entropy_wi*HCwithin|id))
-decode_formula[[5]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
-                                trial_neg_inv_sc*HCwithin + 
+decode_formula[[4]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
+                                trial_bin*HCwithin + 
                                 v_entropy_wi*HCwithin + rt_bin + 
                                 expl_shorter*HCwithin + expl_longer*HCwithin +  # binary expl_code incr / decr separate variables
+                                HCwithin:v_entropy_wi:trial_bin + 
                                 HCbetween +
-                                (v_entropy_wi:HCwithin|id))
+                                (HCwithin*v_entropy_wi*trial_bin|id))
 
 qHC <- Q %>% filter(atlas_value==55) %>% group_by(evt_time,HC_region) %>% 
   summarize(HC_p2SD = mean(HCwithin,na.rm=TRUE)+2*sd(HCwithin,na.rm=TRUE),
@@ -148,7 +146,7 @@ qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
 
 splits = c('evt_time','network','HC_region')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1){
+for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)
@@ -168,13 +166,13 @@ for (i in 1){
                     H_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin', 
                                 specs=formula(~v_entropy_wi*HCwithin), at = list(v_entropy_wi=qH)),
                     T_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin', 
-                                specs=formula(~trial_neg_inv_sc*HCwithin), at = list(trial_neg_inv_sc=c(qT))),
+                                specs=formula(~trial_bin*HCwithin)),
                     V_HC = list(outcome='vmPFC_decon', model_name='model1', var='HCwithin',
                                 specs=formula(~v_max_wi*HCwithin), at=list(v_max_wi=c(qV)))
                   ), 
                   emmeans_spec = list(
                     H_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ v_entropy_wi * HCwithin), at=list(HCwithin=qHC1,v_entropy_wi=qH)),
-                    T_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ trial_neg_inv_sc * HCwithin), at=list(HCwithin=qHC1,trial_neg_inv_sc=qT)),
+                    T_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ trial_bin * HCwithin), at=list(HCwithin=qHC1)),
                     V_HC = list(outcome='vmPFC_decon',model_name='model1',specs=formula(~ v_max_wi * HCwithin), at=list(HCwithin=qHC1,v_max_wi=qV))
                   )
   )
@@ -185,7 +183,7 @@ for (i in 1){
 
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-load('2022-06-03-vmPFC-HC-network-clock-ranslopes-4.Rdata')
+load('2022-06-03-vmPFC-HC-network-clock-ranslopes-3.Rdata')
 
 
 ### Does random slope predict rt_vmax or rt_swing?
@@ -207,10 +205,10 @@ Q2$age <- scale(Q2$age)
 
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
-decode_formula = formula(~ (trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + estimate + last_outcome)^2 +
+decode_formula[[1]] = formula(~ (trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + estimate + last_outcome)^2 +
                                 rt_lag_sc:last_outcome:estimate +
                                 rt_vmax_lag*trial_neg_inv_sc*estimate +
-                                (1 | id/run))
+                                (1 | id))
 qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
 qH <- NULL
 qH[1] <- mean(df$v_entropy_wi,na.rm=TRUE) - 2*sd(df$v_entropy_wi,na.rm=TRUE)
@@ -294,11 +292,11 @@ source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
 for (i in 1){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-  model_str <- paste0('-vmPFC-HC-network-ranslopes-pred-rt_swing-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-HC-network-ranslopes-pred-rt_csv_sc-1','.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   model_iter <- i
-  totest <- 'rt_swing'
+  totest <- 'rt_csv-HCwithin'
   #toprocess <- 'symmetry-by-HC'
   toprocess <- 'network-by-HC'
   toalign <- 'clock'

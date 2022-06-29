@@ -3,7 +3,9 @@
 
 plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR){
   library(grid)
-  ## Check plots
+  library(pracma)
+  library(tidyverse)
+  library(tibble)  
   if (strcmp(toalign,"clock")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
   } else if (strcmp(toalign,"feedback")){
@@ -40,7 +42,8 @@ plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavm
   }
   ddg <- ddf
   ddf <- as_tibble(ddf$coef_df_reml)
-  ddf <- ddf %>% filter(effect == 'fixed')
+  #ddf <- ddf %>% filter(effect == 'fixed')
+
   ddf$t <- ddf$evt_time
   #if (strcmp(toprocess,"network")){
   ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term, 
@@ -70,7 +73,7 @@ plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavm
   # }
   #if ("network" %in% splits) {ddf$visuomotor_grad <- factor(ddf$visuomotor_grad, labels=c("1" = "MT+, control", "2" = "Parieto-occipital", "3" = "Post. parietal", "4" = "Frontal"))}
   terms <- unique(ddf$term[ddf$effect=="fixed"])
-  
+  #terms <- unique(ddf$term)
   if (strcmp(toprocess,"region")){ # get network for each region
     ddf <- ddf %>% mutate(network=case_when(
       region=="pfc11L" ~ "C",
@@ -132,6 +135,7 @@ plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavm
     for (fe in terms) {
       # fe <- terms[1] # test only
       edf <- ddf %>% filter(term == paste(fe) & ddf$effect=='fixed' & t < 8) 
+      #edf <- ddf %>% filter(term == paste(fe) & t < 8)
       termstr <- str_replace_all(fe, "[^[:alnum:]]", "_")
       if (strcmp(toprocess,'symmetry-by-HC') | (strcmp(toprocess,'symmetry-by-bin')) | strcmp(toprocess,'symmetry-group-by-HC-by-outcome') | strcmp(toprocess,'symmetry-by-HC-wPE') | strcmp(toprocess,'symmetry-group-by-HC-by-rewFunc')){
         edf$symmetry_group1 <- factor(edf$symmetry_group1, levels = c('rl9_10',"11/47","d10","24/32","14m25/32","fp10","11/13","14rc11m"))

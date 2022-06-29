@@ -44,6 +44,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
   pal1090[2] <- '#7a7745'
   
   # do v_max_wi
+  
   emt <- ddf$emtrends_list$V
   #emt <- emt %>% filter(network=='D')
   emt$levels <- factor(emt$v_max_wi_lag, labels = c("10'th %ile Value","90'th %ile Value"))
