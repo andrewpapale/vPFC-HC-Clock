@@ -198,7 +198,7 @@ df <- df %>% group_by(id) %>% mutate(entropy_split = case_when(
   v_entropy < mean(v_entropy,na.rm=TRUE) ~ 'low',
   v_entropy > mean(v_entropy,na.rm=TRUE) ~ 'high'
 )) %>% ungroup()
-df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,entropy_split,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
+df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,entropy_split,v_max_above_median,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max,pe_max_lag,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
 Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
 Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
