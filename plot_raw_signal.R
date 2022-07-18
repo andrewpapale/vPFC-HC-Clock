@@ -231,7 +231,7 @@ gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=entropy)) +
   geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
   facet_wrap(~trial_bin) + 
   scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
-  xlab('Time relative to feedback (s)') +
+  xlab('Time relative to clock (s)') +
   ylab('Deconvolved Signal (AU)') +
   theme(legend.text = element_text(size=25)) +
   theme(legend.title = element_text(size=30)) +
@@ -261,7 +261,7 @@ gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=v_max)) +
   geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
   facet_wrap(~trial_bin) + 
   scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
-  xlab('Time relative to feedback (s)') +
+  xlab('Time relative to clock (s)') +
   ylab('Deconvolved Signal (AU)') +
   theme(legend.text = element_text(size=25)) +
   theme(legend.title = element_text(size=30)) +
