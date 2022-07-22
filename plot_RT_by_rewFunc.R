@@ -130,6 +130,126 @@ print(gg1)
 dev.off()
 
 
+# rt_csv - rt_vmax
+
+source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
+df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_fmri')
+df <- df %>% group_by(id,run) %>% mutate(v_max_lag = lag(v_max)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(v_chosen_lag = lag(v_chosen)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(vD = v_max_lag - v_chosen_lag) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(ev_lag = lag(ev)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(score_lag = lag(score_csv)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(rt_conv = abs(rt_csv - rt_vmax_lag)) %>% ungroup()
+df$v_max_lag <- scale(df$v_max_lag)
+df$v_chosen_lag <- scale(df$v_chosen_lag)
+df$v_entropy <- scale(df$v_entropy)
+df$vD <- scale(df$vD)
+df$v_max_full <- scale(df$v_max_full)
+df$ev_lag <- scale(df$ev_lag)
+df$score_lag <- scale(df$score_lag)
+# Plot emmeans of mlm model
+m1 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+
+qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
+
+emH_fmri <- emmeans(m1, outcome = 'rt_conv',specs = c(formula(~ v_entropy*trial_neg_inv_sc*last_outcome)),
+                    at = list(trial_neg_inv_sc=qT,v_entropy=c(-1.5,1.5)))
+emV_fmri <- emmeans(m1, outcome = 'rt_conv',specs = c(formula(~ v_max_lag*trial_neg_inv_sc*last_outcome)),
+                    at = list(trial_neg_inv_sc=qT,v_max_lag=c(-1.5,1.5)))
+
+df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_meg')
+df <- df %>% group_by(id,run) %>% mutate(v_max_lag = lag(v_max)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(v_chosen_lag = lag(v_chosen)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(vD = v_max_lag - v_chosen_lag) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(ev_lag = lag(ev)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(score_lag = lag(score_csv)) %>% ungroup()
+df <- df %>% group_by(id,run) %>% mutate(rt_conv = abs(rt_csv - rt_vmax_lag)) %>% ungroup()
+df$v_max_lag <- scale(df$v_max_lag)
+df$v_chosen_lag <- scale(df$v_chosen_lag)
+df$v_entropy <- scale(df$v_entropy)
+df$vD <- scale(df$vD)
+df$v_max_full <- scale(df$v_max_full)
+df$ev_lag <- scale(df$ev_lag)
+df$score_lag <- scale(df$score_lag)
+# Plot emmeans of mlm model
+m2 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+
+qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
+
+emH_meg <- emmeans(m2, outcome = 'rt_conv',specs = c(formula(~ v_entropy*trial_neg_inv_sc*last_outcome)),
+                   at = list(trial_neg_inv_sc=qT,v_entropy=c(-1.5,1.5)))
+emV_meg <- emmeans(m2, outcome = 'rt_conv',specs = c(formula(~ v_max_lag*trial_neg_inv_sc*last_outcome)),
+                   at = list(trial_neg_inv_sc=qT,v_max_lag=c(-1.5,1.5)))
+
+
+emH_fmri <- broom::tidy(emH_fmri$`emmeans of v_entropy, trial_neg_inv_sc, last_outcome`)
+emH_fmri <- emH_fmri  %>% mutate(Sample = 'fMRI')
+emH_meg <- broom::tidy(emH_meg$`emmeans of v_entropy, trial_neg_inv_sc, last_outcome`)
+emH_meg <- emH_meg  %>% mutate(Sample = 'MEG')
+
+emV_fmri <- broom::tidy(emV_fmri$`emmeans of v_max_lag, trial_neg_inv_sc, last_outcome`)
+emV_fmri <- emV_fmri %>% mutate(Sample = 'fMRI')
+emV_meg <- broom::tidy(emV_meg$`emmeans of v_max_lag, trial_neg_inv_sc, last_outcome`)
+emV_meg <- emV_meg %>% mutate(Sample = 'MEG')
+
+emH <- rbind(emH_fmri,emH_meg)
+emV <- rbind(emV_fmri,emV_meg)
+
+emH <- emH %>% mutate(Entropy = case_when(v_entropy <= -1 ~ 'Low',v_entropy >= 1 ~ 'High'))
+emH <- emH %>% mutate(Trial = case_when(trial_neg_inv_sc < 0 ~ 'Early', trial_neg_inv_sc > 0 ~ 'Late'))
+emH <- emH %>% mutate(Omission_by_Trial = case_when(Trial=='Early' & last_outcome=='Omission' ~ 'Early Omission',
+                                                    Trial=='Early' & last_outcome=='Reward' ~ 'Early Reward',
+                                                    Trial=='Late' & last_outcome=='Omission' ~ 'Late Omission',
+                                                    Trial=='Late' & last_outcome=='Reward' ~ 'Late Reward'))
+emH$Omission_by_Trial <- factor(emH$Omission_by_Trial,levels=c('Early Reward','Late Reward','Early Omission','Late Omission'))
+emH$Entropy <- factor(emH$Entropy, levels = c('Low','High'))
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RT_conv_by_emmeans_Entropy.pdf',height=12,width=12)
+gg1 <- ggplot(emH) + geom_point(aes(x=Omission_by_Trial,y=estimate,color=Entropy),size=8) +
+  geom_errorbar(width=0.5,size=1.5,aes(x=Omission_by_Trial,y=estimate,color=Entropy,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_grid(~Sample) + xlab('Trial / Last Outcome') + ylab('Mean RT Convergence') +
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=40), 
+        legend.text=element_text(size=20),legend.title=element_text(size=30),
+        legend.spacing.y = unit(1.0,'cm'),
+        axis.title.x = element_text(margin = margin(t=20,r=20,b=0,l=0)),
+        axis.title.y = element_text(margin = margin(t=0,r=20,b=0,l=0))) +
+  theme(axis.text.x = element_text(angle=90,vjust=0.05,hjust=0.5)) +
+  theme(strip.text.x = element_text(size=30)) +
+  theme(legend.key.size = unit(1.5,"cm")) +
+  guides(fill = guide_legend(byrow=TRUE))
+print(gg1)
+dev.off()
+
+emV <- emV %>% mutate(Value = case_when(v_max_lag <= -1 ~ 'Low',v_max_lag >= 1 ~ 'High'))
+emV <- emV %>% mutate(Trial = case_when(trial_neg_inv_sc < 0 ~ 'Early', trial_neg_inv_sc > 0 ~ 'Late'))
+emV <- emV %>% mutate(Omission_by_Trial = case_when(Trial=='Early' & last_outcome=='Omission' ~ 'Early Omission',
+                                                    Trial=='Early' & last_outcome=='Reward' ~ 'Early Reward',
+                                                    Trial=='Late' & last_outcome=='Omission' ~ 'Late Omission',
+                                                    Trial=='Late' & last_outcome=='Reward' ~ 'Late Reward'))
+emV$Omission_by_Trial <- factor(emV$Omission_by_Trial,levels=c('Early Reward','Late Reward','Early Omission','Late Omission'))
+emV$Value <- factor(emV$Value,levels=c('High','Low'))
+
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+pdf('RT_conv_by_emmeans_Value.pdf',height=12,width=12)
+gg1 <- ggplot(emV) + geom_point(aes(x=Omission_by_Trial,y=estimate,color=Value),size=8) +
+  geom_errorbar(width=0.5,size=1.5,aes(x=Omission_by_Trial,y=estimate,color=Value,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_grid(~Sample) + xlab('Trial / Last Outcome') + ylab('Mean RT Convergence') +
+  theme(axis.text=element_text(size=20), axis.title=element_text(size=40), 
+        legend.text=element_text(size=20),legend.title=element_text(size=30),
+        legend.spacing.y = unit(1.0,'cm'),
+        axis.title.x = element_text(margin = margin(t=20,r=20,b=0,l=0)),
+        axis.title.y = element_text(margin = margin(t=0,r=20,b=0,l=0))) +
+  theme(axis.text.x = element_text(angle=90,vjust=0.05,hjust=0.5)) +
+  theme(strip.text.x = element_text(size=30)) +
+  theme(legend.key.size = unit(1.5,"cm")) +
+  guides(fill = guide_legend(byrow=TRUE)) +
+  guides(fill=guide_legend(title='Value'))
+print(gg1)
+dev.off()
+
+
+
 # dq <- df %>% select(rt_csv,rewFunc,run_trial,v_entropy,last_outcome,outcome,rt_vmax_lag,id,run,entropy_split)
 # dq <- dq %>% group_by(run_trial,rewFunc) %>% summarize(mRT = mean(rt_csv,na.rm=TRUE), dRT = sd(rt_csv,na.rm=TRUE),N = length(rt_csv)) %>% ungroup()
 # dq <- dq %>% mutate(Contingency = factor(rewFunc,levels=c('IEV','DEV','CEV','CEVR'),ordered=TRUE))
