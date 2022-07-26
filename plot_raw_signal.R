@@ -153,7 +153,7 @@ vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
 rm(clock_comb)
 vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
-source('~/vmPFC/get_trial_data_vmPFC.R')
+source('~/vPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
 df <- df %>%
   group_by(id, run) %>% 
