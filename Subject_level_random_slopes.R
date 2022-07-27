@@ -39,7 +39,7 @@ Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
 Q <- Q %>% select(!decon1)
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-df <- df %>% select(v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+df <- df %>% select(v_max_wi_lag,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                     v_max_wi, v_entropy_wi,kld3,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
                     rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
   group_by(id, run) %>% 
@@ -80,8 +80,8 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial > 10 & run_trial < 30 ~ 'Middle',
   run_trial >=30 ~ 'Late',
 )))
-df <- df %>% group_by(id) %>% mutate(v_entropy_wi1 = scale(v_entropy)) %>% ungroup() %>% select(!v_entropy_wi) %>% rename(v_entropy_wi = v_entropy_wi1)
-df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,v_max_wi,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
+#df <- df %>% group_by(id) %>% mutate(v_entropy_wi1 = scale(v_entropy)) %>% ungroup() %>% select(!v_entropy_wi) %>% rename(v_entropy_wi = v_entropy_wi1)
+df <- df %>% select(id,run,trial_bin,rewFunc,rt_bin,v_max_wi_lag,expl_longer,expl_shorter,rt_csv_sc,v_entropy_wi, v_entropy_wi_change,run_trial,trial_neg_inv_sc,rt_vmax_change,kld3,abs_pe_max_sc,abs_pe_max_lag_sc,pe_max_sc,pe_max_lag_sc,v_entropy_wi_change_lag)
 Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
 Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -100,6 +100,16 @@ Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween))
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
 decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
+                                trial_bin*HCwithin + 
+                                v_entropy_wi*HCwithin + rt_bin + 
+                                HCbetween +
+                                (HCwithin*v_entropy_wi|id))
+decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
+                                trial_bin*HCwithin + 
+                                v_entropy_wi*HCwithin + rt_bin + 
+                                HCbetween +
+                                (v_max_wi|id))
+decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin +  v_max_wi*HCwithin + 
                                 trial_bin*HCwithin + 
                                 v_entropy_wi*HCwithin + rt_bin + 
                                 HCbetween +

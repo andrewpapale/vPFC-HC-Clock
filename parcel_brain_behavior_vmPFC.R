@@ -3,7 +3,7 @@ library(data.table)
 library(tidyverse)
 library(afex)
 library(lattice)
-session  = "fmri"
+session  = "meg"
 if (Sys.getenv("USER")=="dnplserv") {
   setwd("~/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/betas_final")
   
@@ -150,8 +150,8 @@ for (ee in efiles_l2) {
 
 
 efiles_l1 <- list.files(beta_dir,
-  #pattern = "Schaefer2018_200Parcels_7Networks_order_fonov_2.3mm_ants_cope_l2.csv.gz",
-  pattern = 'Schaefer2018_200Parcels_7Networks_order_fonov_2.3mm_ants_cope_l2_v_entropy.csv.gz',
+  pattern = "Schaefer2018_200Parcels_7Networks_order_fonov_2.3mm_ants_cope_l2.csv.gz",
+  #pattern = 'Schaefer2018_200Parcels_7Networks_order_fonov_2.3mm_ants_cope_l2_v_entropy.csv.gz',
   recursive = TRUE, full.names = TRUE
 )
 

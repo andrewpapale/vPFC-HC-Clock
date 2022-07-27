@@ -139,7 +139,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
       # plot stream gradients
       
       if (!strcmp(toprocess,"symmetry-group-by-HC-by-outcome") & !strcmp(toprocess,"symmetry-group-by-HC-by-rewFunc")){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter,".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
       }
       
@@ -337,7 +337,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
       
       
       if (strcmp(toprocess,"network")){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-', model_iter, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
         gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
           geom_line(size = 1) + geom_point() +
@@ -361,7 +361,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         print(gg)
         dev.off()
       } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag')){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
         # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
         #   geom_line(size = 1) + geom_point() +
@@ -442,7 +442,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         print(gg)
         dev.off()
       } else if (strcmp(toprocess,"symmetry-by-HC")){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter,".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
         gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=as.factor(HC_region), size=`p, FDR-corrected`)) +
           geom_line(size = 1) + geom_point() +
