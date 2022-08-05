@@ -94,7 +94,7 @@ dQ$entropy <- dQ$entropy_split
 dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-pdf('plot_raw_signal_feedback_ventropy.pdf',height=12,width=24)
+pdf('plot_raw_signal_feedback_ventropy.pdf',height=8,width=12)
 gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=entropy)) + 
   geom_point(size=5) + geom_line(size=2) + 
   geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
@@ -125,7 +125,7 @@ dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
 #dQ <- dQ %>% filter(trial_bin!='Middle')
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-pdf('plot_raw_signal_feedback_vmax.pdf',height=12,width=24)
+pdf('plot_raw_signal_feedback_vmax.pdf',height=8,width=12)
 gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=v_max)) + 
   geom_point(size=5) + geom_line(size=2) + 
   geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
@@ -234,14 +234,14 @@ dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
 #dQ <- dQ %>% filter(trial_bin!='Middle')
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-pdf('plot_raw_signal_clock_ventropy.pdf',height=12,width=24)
+pdf('plot_raw_signal_clock_ventropy.pdf',height=8,width=12)
 gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=entropy)) + 
   geom_point(size=5) + geom_line(size=2) + 
   geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
   geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
   #facet_grid(trial_bin~last_outcome) + 
   scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
-  xlab('Time relative to clock (s)') +
+  xlab('Time relative to trial onset (s)') +
   ylab('Deconvolved Signal (AU)') +
   theme(legend.text = element_text(size=25)) +
   theme(legend.title = element_text(size=30)) +
@@ -257,7 +257,7 @@ dQ <- dQ %>% ungroup() %>% group_by(evt_time,network,v_max_above_median) %>% sum
 dQ <- dQ %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM'))
 dQ$network1 <- factor(dQ$network1,levels=c('DMN','CTR','LIM'))
 dQ <- dQ %>% filter(!is.na(v_max_above_median))
-dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
+#dQ$trial_bin <- factor(dQ$trial_bin,levels=c('Early','Middle','Late'))
 pal = wes_palette("FantasticFox1", 3, type = "discrete")
 #dQ <- dQ %>% filter(!is.na(last_outcome))
 #dQ <- dQ %>% filter(trial_bin!='Middle')
@@ -266,14 +266,14 @@ dQ <- dQ %>% mutate(v_max = case_when(v_max_above_median == TRUE ~ 'high', v_max
 dQ <- dQ %>% ungroup() %>% select(!network) %>% rename(network=network1)
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-pdf('plot_raw_signal_clock_vmax.pdf',height=12,width=24)
+pdf('plot_raw_signal_clock_vmax.pdf',height=8,width=12)
 gg1 <- ggplot(dQ,aes(x=evt_time,y=vP1,color=network,linetype=v_max)) + 
   geom_point(size=5) + geom_line(size=2) + 
   geom_errorbar(aes(ymin=vP1-(dP1/sqrt(N1)),ymax=vP1+(dP1/sqrt(N1)))) + 
   geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 3) + 
   #facet_grid(trial_bin~last_outcome) + 
   scale_color_manual(values=pal,labels=c("DMN","CTR","LIM")) +
-  xlab('Time relative to clock (s)') +
+  xlab('Time relative to trial onset (s)') +
   ylab('Deconvolved Signal (AU)') +
   theme(legend.text = element_text(size=25)) +
   theme(legend.title = element_text(size=30)) +
