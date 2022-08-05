@@ -6,10 +6,18 @@ plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavm
   library(pracma)
   library(tidyverse)
   library(tibble)  
+  if (strcmp(toprocess,'network-by-HC')){
   if (strcmp(toalign,"clock")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
   } else if (strcmp(toalign,"feedback")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback_HC_interaction')
+  }
+  } else if (strcmp(toprocess,'network')){
+    if (strcmp(toalign,"clock")){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
+    } else if (strcmp(toalign,"feedback")){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback')
+    }
   }
   
   message("\nPlotting streams decoding")
@@ -121,7 +129,7 @@ plot_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavm
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
   
-  if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side')){
+  if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side') | strcmp(toprocess,'network')){
     ddf <- ddf %>% mutate(network1 = 
                             case_when(network=='C'~'2C',
                                       network=='D'~'1D',

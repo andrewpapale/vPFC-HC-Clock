@@ -12,10 +12,10 @@ do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_clock = FALSE
 do_HC_fb = FALSE
-do_HC2vPFC_fb = FALSE
+do_HC2vPFC_fb = TRUE
 do_HC2vPFC_clock = TRUE
 do_symmetry = TRUE
-do_network = FALSE
+do_network = TRUE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
