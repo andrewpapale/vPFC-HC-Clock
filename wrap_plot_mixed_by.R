@@ -203,23 +203,23 @@ for (i in 1:2){
 #   #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
 # }
 
-# vmPFC-HC-network-testing
-source('~/vmPFC/plot_mixed_by_vmPFC_HC.R')
-source('~/vmPFC/plot_emtrends_vmPFC_HC.R')
-for (i in 1){
-  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-HC-network-clock-ranslopes-',i,'.Rdata')
-  #model_str <- paste0('-vmPFC-HC-full-network-',i,'.Rdata')
-  model_str <- Sys.glob(paste0('*',model_str))
-  load(model_str)
-  model_iter <- i
-  totest <- 'final-model'
-  toprocess <- 'network-by-HC'
-  #toprocess <- 'network-by-HC'
-  toalign <- 'clock'
-  behavmodel <- 'compressed'
-  hc_LorR <- 'LR'
-  plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
-  #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
-}
+# # vmPFC-HC-network-testing
+# source('~/vmPFC/plot_mixed_by_vmPFC_HC.R')
+# source('~/vmPFC/plot_emtrends_vmPFC_HC.R')
+# for (i in 1:2){
+#   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+#   model_str <- paste0('-vmPFC-HC-network-clock-ranslopes-',i,'.Rdata')
+#   #model_str <- paste0('-vmPFC-HC-full-network-',i,'.Rdata')
+#   model_str <- Sys.glob(paste0('*',model_str))
+#   load(model_str)
+#   model_iter <- i
+#   totest <- 'final-model'
+#   toprocess <- 'network-by-HC'
+#   #toprocess <- 'network-by-HC'
+#   toalign <- 'clock'
+#   behavmodel <- 'compressed'
+#   hc_LorR <- 'LR'
+#   plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+#   #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+# }
 

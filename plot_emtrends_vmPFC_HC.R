@@ -66,7 +66,7 @@ if (!strcmp(totest,'final-model-testing-')){
   # do v_entropy
   emt <- ddf$emtrends_list$H_HC
   emt <- emt %>% filter(network=='D')
-  emt$levels <- factor(emt$v_entropy_wi, labels = c("-2 std Entropy","+2 std Entropy"))
+  emt$levels <- factor(emt$v_entropy_lag_sc, labels = c("-2 std Entropy","+2 std Entropy"))
   
   fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy','-',hc_LorR, ".pdf", sep = "")
   pdf(fname, width = 9, height = 3.5)

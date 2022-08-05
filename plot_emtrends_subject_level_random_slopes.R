@@ -25,12 +25,12 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
   pal1090[1] <- pal[[2]]
   pal1090[2] <- '#7a7745'
   
-  emt <- ddq$emtrends_list$H
+  emt <- ddq$emtrends_list$TrxVmax
   emt <- emt %>% filter(estimate==min(unique(estimate)) | estimate==max(unique(estimate)))
   emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
   #emt <- emt %>% filter(trial_bin != 'Middle')
   emt$levels <- factor(emt$estimate, labels = c("10'th %ile HC slope","90'th %ile HC slope"))
-  fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag','-',hc_LorR, ".pdf", sep = "")
+  fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_by_trial','-',hc_LorR, ".pdf", sep = "")
   pdf(fname, width = 9, height = 9)
   gg1 <- ggplot(emt,aes(x=evt_time,y=rt_vmax_lag.trend)) + 
     facet_grid(network~HC_region) +
@@ -66,7 +66,28 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
   }
   grid.draw(gg2)
   dev.off()  
+ 
   
+  emt <- ddq$emtrends_list$Vmax
+  emt <- emt %>% filter(estimate==min(unique(estimate)) | estimate==max(unique(estimate)))
+  #emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
+  #emt <- emt %>% filter(trial_bin != 'Middle')
+  emt$levels <- factor(emt$estimate, labels = c("10'th %ile HC slope","90'th %ile HC slope"))
+  fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag','-',hc_LorR, ".pdf", sep = "")
+  pdf(fname, width = 9, height = 9)
+  gg1 <- ggplot(emt,aes(x=evt_time,y=rt_vmax_lag.trend)) + 
+    facet_grid(network~HC_region) +
+    geom_point(aes(color=as.factor(levels)),size=1) +
+    geom_line(aes(color=as.factor(levels),linetype=as.factor(levels)), size=1) + 
+    geom_errorbar(aes(ymin=rt_vmax_lag.trend-std.error, ymax=rt_vmax_lag.trend+std.error), width=0.5) +
+    geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+    ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+  print(gg1)
+  dev.off()
+  
+  
+  
+   
 }  
   
   
