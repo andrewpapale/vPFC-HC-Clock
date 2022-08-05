@@ -31,7 +31,7 @@ df$v_max_full <- scale(df$v_max_full)
 df$ev_lag <- scale(df$ev_lag)
 df$score_lag <- scale(df$score_lag)
 # Plot emmeans of mlm model
-m1 <- lmer(rt_swing ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+m1 <- lmer(rt_swing ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + (1|id/rewFunc),df)
 
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 
@@ -54,7 +54,7 @@ df$v_max_full <- scale(df$v_max_full)
 df$ev_lag <- scale(df$ev_lag)
 df$score_lag <- scale(df$score_lag)
 # Plot emmeans of mlm model
-m2 <- lmer(rt_swing ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+m2 <- lmer(rt_swing ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + (1|id/rewFunc),df)
 
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 
@@ -148,7 +148,7 @@ df$v_max_full <- scale(df$v_max_full)
 df$ev_lag <- scale(df$ev_lag)
 df$score_lag <- scale(df$score_lag)
 # Plot emmeans of mlm model
-m1 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+m1 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + (1|id/rewFunc),df)
 
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 
@@ -172,7 +172,7 @@ df$v_max_full <- scale(df$v_max_full)
 df$ev_lag <- scale(df$ev_lag)
 df$score_lag <- scale(df$score_lag)
 # Plot emmeans of mlm model
-m2 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + score_lag + (1|id/rewFunc),df)
+m2 <- lmer(rt_conv ~ v_entropy*trial_neg_inv_sc*last_outcome + v_max_lag*trial_neg_inv_sc*last_outcome + (1|id/rewFunc),df)
 
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 
@@ -202,7 +202,7 @@ emH <- emH %>% mutate(Omission_by_Trial = case_when(Trial=='Early' & last_outcom
                                                     Trial=='Late' & last_outcome=='Omission' ~ 'Late Omission',
                                                     Trial=='Late' & last_outcome=='Reward' ~ 'Late Reward'))
 emH$Omission_by_Trial <- factor(emH$Omission_by_Trial,levels=c('Early Reward','Late Reward','Early Omission','Late Omission'))
-emH$Entropy <- factor(emH$Entropy, levels = c('Low','High'))
+emH$Entropy <- factor(emH$Entropy, levels = c('High','Low'))
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
 pdf('RT_conv_by_emmeans_Entropy.pdf',height=12,width=12)
@@ -228,7 +228,7 @@ emV <- emV %>% mutate(Omission_by_Trial = case_when(Trial=='Early' & last_outcom
                                                     Trial=='Late' & last_outcome=='Omission' ~ 'Late Omission',
                                                     Trial=='Late' & last_outcome=='Reward' ~ 'Late Reward'))
 emV$Omission_by_Trial <- factor(emV$Omission_by_Trial,levels=c('Early Reward','Late Reward','Early Omission','Late Omission'))
-emV$Value <- factor(emV$Value,levels=c('High','Low'))
+emV$Value <- factor(emV$Value,levels=c('Low','High'))
 
 setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
 pdf('RT_conv_by_emmeans_Value.pdf',height=12,width=12)
