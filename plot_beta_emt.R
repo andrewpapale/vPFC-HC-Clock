@@ -1,6 +1,6 @@
 # plot_beta_emt
 # 2022-08-01 AndyP
-session = "meg"
+session = "fmri"
 model = "int"
 clock_folder <- "~/clock_analysis" 
 # source('~/code/Rhelpers/')
@@ -51,17 +51,19 @@ df0 <- inner_join(df0,label_vPFC, by='mask_value')
 
 Q <- inner_join(emt,df0,by=c('atlas_value','last_outcome'))
 
-Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
-  mutate(p_level_fdr = as.factor(case_when(
-    padj_BY_term > .05 ~ '1',
-    padj_BY_term < .05 & padj_BY_term > .01 ~ '2',
-    padj_BY_term < .01 & padj_BY_term > .001 ~ '3',
-    padj_BY_term <.001 & padj_BY_term > .0001 ~ '4',
-    padj_BY_term <.0001 & padj_BY_term > .00001 ~ '5',
-    padj_BY_term <.00001 ~ '6'
-  )))
-Q$p_level_fdr <- factor(Q$p_level_fdr, levels = c('1', '2', '3', '4', '5', '6'), labels = c("NS","p < .05", "p < .01", "p < .001", "p < .0001", "p < .00001")) 
+Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() 
 
+Q <- Q %>% 
+  mutate(p_level_fdr = as.factor(case_when(
+    padj_BY_term >= .05 ~ '1',
+    padj_BY_term < .05 ~ '2' # & padj_BY_term > .01 ~ '2',
+    # padj_BY_term < .01 & padj_BY_term > .001 ~ '3',
+    # padj_BY_term <.001 & padj_BY_term > .0001 ~ '4',
+    # padj_BY_term <.0001 & padj_BY_term > .00001 ~ '5',
+    # padj_BY_term <.00001 ~ '6'
+  )))
+#Q$p_level_fdr <- factor(Q$p_level_fdr, levels = c('1', '2', '3', '4', '5', '6'), labels = c("NS","p < .05", "p < .01", "p < .001", "p < .0001", "p < .00001")) 
+Q$p_level_fdr <- factor(Q$p_level_fdr,levels = c('1','2'),labels=c("NS","p < 0.05"))
 
 
 pdf(paste0(model,'-',session,'-','Exploration-b2b.pdf'),height=12,width=12)
