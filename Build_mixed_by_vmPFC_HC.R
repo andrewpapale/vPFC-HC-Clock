@@ -12,8 +12,10 @@ do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_clock = FALSE
 do_HC_fb = FALSE
-do_HC2vPFC_fb = TRUE
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_fb = FALSE
+do_HC2vPFC_clock = FALSE
+do_anat_fb = TRUE
+do_anat_clock = TRUE
 do_symmetry = TRUE
 do_network = TRUE
 repo_directory <- "~/clock_analysis"
@@ -38,11 +40,8 @@ if (do_vPFC_fb){
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+  df <- df %>% 
     group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            score_sc = scale(score_csv),
@@ -83,8 +82,10 @@ if (do_vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,trial_bin,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% select(id,run,run_trial,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -178,11 +179,8 @@ if (do_vPFC_clock){
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+  df <- df %>% 
     group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            iti_lag_sc = scale(iti_lag),
@@ -227,8 +225,10 @@ if (do_vPFC_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -336,11 +336,8 @@ if (do_HC_fb){
   
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+  df <- df %>%
     group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            score_sc = scale(score_csv),
@@ -381,8 +378,10 @@ if (do_HC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,trial_bin,rt_csv_sc, trial_neg_inv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% select(id,run,run_trial,trial_bin,iti_ideal,iti_prev, rt_csv,rt_csv_sc, trial_neg_inv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
+  Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -449,11 +448,8 @@ if (do_HC_clock){
   
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
-    group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
+  df <- df %>% 
+    group_by(id,run) %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            iti_lag_sc = scale(iti_lag),
@@ -498,8 +494,10 @@ if (do_HC_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
+  df <- df %>% select(id,run,run_trial,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+  Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -542,6 +540,184 @@ if (do_HC_clock){
     save(ddf,file=paste0(curr_date,'-HC-axis-clock-',i,'.Rdata'))
   }
 }
+####################################
+### vPFC - HC feedback - anatomy ###
+####################################
+if (do_anat_fb){
+  rm(Q)
+  message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
+  load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
+  vmPFC <- fb_comb
+  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  rm(fb_comb)
+  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
+  vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
+  load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
+  hc <- fb_comb
+  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  rm(fb_comb)
+  hc <- hc %>% mutate(
+    HC_region = case_when(
+      bin_num <= 8 ~ 'AH',
+      bin_num >8 ~ 'PH'
+    ),
+  )
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
+  hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
+  
+  Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+  Q <- Q %>% select(!decon1)
+  
+  decode_formula <- formula(~ (1|id))
+  decode_formula[[1]] <- formula(~ HCwithin*trial_neg_inv_sc + HCbetween + (1|id/run))
+  decode_formula[[2]] <- formula(~ HCwithin*trial_neg_inv_sc + HCbetween + (1+HCbetween |id/run))
+  source('~/vmPFC/get_trial_data_vmPFC.R')
+  df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
+  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv)
+  
+  Q <- inner_join(Q,df,by=c('id','run','run_trial'))
+  Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
+  Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
+  Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;  
+  if (do_network){
+    
+    splits = c('evt_time','network','HC_region')
+    source("~/fmri.pipeline/R/mixed_by.R")
+    for (i in 1:length(decode_formula)){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      df0 <- decode_formula[[i]]
+      print(df0)
+      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                      emmeans_spec = list(
+                        HC = list(outcome='vmPFC_decon', model_name='model1', 
+                                  specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
+                        Tr = list(outcome='vmPFC_decon',model_name='model1',
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                      )
+      )
+      
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-anatomy-',i,'.Rdata'))
+    }
+  }
+  if (do_symmetry){
+    
+    splits = c('evt_time','symmetry_group','HC_region')
+    source("~/fmri.pipeline/R/mixed_by.R")
+    for (i in 1:length(decode_formula)){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      df0 <- decode_formula[[i]]
+      print(df0)
+      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                      emmeans_spec = list(
+                        HC = list(outcome='vmPFC_decon', model_name='model1', 
+                                  specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
+                        Tr = list(outcome='vmPFC_decon',model_name='model1',
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                      )
+      )
+      
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-symmetry-clock-anatomy-',i,'.Rdata'))
+    }
+  }
+}
+  
+
+####################################
+### vPFC - HC clock - anatomy ###
+####################################
+if (do_anat_clock){
+  rm(Q)
+  message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
+  load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
+  vmPFC <- clock_comb
+  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  rm(clock_comb)
+  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
+  vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
+  load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
+  hc <- clock_comb
+  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  rm(clock_comb)
+  hc <- hc %>% mutate(
+    HC_region = case_when(
+      bin_num <= 8 ~ 'AH',
+      bin_num >8 ~ 'PH'
+    ),
+  )
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
+  hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
+  
+  Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+  Q <- Q %>% select(!decon1)
+  source('~/vmPFC/get_trial_data_vmPFC.R')
+  df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
+  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv)
+  Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
+  Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+  Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;
+  Q <- inner_join(Q,df,by=c('id','run','run_trial'))
+  
+  decode_formula <- formula(~ (1|id))
+  decode_formula[[1]] <- formula(~ HCwithin*trial_neg_inv_sc + HCbetween + (1|id/run))
+  decode_formula[[2]] <- formula(~ HCwithin*trial_neg_inv_sc + HCbetween + (1+HCbetween |id/run))
+  qT <- c(-0.7,0.43)
+  
+  if (do_network){
+    
+    splits = c('evt_time','network','HC_region')
+    source("~/fmri.pipeline/R/mixed_by.R")
+    for (i in 1:length(decode_formula)){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      df0 <- decode_formula[[i]]
+      print(df0)
+      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                      emmeans_spec = list(
+                        HC = list(outcome='vmPFC_decon', model_name='model1', 
+                                  specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
+                        Tr = list(outcome='vmPFC_decon',model_name='model1',
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                      )
+      )
+      
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-feedback-anatomy-',i,'.Rdata'))
+    }
+  }
+  if (do_symmetry){
+    
+    splits = c('evt_time','symmetry_group','HC_region')
+    source("~/fmri.pipeline/R/mixed_by.R")
+    for (i in 1:length(decode_formula)){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      df0 <- decode_formula[[i]]
+      print(df0)
+      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                      emmeans_spec = list(
+                        HC = list(outcome='vmPFC_decon', model_name='model1', 
+                                  specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
+                        Tr = list(outcome='vmPFC_decon',model_name='model1',
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                      )
+      )
+      
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-symmetry-feedback-anatomy-',i,'.Rdata'))
+    }
+  }
+}
+
 ###################################
 ##### vmPFC - HC -feedback    #####
 ###################################
@@ -571,11 +747,8 @@ if (do_HC2vPFC_fb){
   Q <- Q %>% select(!decon1)
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+  df <- df %>% 
     group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            score_sc = scale(score_csv),
@@ -616,8 +789,12 @@ if (do_HC2vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% select(id,run,run_trial,trial_bin,iti_ideal,iti_prev,rt_csv,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
+  Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
+  Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -786,11 +963,8 @@ if (do_HC2vPFC_clock){
   Q <- Q %>% select(!decon1)
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-  df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                      v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                      rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+  df <- df %>% 
     group_by(id, run) %>% 
-    mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
     mutate(v_chosen_sc = scale(v_chosen),
            abs_pe_max_sc = scale(abs(pe_max)),
            iti_lag_sc = scale(iti_lag),
@@ -837,6 +1011,8 @@ if (do_HC2vPFC_clock){
   )))
   df <- df %>% select(id,run,run_trial,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+  # placeholder
+  
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
