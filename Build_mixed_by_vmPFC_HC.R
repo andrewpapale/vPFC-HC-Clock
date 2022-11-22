@@ -12,10 +12,10 @@ do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_clock = FALSE
 do_HC_fb = FALSE
-do_HC2vPFC_fb = TRUE
+do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
-do_anat_clock = TRUE
+do_anat_clock = FALSE
 do_symmetry = TRUE
 do_network = TRUE
 repo_directory <- "~/clock_analysis"
@@ -1199,7 +1199,7 @@ if (do_HC2vPFC_clock){
     run_trial >=30 ~ 'Late',
   )))
   df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,iti_ideal,iti_prev,rt_csv,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -1224,8 +1224,8 @@ if (do_HC2vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 | id/rewFunc))
+  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 | id/rewFunc))
   decode_formula[[2]] <- NULL
 
   qT <- c(-0.7,0.43)
