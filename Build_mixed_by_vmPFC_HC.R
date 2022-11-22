@@ -107,7 +107,7 @@ if (do_vPFC_fb){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -263,7 +263,7 @@ if (do_vPFC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -425,7 +425,7 @@ if (do_HC_fb){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -558,7 +558,7 @@ if (do_HC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -701,7 +701,7 @@ if (do_anat_fb){
   
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1 +id/rewFunc))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1 |id/rewFunc))
   
   if (do_network){
     
@@ -861,7 +861,7 @@ if (do_anat_clock){
   
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 +id/rewFunc))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 |id/rewFunc))
   qT <- c(-0.7,0.43)
   
   if (do_network){
@@ -1023,7 +1023,7 @@ if (do_HC2vPFC_fb){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin  + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 |id/rewFunc))
   #decode_formula[[2]] <- NULL
   
   qT <- c(-0.7,0.43)
@@ -1231,7 +1231,7 @@ if (do_HC2vPFC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 +id/rewFunc))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 | id/rewFunc))
   decode_formula[[2]] <- NULL
 
   qT <- c(-0.7,0.43)
