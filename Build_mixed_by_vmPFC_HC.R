@@ -9,9 +9,9 @@ library(tidyverse)
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
 do_vPFC_fb = FALSE
-do_vPFC_clock = TRUE
+do_vPFC_clock = FALSE
 do_HC_clock = TRUE
-do_HC_fb = TRUE
+do_HC_fb = FALSE
 do_HC2vPFC_fb = TRUE
 do_HC2vPFC_clock = TRUE
 do_anat_fb = TRUE
@@ -544,7 +544,7 @@ if (do_HC_clock){
     run_trial >=30 ~ 'Late',
   )))
   df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,iti_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;
