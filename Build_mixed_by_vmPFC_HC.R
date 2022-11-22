@@ -14,7 +14,7 @@ do_HC_clock = FALSE
 do_HC_fb = FALSE
 do_HC2vPFC_fb = TRUE
 do_HC2vPFC_clock = TRUE
-do_anat_fb = TRUE
+do_anat_fb = FALSE
 do_anat_clock = TRUE
 do_symmetry = TRUE
 do_network = TRUE
@@ -678,17 +678,14 @@ if (do_anat_fb){
     run_trial >=30 ~ 'Late',
   )))
   
-  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
+  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc, rewFunc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;  
-  Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
-  Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
-  Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
-  Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+ 
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -702,7 +699,7 @@ if (do_anat_fb){
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1|id/run))
   decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1 |id/rewFunc))
-  
+  qT <- c(-0.7,0.43)
   if (do_network){
     
     splits = c('evt_time','network','HC_region')
@@ -838,17 +835,14 @@ if (do_anat_clock){
     run_trial >=30 ~ 'Late',
   )))
 
-  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
+  df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc,rewFunc,iti_lag_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;  
-  Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
-  Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
-  Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
-  Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
