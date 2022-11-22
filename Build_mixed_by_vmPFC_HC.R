@@ -8,7 +8,7 @@ library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
-do_vPFC_fb = TRUE
+do_vPFC_fb = FALSE
 do_vPFC_clock = TRUE
 do_HC_clock = TRUE
 do_HC_fb = TRUE
@@ -249,7 +249,7 @@ if (do_vPFC_clock){
     run_trial >=30 ~ 'Late',
   )))
   df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_lag_bin,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_lag_bin,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -1205,7 +1205,7 @@ if (do_HC2vPFC_clock){
     run_trial >=30 ~ 'Late',
   )))
   df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
