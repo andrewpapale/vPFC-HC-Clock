@@ -34,7 +34,7 @@ if (do_vPFC_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -56,8 +56,8 @@ if (do_vPFC_fb){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            v_entropy_wi_change_bin = case_when(
              v_entropy_wi_change < -0.5 ~ 'Decrease',
@@ -92,8 +92,8 @@ if (do_vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_bin))
+  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
@@ -106,8 +106,8 @@ if (do_vPFC_fb){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 + v_max_wi + v_entropy_sc |id/run))
+  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 +id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -137,9 +137,7 @@ if (do_vPFC_fb){
                         V = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
                                  specs = formula(~v_max_wi),at=list(v_max_wi=c(-1.5,1.5))),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
-                                   specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change_bin',
-                                  specs=formula(~v_entropy_wi_change_bin))
+                                   specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -172,9 +170,7 @@ if (do_vPFC_fb){
                         V = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
                                  specs = formula(~v_max_wi),at=list(v_max_wi=c(-1.5,1.5))),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
-                                 specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change_bin',
-                                  specs=formula(~v_entropy_wi_change_bin))
+                                 specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -190,7 +186,7 @@ if (do_vPFC_clock){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- clock_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -216,8 +212,8 @@ if (do_vPFC_clock){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            v_entropy_wi_change_lag_bin = case_when(
              v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
@@ -267,7 +263,7 @@ if (do_vPFC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 +id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -298,9 +294,7 @@ if (do_vPFC_clock){
                         Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                   specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
-                                 specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1', var ='v_entropy_wi_change_lag_bin',
-                                  specs=formula(~v_entropy_wi_change_lag_bin))
+                                 specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -333,9 +327,7 @@ if (do_vPFC_clock){
                         Tr = list(outcome='vmPFC_decon', model_name='model1',var = 'trial_neg_inv_sc',
                                   specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
-                                 specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag_bin',
-                                  specs=formula(~v_entropy_wi_change_lag_bin))
+                                 specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -352,7 +344,7 @@ if (do_HC_fb){
   message('adding HC signals to models...')
   load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
   hc <- fb_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   
   hc <- hc %>% select(id,run,run_trial,decon_mean,evt_time,bin_num,side)
@@ -382,8 +374,8 @@ if (do_HC_fb){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            v_entropy_wi_change_bin = case_when(
              v_entropy_wi_change < -0.5 ~ 'Decrease',
@@ -418,7 +410,7 @@ if (do_HC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_bin))
   df <- df %>% select(id,run,run_trial,v_entropy_wi_change_bin,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev, rt_csv,rt_csv_sc, trial_neg_inv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
@@ -433,7 +425,7 @@ if (do_HC_fb){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 +id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -465,11 +457,7 @@ if (do_HC_fb){
                       Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                 specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1', var = 'v_max_wi',
-                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
-                      dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_bin',
-                                specs=formula(~v_entropy_wi_change_bin)),
-                      RT = list(outcome='vmPFC_decon', model_name='model1', var = 'rt_vmax_change_bin',
-                                specs=formula(~rt_vmax_change_bin))
+                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5)))
                     )
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -485,7 +473,7 @@ if (do_HC_clock){
   message('adding HC signals to models...')
   load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
   hc <- clock_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   
   hc <- hc %>% select(id,run,run_trial,decon_mean,evt_time,bin_num,side)
@@ -519,8 +507,8 @@ if (do_HC_clock){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            v_entropy_wi_change_lag_bin = case_when(
              v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
@@ -570,7 +558,7 @@ if (do_HC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 +id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -601,11 +589,7 @@ if (do_HC_clock){
                       Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                 specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1', var = 'v_max_wi',
-                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
-                      dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag_bin',
-                                specs=formula(~v_entropy_wi_change_lag_bin)),
-                      RT = list(outcome='vmPFC_decon', model_name='model1', var = 'rt_vmax_change_bin',
-                                specs=formula(~rt_vmax_change_bin))
+                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5)))
                     )
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -620,13 +604,13 @@ if (do_anat_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
   hc <- fb_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   hc <- hc %>% mutate(
     HC_region = case_when(
@@ -662,8 +646,8 @@ if (do_anat_fb){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
@@ -717,7 +701,7 @@ if (do_anat_fb){
   
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1+HCwithin |id/run))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1 +id/rewFunc))
   
   if (do_network){
     
@@ -780,13 +764,13 @@ if (do_anat_clock){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- clock_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
   hc <- clock_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   hc <- hc %>% mutate(
     HC_region = case_when(
@@ -822,8 +806,8 @@ if (do_anat_clock){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
@@ -877,7 +861,7 @@ if (do_anat_clock){
   
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 + HCwithin |id/run))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 +id/rewFunc))
   qT <- c(-0.7,0.43)
   
   if (do_network){
@@ -940,13 +924,13 @@ if (do_HC2vPFC_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
   hc <- fb_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
   hc <- hc %>% mutate(
     HC_region = case_when(
@@ -977,8 +961,8 @@ if (do_HC2vPFC_fb){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            v_entropy_wi_change_bin = case_when(
              v_entropy_wi_change < -0.5 ~ 'Decrease',
@@ -1013,7 +997,7 @@ if (do_HC2vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_bin))
   df <- df %>% select(id,run,run_trial,v_entropy_wi_change_bin,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
@@ -1039,7 +1023,7 @@ if (do_HC2vPFC_fb){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin  + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 + HCwithin | id/run))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 +id/rewFunc))
   #decode_formula[[2]] <- NULL
   
   qT <- c(-0.7,0.43)
@@ -1143,13 +1127,13 @@ if (do_HC2vPFC_clock){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- clock_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
   hc <- clock_comb
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   hc <- hc %>% mutate(
     HC_region = case_when(
@@ -1184,8 +1168,8 @@ if (do_HC2vPFC_clock){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change',
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change',
            ),
            v_entropy_wi_change_lag_bin = case_when(
              v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
@@ -1247,8 +1231,8 @@ if (do_HC2vPFC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 + HCwithin |id/run))
-  #decode_formula[[2]] <- NULL
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 +id/rewFunc))
+  decode_formula[[2]] <- NULL
 
   qT <- c(-0.7,0.43)
   
@@ -1365,8 +1349,8 @@ if (doTesting){
            v_entropy_wi_change_lag = lag(v_entropy_wi_change),
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
-             abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
            ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld3 = case_when(
              kld3 ==0 ~ NA_real_,
