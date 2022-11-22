@@ -10,7 +10,7 @@ library(tidyverse)
 doTesting = FALSE
 do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
-do_HC_clock = TRUE
+do_HC_clock = FALSE
 do_HC_fb = FALSE
 do_HC2vPFC_fb = TRUE
 do_HC2vPFC_clock = TRUE
@@ -677,7 +677,7 @@ if (do_anat_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  
   df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
@@ -837,7 +837,7 @@ if (do_anat_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+
   df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
