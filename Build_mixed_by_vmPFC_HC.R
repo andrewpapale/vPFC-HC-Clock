@@ -10,7 +10,7 @@ library(tidyverse)
 doTesting = FALSE
 do_vPFC_fb = TRUE
 do_vPFC_clock = TRUE
-do_HC_clock = TRUEdf
+do_HC_clock = TRUE
 do_HC_fb = TRUE
 do_HC2vPFC_fb = TRUE
 do_HC2vPFC_clock = TRUE
@@ -59,6 +59,11 @@ if (do_vPFC_fb){
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
              abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
            ),
+           v_entropy_wi_change_bin = case_when(
+             v_entropy_wi_change < -0.5 ~ 'Decrease',
+             v_entropy_wi_change > 0.5  ~ 'Increase',
+             v_entropy_wi_change >= -0.5 & v_entropy_wi_change <= 0.5 ~ 'No Change'
+           ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
              kld4 >0 ~ log10(kld4)
@@ -87,7 +92,8 @@ if (do_vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
@@ -95,11 +101,13 @@ if (do_vPFC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 + v_max_wi + v_entropy_sc |id/run))
+  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 + v_max_wi + v_entropy_sc |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -121,7 +129,7 @@ if (do_vPFC_fb){
                         V = list(outcome='vmPFC_decon', model_name='model1',
                                  specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=c("v_entropy_wi_change"), at = list(v_entropy_wi_change=c(-1.5,1.5)))
+                                  specs=c("v_entropy_wi_change_bin"))
                       ),
                       emtrends_spec = list(
                         Tr = list(outcome='vmPFC_decon',model_name='model1', var = 'trial_neg_inv_sc',
@@ -130,8 +138,8 @@ if (do_vPFC_fb){
                                  specs = formula(~v_max_wi),at=list(v_max_wi=c(-1.5,1.5))),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
                                    specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change',
-                                  specs=formula(~v_entropy_wi_change), at = list(v_entropy_wi_change=c(-1.5,1.5)))
+                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change_bin',
+                                  specs=formula(~v_entropy_wi_change_bin))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -156,7 +164,7 @@ if (do_vPFC_fb){
                         V = list(outcome='vmPFC_decon', model_name='model1',
                                  specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=c("v_entropy_wi_change"), at = list(v_entropy_wi_change=c(-1.5,1.5)))
+                                  specs=c("v_entropy_wi_change_bin"))
                       ),
                       emtrends_spec = list(
                         Tr = list(outcome='vmPFC_decon',model_name='model1', var = 'trial_neg_inv_sc',
@@ -165,8 +173,8 @@ if (do_vPFC_fb){
                                  specs = formula(~v_max_wi),at=list(v_max_wi=c(-1.5,1.5))),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
                                  specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change',
-                                  specs=formula(~v_entropy_wi_change), at = list(v_entropy_wi_change=c(-1.5,1.5)))
+                        dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change_bin',
+                                  specs=formula(~v_entropy_wi_change_bin))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -211,6 +219,11 @@ if (do_vPFC_clock){
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
              abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
            ),
+           v_entropy_wi_change_lag_bin = case_when(
+             v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
+             v_entropy_wi_change_lag > 0.5  ~ 'Increase',
+             v_entropy_wi_change_lag >= -0.5 & v_entropy_wi_change_lag <= 0.5 ~ 'No Change'
+           ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
              kld4 >0 ~ log10(kld4)
@@ -239,7 +252,8 @@ if (do_vPFC_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,v_entropy_wi_change_lag_bin,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -247,11 +261,13 @@ if (do_vPFC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
+  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -268,23 +284,23 @@ if (do_vPFC_clock){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=c("v_entropy_lag_sc"), at = list(v_entropy_lag_sc=c(-1.5,1.5))),
+                                 specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
                                  specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1',
-                                  specs=c('v_entropy_wi_change_lag'), at=list(v_entropy_wi_change_lag=c(-1.5,1.5)))
+                                  specs=c('v_entropy_wi_change_lag_bin'))
                       ),
-                      emmeans_spec = list(
+                      emtrends_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', var='v_entropy_sc',
                                  specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                   specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
                                  specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1', var ='v_entropy_wi_change_lag',
-                                  specs=formula(~v_entropy_wi_change_lag), at=list(v_entropy_wi_change_lag=c(-1.5,1.5)))
+                        dH = list(outcome='vmPFC_decon', model_name='model1', var ='v_entropy_wi_change_lag_bin',
+                                  specs=formula(~v_entropy_wi_change_lag_bin))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -303,24 +319,24 @@ if (do_vPFC_clock){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=c("v_entropy_lag_sc"), at = list(v_entropy_lag_sc=c(-1.5,1.5))),
+                                 specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1',
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
                                  specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1',
-                                  specs=c('v_entropy_wi_change_lag'), at=list(v_entropy_wi_change_lag=c(-1.5,1.5)))#,
-                        #   TbyHbyO = list(outcome='vmPFC_decon',model_name='model1',
-                        #                  specs=formula(~v_entropy_lag_sc:trial_neg_inv_sc), at=list(v_entropy_lag_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5)))
-                      )#,
-                      # emtrends_spec = list(
-                      #   T_H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                      #              specs = formula(~v_entropy_lag_sc:trial_neg_inv_sc),at=list(trial_neg_inv_sc=c(-1.5,1.5))),
-                      #   V = list(outcome='vmPFC_decon',model_name='model1',var='v_max_wi_lag',
-                      #            specs = formula(~v_max_wi_lag:last_outcome)),
-                      #   O_H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                      #              specs = formula(~v_entropy_lag_sc:last_outcome))
-                      # )
+                                  specs=c('v_entropy_wi_change_lag_bin'))
+                      ),
+                      emtrends_spec = list(
+                        H = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_sc',
+                                 specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
+                        Tr = list(outcome='vmPFC_decon', model_name='model1',var = 'trial_neg_inv_sc',
+                                  specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
+                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
+                                 specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
+                        dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag_bin',
+                                  specs=formula(~v_entropy_wi_change_lag_bin))
+                      )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-',i,'.Rdata'))
@@ -369,6 +385,11 @@ if (do_HC_fb){
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
              abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
            ),
+           v_entropy_wi_change_bin = case_when(
+             v_entropy_wi_change < -0.5 ~ 'Decrease',
+             v_entropy_wi_change > 0.5  ~ 'Increase',
+             v_entropy_wi_change >= -0.5 & v_entropy_wi_change <= 0.5 ~ 'No Change'
+           ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
              kld4 >0 ~ log10(kld4)
@@ -397,7 +418,8 @@ if (do_HC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev, rt_csv,rt_csv_sc, trial_neg_inv_sc,rewFunc,v_entropy_sc,last_outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_bin,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev, rt_csv,rt_csv_sc, trial_neg_inv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;
@@ -405,11 +427,13 @@ if (do_HC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc +rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
+  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -429,16 +453,24 @@ if (do_HC_fb){
                       Tr = list(outcome='vmPFC_decon', model_name='model1',
                                 specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1',
-                               specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
-                    )#,
-                    # emtrends_spec = list(
-                    #   H = list(outcome='decon_mean',model_name='model1', var = 'v_entropy_sc',
-                    #            specs = formula(~v_entropy_sc:trial_neg_inv_sc),at=list(v_entropy_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                    #   V = list(outcome='decon_mean',model_name='model1', var = 'v_max_wi',
-                    #            specs = formula(~v_max_wi:last_outcome),at=list(v_max_wi=c(-1.5,1.5))),
-                    #   O_H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                    #              specs = formula(~v_entropy_sc:last_outcome),at=list(v_entropy_sc=c(-1.5,1.5)))
-                    # )
+                               specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
+                      dH = list(outcome='vmPFC_decon', model_name='model1',
+                                specs=c('v_entropy_wi_change_bin')),
+                      RT = list(outcome='vmPFC_decon',model_name='model1',
+                                specs=c('rt_vmax_change_bin'))
+                    ),
+                    emtrends_spec = list(
+                      H = list(outcome='decon_mean', model_name='model1', var = 'v_entropy_sc',
+                               specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
+                      Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
+                                specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
+                      V = list(outcome='decon_mean', model_name='model1', var = 'v_max_wi',
+                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
+                      dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_bin',
+                                specs=formula(~v_entropy_wi_change_bin)),
+                      RT = list(outcome='vmPFC_decon', model_name='model1', var = 'rt_vmax_change_bin',
+                                specs=formula(~rt_vmax_change_bin))
+                    )
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
     save(ddf,file=paste0(curr_date,'-HC-axis-feedback-',i,'.Rdata'))
@@ -490,6 +522,11 @@ if (do_HC_clock){
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
              abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
            ),
+           v_entropy_wi_change_lag_bin = case_when(
+             v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
+             v_entropy_wi_change_lag > 0.5  ~ 'Increase',
+             v_entropy_wi_change_lag >= -0.5 & v_entropy_wi_change_lag <= 0.5 ~ 'No Change'
+           ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
              kld4 >0 ~ log10(kld4)
@@ -518,7 +555,8 @@ if (do_HC_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -526,11 +564,13 @@ if (do_HC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi_lag + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi_lag + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_lag_sc + v_max_wi_lag |id/run))
+  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 + v_entropy_sc + v_max_wi |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -544,21 +584,29 @@ if (do_HC_clock){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                     emmeans_spec = list(
-                      H = list(outcome='vmPFC_decon', model_name='model1',
+                      H = list(outcome='decon_mean', model_name='model1',
                                specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
-                      V = list(outcome='vmPFC_decon', model_name='model1',
+                      Tr = list(outcome='vmPFC_decon', model_name='model1',
+                                specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
+                      V = list(outcome='decon_mean', model_name='model1',
                                specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
-                      Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                specs=formula(~trial_neg_inv_sc), at=list(trial_neg_inv_sc=c(-1.5,1.5)))
-                    )#,
-                    # emtrends_spec = list(
-                    #   T_H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                    #              specs = formula(~v_entropy_lag_sc:trial_neg_inv_sc),at=list(v_entropy_lag_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                    #   V = list(outcome='vmPFC_decon',model_name='model1',var='v_max_wi_lag',
-                    #            specs = formula(~v_max_wi_lag:last_outcome), at=list(v_max_wi_lag=c(-1.5,1.5))),
-                    #   O_H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                    #              specs = formula(~v_entropy_lag_sc:last_outcome),at=list(v_entropy_lag_sc=c(-1.5,1.5)))
-                    # )
+                      dH = list(outcome='vmPFC_decon', model_name='model1',
+                                specs=c('v_entropy_wi_change_lag_bin')),
+                      RT = list(outcome='vmPFC_decon',model_name='model1',
+                                specs=c('rt_vmax_change_bin'))
+                    ),
+                    emtrends_spec = list(
+                      H = list(outcome='decon_mean', model_name='model1', var = 'v_entropy_sc',
+                               specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
+                      Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
+                                specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
+                      V = list(outcome='decon_mean', model_name='model1', var = 'v_max_wi',
+                               specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))),
+                      dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag_bin',
+                                specs=formula(~v_entropy_wi_change_lag_bin)),
+                      RT = list(outcome='vmPFC_decon', model_name='model1', var = 'rt_vmax_change_bin',
+                                specs=formula(~rt_vmax_change_bin))
+                    )
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
     save(ddf,file=paste0(curr_date,'-HC-axis-clock-',i,'.Rdata'))
@@ -645,6 +693,7 @@ if (do_anat_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
   df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
@@ -664,9 +713,11 @@ if (do_anat_fb){
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
   
+  Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
+  
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] <- formula(~ age + sex + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + sex + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1+HCwithin |id/run))
+  decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1|id/run))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + HCbetween*HCwithin + (1+HCwithin |id/run))
   
   if (do_network){
     
@@ -683,7 +734,9 @@ if (do_anat_fb){
                         HC = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',
+                                    specs=formula(~HCbetween:HCwithin), at=list(HCwithin=c(-1.5,1.5),HCbetween=c(-1.5,1.5)))
                       )
       )
       
@@ -706,7 +759,9 @@ if (do_anat_fb){
                         HC = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',
+                                    specs=formula(~HCbetween:HCwithin), at=list(HCwithin=c(-1.5,1.5),HCbetween=c(-1.5,1.5)))
                       )
       )
       
@@ -798,6 +853,7 @@ if (do_anat_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
   df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_csv_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
@@ -817,10 +873,11 @@ if (do_anat_clock){
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
   
+  Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
   
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] <- formula(~ age + sex + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + sex + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 + HCwithin |id/run))
+  decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1|id/run))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + HCbetween*HCwithin + (1 + HCwithin |id/run))
   qT <- c(-0.7,0.43)
   
   if (do_network){
@@ -838,7 +895,9 @@ if (do_anat_clock){
                         HC = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',
+                                    specs=formula(~HCbetween:HCwithin), at=list(HCwithin=c(-1.5,1.5),HCbetween=c(-1.5,1.5)))
                       )
       )
       
@@ -861,7 +920,9 @@ if (do_anat_clock){
                         HC = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',
+                                    specs=formula(~HCbetween:HCwithin), at=list(HCwithin=c(-1.5,1.5),HCbetween=c(-1.5,1.5)))
                       )
       )
       
@@ -919,6 +980,11 @@ if (do_HC2vPFC_fb){
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
              abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
            ),
+           v_entropy_wi_change_bin = case_when(
+             v_entropy_wi_change < -0.5 ~ 'Decrease',
+             v_entropy_wi_change > 0.5  ~ 'Increase',
+             v_entropy_wi_change >= -0.5 & v_entropy_wi_change <= 0.5 ~ 'No Change'
+           ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
              kld4 >0 ~ log10(kld4)
@@ -947,7 +1013,8 @@ if (do_HC2vPFC_fb){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_bin,rt_vmax_change_bin,trial_bin,iti_ideal,iti_prev,rt_csv,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
@@ -957,6 +1024,8 @@ if (do_HC2vPFC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -969,38 +1038,12 @@ if (do_HC2vPFC_fb){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin  + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 + HCwithin | id/run))
+  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin  + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1|id/run))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_bin*HCwithin   + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCbetween*HCwithin + (1 + HCwithin | id/run))
   #decode_formula[[2]] <- NULL
-  qHC <- Q %>% filter(atlas_value==55) %>% group_by(evt_time,HC_region) %>% 
-    summarize(HC_p2SD = mean(HCwithin,na.rm=TRUE)+2*sd(HCwithin,na.rm=TRUE),
-              HC_m2SD = mean(HCwithin,na.rm=TRUE)-2*sd(HCwithin,na.rm=TRUE),
-              HC_p1SD = mean(HCwithin,na.rm=TRUE)+1*sd(HCwithin,na.rm=TRUE),
-              HC_m1SD = mean(HCwithin,na.rm=TRUE)-1*sd(HCwithin,na.rm=TRUE),
-              HC_p05SD = mean(HCwithin,na.rm=TRUE)+0.5*sd(HCwithin,na.rm=TRUE),
-              HC_m05SD = mean(HCwithin,na.rm=TRUE)-0.5*sd(HCwithin,na.rm=TRUE))
   
-  qHC <- qHC %>% filter(HC_region=='PH')
-  qHC1 <- NULL
-  qHC1[1] <- mean(qHC$HC_m2SD,na.rm=TRUE)
-  qHC1[2] <- mean(qHC$HC_p2SD,na.rm=TRUE)
-  qHC1[3] <- mean(qHC$HC_m1SD,na.rm=TRUE)
-  qHC1[4] <- mean(qHC$HC_p1SD,na.rm=TRUE)
-  qHC1[5] <- mean(qHC$HC_m05SD,na.rm=TRUE)
-  qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
-  
-  qH <- NULL
-  qH[1] <- mean(df$v_entropy_sc,na.rm=TRUE) - 1.5*sd(df$v_entropy_sc,na.rm=TRUE)
-  qH[2] <- mean(df$v_entropy_sc,na.rm=TRUE) + 1.5*sd(df$v_entropy_sc,na.rm=TRUE)
-  #qH <- c(1,2,3,4)
   qT <- c(-0.7,0.43)
-  qV <- NULL
-  qV[1] <- mean(df$v_max_wi,na.rm=TRUE) - 1.5*sd(df$v_max_wi,na.rm=TRUE)
-  qV[2] <- mean(df$v_max_wi,na.rm=TRUE) + 1.5*sd(df$v_max_wi,na.rm=TRUE)
-  qdH <- NULL
-  qdH[1] <- mean(df$v_entropy_wi_change,na.rm=TRUE) - 1.5*sd(df$v_entropy_wi_change,na.rm=TRUE)
-  qdH[2] <- mean(df$v_entropy_wi_change,na.rm=TRUE) + 1.5*sd(df$v_entropy_wi_change,na.rm=TRUE)
-  
+
   
   if (do_network){
     
@@ -1015,31 +1058,31 @@ if (do_HC2vPFC_fb){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=qH,HCwithin=qHC1)),
+                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=qV,HCwithin=qHC1)),
+                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=qHC1))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       ),
                       emtrends_spec = list(
-                        # T_H_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'HCwithin',
-                        #               specs = formula(~v_entropy_sc:trial_neg_inv_sc:HCwithin),at=list(v_entropy_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                        # V_O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                        #               specs = formula(~v_max_wi:last_outcome:HCwithin), at=list(v_max_wi=c(-1.5,1.5))),
-                        # H_O_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
-                        #               specs = formula(~v_entropy_sc:last_outcome:HCwithin),at=list(v_entropy_sc=c(-1.5,1.5))),
                         H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=qH)),
+                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=c(-1.5,1.5))),
                         T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT)),
                         V_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=qV)),
+                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=c(-1.5,1,5))),
                         A_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~age:HCwithin),at=list(age=c(-1.5,1.5))),
                         O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~last_outcome:HCwithin)),
+                                    specs=formula(~outcome:HCwithin)),
                         dH_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                     specs=formula(~v_entropy_wi_change:HCwithin),at=list(v_entropy_wi_change=qdH))
+                                     specs=formula(~v_entropy_wi_change_bin:HCwithin)),
+                        dRT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                      specs=formula(~rt_vmax_change_bin:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~HCbetween:HCwithin),at=list(HCwithin=c(-1.5,1,5),HCbetween=c(-1.5,1,5))),
+                        RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                     specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5)))
                       )
       )
       
@@ -1060,31 +1103,31 @@ if (do_HC2vPFC_fb){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=qH,HCwithin=qHC1)),
+                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=qV,HCwithin=qHC1)),
+                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=qHC1))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       ),
                       emtrends_spec = list(
-                        # T_H_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'HCwithin',
-                        #               specs = formula(~v_entropy_sc:trial_neg_inv_sc:HCwithin),at=list(v_entropy_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                        # V_O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                        #               specs = formula(~v_max_wi:last_outcome:HCwithin), at=list(v_max_wi=c(-1.5,1.5))),
-                        # H_O_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
-                        #               specs = formula(~v_entropy_sc:last_outcome:HCwithin),at=list(v_entropy_sc=c(-1.5,1.5))),
                         H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=qH)),
+                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=c(-1.5,1.5))),
                         T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT)),
                         V_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=qV)),
+                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=c(-1.5,1,5))),
                         A_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~age:HCwithin),at=list(age=c(-1.5,1.5))),
                         O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~last_outcome:HCwithin)),
+                                    specs=formula(~outcome:HCwithin)),
                         dH_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                     specs=formula(~v_entropy_wi_change:HCwithin),at=list(v_entropy_wi_change=qdH))
+                                     specs=formula(~v_entropy_wi_change_bin:HCwithin)),
+                        dRT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                      specs=formula(~rt_vmax_change_bin:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~HCbetween:HCwithin),at=list(HCwithin=c(-1.5,1,5),HCbetween=c(-1.5,1,5))),
+                        RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                     specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -1142,7 +1185,12 @@ if (do_HC2vPFC_clock){
            abs_rt_vmax_change = abs(rt_vmax_change),
            rt_vmax_change_bin = case_when(
              abs_rt_vmax_change < 4/0.1667 ~ 'No_Change',
-             abs_rt_vmax_change >= 4/0.1667 ~ 'Change'
+             abs_rt_vmax_change >= 4/0.1667 ~ 'Change',
+           ),
+           v_entropy_wi_change_lag_bin = case_when(
+             v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
+             v_entropy_wi_change_lag > 0.5  ~ 'Increase',
+             v_entropy_wi_change_lag >= -0.5 & v_entropy_wi_change_lag <= 0.5 ~ 'No Change',
            ),
            rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
              kld4 ==0 ~ NA_real_,
@@ -1172,7 +1220,8 @@ if (do_HC2vPFC_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
+  df <- df %>% select(id,run,run_trial,v_entropy_wi_change_lag_bin,rt_vmax_change_bin,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_lag_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi_lag,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -1182,6 +1231,9 @@ if (do_HC2vPFC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -1194,37 +1246,11 @@ if (do_HC2vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 + HCwithin |id/run))
+  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin  + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag_bin*HCwithin + rt_csv_sc  + iti_lag_sc*HCwithin + iti_sc*HCwithin + last_outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 + HCwithin |id/run))
   #decode_formula[[2]] <- NULL
-  qHC <- Q %>% filter(atlas_value==55) %>% group_by(evt_time,HC_region) %>% 
-    summarize(HC_p2SD = mean(HCwithin,na.rm=TRUE)+2*sd(HCwithin,na.rm=TRUE),
-              HC_m2SD = mean(HCwithin,na.rm=TRUE)-2*sd(HCwithin,na.rm=TRUE),
-              HC_p1SD = mean(HCwithin,na.rm=TRUE)+1*sd(HCwithin,na.rm=TRUE),
-              HC_m1SD = mean(HCwithin,na.rm=TRUE)-1*sd(HCwithin,na.rm=TRUE),
-              HC_p05SD = mean(HCwithin,na.rm=TRUE)+0.5*sd(HCwithin,na.rm=TRUE),
-              HC_m05SD = mean(HCwithin,na.rm=TRUE)-0.5*sd(HCwithin,na.rm=TRUE))
-  
-  qHC <- qHC %>% filter(HC_region=='PH')
-  qHC1 <- NULL
-  qHC1[1] <- mean(qHC$HC_m2SD,na.rm=TRUE)
-  qHC1[2] <- mean(qHC$HC_p2SD,na.rm=TRUE)
-  qHC1[3] <- mean(qHC$HC_m1SD,na.rm=TRUE)
-  qHC1[4] <- mean(qHC$HC_p1SD,na.rm=TRUE)
-  qHC1[5] <- mean(qHC$HC_m05SD,na.rm=TRUE)
-  qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
-  qH <- NULL
-  qH[1] <- mean(df$v_entropy_lag_sc,na.rm=TRUE) - 1.5*sd(df$v_entropy_lag_sc,na.rm=TRUE)
-  qH[2] <- mean(df$v_entropy_lag_sc,na.rm=TRUE) + 1.5*sd(df$v_entropy_lag_sc,na.rm=TRUE)
-  #qH <- c(1,2,3,4)
+
   qT <- c(-0.7,0.43)
-  qV <- NULL
-  qV[1] <- mean(df$v_max_wi_lag,na.rm=TRUE) - 1.5*sd(df$v_max_wi_lag,na.rm=TRUE)
-  qV[2] <- mean(df$v_max_wi_lag,na.rm=TRUE) + 1.5*sd(df$v_max_wi_lag,na.rm=TRUE)
-  qdH <- NULL
-  qdH[1] <- mean(df$v_entropy_wi_change_lag,na.rm=TRUE) - 1.5*sd(df$v_entropy_wi_change_lag,na.rm=TRUE)
-  qdH[2] <- mean(df$v_entropy_wi_change_lag,na.rm=TRUE) + 1.5*sd(df$v_entropy_wi_change_lag,na.rm=TRUE)
-  
   
   if (do_network){
     
@@ -1239,31 +1265,31 @@ if (do_HC2vPFC_clock){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=formula(~v_entropy_lag_sc*HCwithin), at = list(v_entropy_lag_sc=qH,HCwithin=qHC1)),
+                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=formula(~v_max_wi_lag*HCwithin), at=list(v_max_wi_lag=qV,HCwithin=qHC1)),
+                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc*HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=qHC1))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       ),
                       emtrends_spec = list(
-                        # T_H_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'HCwithin',
-                        #               specs = formula(~v_entropy_lag_sc:trial_neg_inv_sc:HCwithin),at=list(v_entropy_lag_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                        # V_O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                        #               specs = formula(~v_max_wi_lag:last_outcome:HCwithin), at=list(v_max_wi_lag=c(-1.5,1.5))),
-                        # H_O_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                        #               specs = formula(~v_entropy_lag_sc:last_outcome:HCwithin),at=list(v_entropy_lag_sc=c(-1.5,1.5))),
                         H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_entropy_lag_sc*HCwithin), at=list(v_entropy_lag_sc=qH)),
+                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=c(-1.5,1.5))),
                         T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~trial_neg_inv_sc*HCwithin),at=list(trial_neg_inv_sc=qT)),
+                                    specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT)),
                         V_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_max_wi_lag*HCwithin),at=list(v_max_wi_lag=qV)),
+                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=c(-1.5,1,5))),
                         A_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~age*HCwithin),at=list(age=c(-1.5,1.5))),
+                                    specs=formula(~age:HCwithin),at=list(age=c(-1.5,1.5))),
                         O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~last_outcome*HCwithin)),
+                                    specs=formula(~outcome:HCwithin)),
                         dH_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                     specs=formula(~v_entropy_wi_change_lag*HCwithin),at=list(v_entropy_wi_change_lag=qdH))
+                                     specs=formula(~v_entropy_wi_change_lag_bin:HCwithin)),
+                        dRT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                      specs=formula(~rt_vmax_change_bin:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~HCbetween:HCwithin),at=list(HCwithin=c(-1.5,1,5),HCbetween=c(-1.5,1,5))),
+                        RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                     specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
@@ -1283,31 +1309,31 @@ if (do_HC2vPFC_clock){
                       tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       emmeans_spec = list(
                         H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=formula(~v_entropy_lag_sc:HCwithin), at = list(v_entropy_lag_sc=qH,HCwithin=qHC1)),
+                                 specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         V = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=formula(~v_max_wi_lag:HCwithin), at=list(v_max_wi_lag=qV,HCwithin=qHC1)),
+                                 specs=formula(~v_max_wi:HCwithin), at=list(v_max_wi=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=qHC1))
+                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       ),
                       emtrends_spec = list(
-                        # T_H_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'HCwithin',
-                        #               specs = formula(~v_entropy_lag_sc:trial_neg_inv_sc:HCwithin),at=list(v_entropy_lag_sc=c(-1.5,1.5),trial_neg_inv_sc=c(-1.5,1.5))),
-                        # V_O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                        #               specs = formula(~v_max_wi_lag:last_outcome:HCwithin), at=list(v_max_wi_lag=c(-1.5,1.5))),
-                        # H_O_HC = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_lag_sc',
-                        #               specs = formula(~v_entropy_lag_sc:last_outcome:HCwithin),at=list(v_entropy_lag_sc=c(-1.5,1.5))),
                         H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_entropy_lag_sc*HCwithin), at=list(v_entropy_lag_sc=qH)),
+                                    specs=formula(~v_entropy_sc:HCwithin), at=list(v_entropy_sc=c(-1.5,1.5))),
                         T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~trial_neg_inv_sc*HCwithin),at=list(trial_neg_inv_sc=qT)),
+                                    specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT)),
                         V_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~v_max_wi_lag*HCwithin),at=list(v_max_wi_lag=qV)),
+                                    specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=c(-1.5,1,5))),
                         A_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~age*HCwithin),at=list(age=c(-1.5,1.5))),
+                                    specs=formula(~age:HCwithin),at=list(age=c(-1.5,1.5))),
                         O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                    specs=formula(~last_outcome*HCwithin)),
+                                    specs=formula(~outcome:HCwithin)),
                         dH_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                     specs=formula(~v_entropy_wi_change_lag*HCwithin),at=list(v_entropy_wi_change_lag=qdH))
+                                     specs=formula(~v_entropy_wi_change_lag_bin:HCwithin)),
+                        dRT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                      specs=formula(~rt_vmax_change_bin:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
+                        HCbw = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~HCbetween:HCwithin),at=list(HCwithin=c(-1.5,1,5),HCbetween=c(-1.5,1,5))),
+                        RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                     specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5)))
                       )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
