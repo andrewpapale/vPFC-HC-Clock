@@ -10,8 +10,8 @@ library(tidyverse)
 doTesting = FALSE
 do_vPFC_fb = TRUE
 do_vPFC_clock = TRUE
-do_HC_clock = TRUE
 do_HC_fb = TRUE
+do_HC_clock = TRUE
 do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
@@ -468,15 +468,15 @@ if (do_HC_fb){
                                 specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1',
                                specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
-                      dH = list(outcome='vmPFC_decon', model_name='model1',
+                      dH = list(outcome='decon_mean', model_name='model1',
                                 specs=c('v_entropy_wi_change_bin')),
-                      RT = list(outcome='vmPFC_decon',model_name='model1',
+                      RT = list(outcome='decon_mean',model_name='model1',
                                 specs=c('rt_vmax_change_bin'))
                     ),
                     emtrends_spec = list(
                       H = list(outcome='decon_mean', model_name='model1', var = 'v_entropy_sc',
                                specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
-                      Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
+                      Tr = list(outcome='decon_mean', model_name='model1', var = 'trial_neg_inv_sc',
                                 specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1', var = 'v_max_wi',
                                specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5)))
@@ -603,13 +603,13 @@ if (do_HC_clock){
                     emmeans_spec = list(
                       H = list(outcome='decon_mean', model_name='model1',
                                specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
-                      Tr = list(outcome='vmPFC_decon', model_name='model1',
+                      Tr = list(outcome='decon_mean', model_name='model1',
                                 specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(-1.5,1.5))),
                       V = list(outcome='decon_mean', model_name='model1',
                                specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5))),
-                      dH = list(outcome='vmPFC_decon', model_name='model1',
+                      dH = list(outcome='decon_mean', model_name='model1',
                                 specs=c('v_entropy_wi_change_lag_bin')),
-                      RT = list(outcome='vmPFC_decon',model_name='model1',
+                      RT = list(outcome='decon_mean',model_name='model1',
                                 specs=c('rt_vmax_change_bin'))
                     ),
                     emtrends_spec = list(
