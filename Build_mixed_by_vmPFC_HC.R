@@ -8,12 +8,12 @@ library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
-do_vPFC_fb = FALSE
-do_vPFC_clock = FALSE
-do_HC_clock = FALSE
-do_HC_fb = FALSE
+do_vPFC_fb = TRUE
+do_vPFC_clock = TRUE
+do_HC_clock = TRUE
+do_HC_fb = TRUE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = TRUE
@@ -34,7 +34,7 @@ if (do_vPFC_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -104,10 +104,18 @@ if (do_vPFC_fb){
   Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
   Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
+  # test age & sex
+  demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+  demo <- demo %>% rename(id=lunaid)
+  demo <- demo %>% select(!adult & !scandate)
+  Q <- inner_join(Q,demo,by=c('id'))
+  Q$female <- relevel(as.factor(Q$female),ref='0')
+  Q$age <- scale(Q$age)
+  
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_bin + outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -259,11 +267,18 @@ if (do_vPFC_clock){
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
   Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
   Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  # test age & sex
+  demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+  demo <- demo %>% rename(id=lunaid)
+  demo <- demo %>% select(!adult & !scandate)
+  Q <- inner_join(Q,demo,by=c('id'))
+  Q$female <- relevel(as.factor(Q$female),ref='0')
+  Q$age <- scale(Q$age)
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_lag_bin + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -344,7 +359,7 @@ if (do_HC_fb){
   message('adding HC signals to models...')
   load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
   hc <- fb_comb
-  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% filter(evt_time > -4 & evt_time < 5)
   rm(fb_comb)
   
   hc <- hc %>% select(id,run,run_trial,decon_mean,evt_time,bin_num,side)
@@ -421,11 +436,18 @@ if (do_HC_fb){
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
   Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
   Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  # test age & sex
+  demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+  demo <- demo %>% rename(id=lunaid)
+  demo <- demo %>% select(!adult & !scandate)
+  Q <- inner_join(Q,demo,by=c('id'))
+  Q$female <- relevel(as.factor(Q$female),ref='0')
+  Q$age <- scale(Q$age)
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_bin + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   
@@ -554,11 +576,18 @@ if (do_HC_clock){
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
   Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
   Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  # test age & sex
+  demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+  demo <- demo %>% rename(id=lunaid)
+  demo <- demo %>% select(!adult & !scandate)
+  Q <- inner_join(Q,demo,by=c('id'))
+  Q$female <- relevel(as.factor(Q$female),ref='0')
+  Q$age <- scale(Q$age)
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
-  decode_formula[[2]] = formula(~ v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag_bin + v_max_wi + last_outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_bin + (1 |id/rewFunc))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
@@ -604,7 +633,7 @@ if (do_anat_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -918,13 +947,13 @@ if (do_HC2vPFC_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
   hc <- fb_comb
-  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% filter(evt_time > -4 & evt_time < 5)
   rm(fb_comb)
   hc <- hc %>% mutate(
     HC_region = case_when(
