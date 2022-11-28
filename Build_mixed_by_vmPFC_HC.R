@@ -8,14 +8,14 @@ library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
-do_vPFC_fb = TRUE
-do_vPFC_clock = TRUE
-do_HC_fb = TRUE
-do_HC_clock = TRUE
-do_HC2vPFC_fb = TRUE
+do_vPFC_fb = FALSE
+do_vPFC_clock = FALSE
+do_HC_fb = FALSE
+do_HC_clock = FALSE
+do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = TRUE
-do_anat_fb = TRUE
-do_anat_clock = TRUE
+do_anat_fb = FALSE
+do_anat_clock = FALSE
 do_symmetry = TRUE
 do_network = TRUE
 repo_directory <- "~/clock_analysis"
@@ -101,8 +101,8 @@ if (do_vPFC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
@@ -269,8 +269,8 @@ if (do_vPFC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -442,8 +442,8 @@ if (do_HC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -590,8 +590,8 @@ if (do_HC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -1056,8 +1056,8 @@ if (do_HC2vPFC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -1263,8 +1263,8 @@ if (do_HC2vPFC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
-  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  #Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
@@ -1278,8 +1278,8 @@ if (do_HC2vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi*HCwithin  + v_entropy_wi_change_lag*HCwithin  + rt_csv_sc*HCwithin  + iti_lag_sc*HCwithin + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_lag*HCwithin + rt_csv_sc*HCwithin  + iti_lag_sc*HCwithin + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_bin*HCwithin + HCwithin*HCbetween + (1 + HCwithin | id/run))
+  decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi*HCwithin  + v_entropy_wi_change_lag*HCwithin  + rt_csv_sc*HCwithin  + iti_lag_sc*HCwithin + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_sc*HCwithin + HCwithin*HCbetween + (1|id/run))
+  decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change_lag*HCwithin + rt_csv_sc*HCwithin  + iti_lag_sc*HCwithin + iti_sc*HCwithin + outcome*HCwithin + rt_vmax_change_sc*HCwithin + HCwithin*HCbetween + (1 + HCwithin | id/run))
 
   qT <- c(-0.7,0.43)
   
