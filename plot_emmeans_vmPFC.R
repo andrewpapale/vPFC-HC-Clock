@@ -61,17 +61,19 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1[[3]] <- pal[[3]]
   pal1090[1] <- pal[[1]]
   pal1090[2] <- '#574c35'
+  pal1090[3] <- '#f5b32a'
+  
   
   # do v_entropy
-  emt <- ddf$emmeans_list$H_HC
-  emt$levels <- factor(emt$v_entropy_wi, labels = c("-2 std Entropy","+2 std Entropy"))
+  emt <- ddf$emmeans_list$H
+  emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
   
   fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy', ".pdf", sep = "")
   pdf(fname, width = 9, height = 3.5)
   gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
     facet_grid(~network) +
     geom_point(aes(color=levels),size=5) +
-    scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-2 std Entropy","+2 std Entropy")) + 
+    scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-1.5 std Entropy","+1.5 std Entropy")) + 
     geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
     geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
     ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
@@ -96,15 +98,15 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1090[2] <- '#7a7745'
   
   # do v_max_wi
-  emt <- ddf$emmeans_list$V_HC
-  emt$levels <- factor(emt$v_max_wi, labels = c("10'th %ile Value","90'th %ile Value"))
+  emt <- ddf$emmeans_list$V
+  emt$levels <- factor(emt$v_max_wi, labels = c("-1.5 std Value","+1.5 std Value"))
   
   fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value', ".pdf", sep = "")
   pdf(fname, width = 9, height = 3.5)
   gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
     facet_grid(~network) +
     geom_point(aes(color=levels),size=5) +
-    scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("10th %ile Value","90'th %ile Value")) + 
+    scale_color_manual(values=c(pal1090[1],pal1090[2]),labels= c("-1.5 std Value","+1.5 std Value")) + 
     geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
     geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
     ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
@@ -129,20 +131,19 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1090[2] <- '#574c35'
   
   # do v_entropy_wi_change
-  emt <- ddf$emmeans_list$dH_HC
-  
-  if (strcmp(toalign,'clock')){
-    emt$levels <- factor(emt$v_entropy_wi_change_lag, labels = c("-2 std Entropy Change","+2 std Entropy Change"))
-  } else if (strcmp(toalign,'feedback')){
-    emt$levels <- factor(emt$v_entropy_wi_change, labels = c("-2 std Entropy Change","+2 std Entropy Change"))
+  emt <- ddf$emmeans_list$dH
+
+  if (strcmp(toalign,'feedback')){
+    emt$levels <- factor(emt$v_entropy_wi_change_bin)
+  }else if (strcmp(toalign,'clock')){
+    emt$levels <- factor(emt$v_entropy_wi_change_lag_bin)
   }
-  
   fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
   pdf(fname, width = 9, height = 3.5)
   gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
     facet_grid(~network) +
     geom_point(aes(color=levels),size=5) +
-    scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-2 std Entropy Change","+2 std Entropy Change")) + 
+    scale_color_manual(values=c(pal1090[1],pal1090[2],pal1090[3])) + 
     geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
     geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
     ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
@@ -157,6 +158,35 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   }
   grid.draw(gg2)
   dev.off()
+  
+  # # do Trial
+  # emt <- ddf$emmeans_list$Tr
+  # 
+  # emt$levels <- factor(emt$v_entropy_wi_change_lag, labels = c('Trial 5','Trial 45'))
+  # 
+  # fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
+  # pdf(fname, width = 9, height = 3.5)
+  # gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+  #   facet_grid(~network) +
+  #   geom_point(aes(color=levels),size=5) +
+  #   scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c('-0.5 std Entropy Change','No Entropy Change','+0.5 std Entropy Change')) + 
+  #   geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+  #   geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+  #   ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+  # 
+  # gg2 <- ggplot_gtable(ggplot_build(gg1))
+  # stripr <- which(grepl('strip-t', gg2$layout$name))
+  # k <- 1
+  # for (i in stripr) {
+  #   j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+  #   gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+  #   k <- k+1
+  # }
+  # grid.draw(gg2)
+  # dev.off()
+  
+  
+  
   
 }
 
