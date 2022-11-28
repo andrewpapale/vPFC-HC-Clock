@@ -17,7 +17,7 @@ do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = TRUE
-do_network = TRUE
+do_network = FALSE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -1358,9 +1358,9 @@ if (do_HC2vPFC_clock){
                         O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~outcome:HCwithin)),
                         dH_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                     specs=formula(~v_entropy_wi_change_lag_bin:HCwithin)),
+                                     specs=formula(~v_entropy_wi_change_lag:HCwithin)),
                         dRT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                      specs=formula(~rt_vmax_change_bin:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
+                                      specs=formula(~rt_vmax_change_sc:HCwithin),at=list(HCwithin=c(-1.5,1.5))),
                         HCbw = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                                     specs=formula(~HCbetween:HCwithin),at=list(HCwithin=c(-1.5,1,5),HCbetween=c(-1.5,1,5))),
                         RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
