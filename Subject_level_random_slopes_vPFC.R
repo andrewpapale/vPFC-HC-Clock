@@ -51,7 +51,9 @@ if (strcmp(toalign,'feedback')){
 #hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
 
 #Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
-Q <- vmPFC %>% select(!decon1)
+Q <- vmPFC
+rm(vmPFC)
+
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
 
