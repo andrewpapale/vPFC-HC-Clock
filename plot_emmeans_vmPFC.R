@@ -134,16 +134,16 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   emt <- ddf$emmeans_list$dH
 
   if (strcmp(toalign,'feedback')){
-    emt$levels <- factor(emt$v_entropy_wi_change_bin)
+    emt$levels <- factor(emt$v_entropy_wi_change)
   }else if (strcmp(toalign,'clock')){
-    emt$levels <- factor(emt$v_entropy_wi_change_lag_bin)
+    emt$levels <- factor(emt$v_entropy_wi_change_lag)
   }
   fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
   pdf(fname, width = 9, height = 3.5)
   gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
     facet_grid(~network) +
     geom_point(aes(color=levels),size=5) +
-    scale_color_manual(values=c(pal1090[1],pal1090[2],pal1090[3])) + 
+    scale_color_manual(values=c(pal1090[1],pal1090[2])) + 
     geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
     geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
     ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
@@ -159,6 +159,38 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   grid.draw(gg2)
   dev.off()
   
+  
+  rm(emt)
+  
+  pal1090 = palette()
+  pal = wes_palette("FantasticFox1", 3, type = "discrete")
+  pal1090[1] <- pal[[1]]
+  pal1090[2] <- '#574c35'
+  
+  # do v_entropy_wi_change
+  emt <- ddf$emmeans_list$Tr
+  
+  emt$levels <- factor(emt$trial_neg_inv_sc)
+  fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Trial', ".pdf", sep = "")
+  pdf(fname, width = 9, height = 3.5)
+  gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+    facet_grid(~network) +
+    geom_point(aes(color=levels),size=5) +
+    scale_color_manual(values=c(pal1090[1],pal1090[2])) + 
+    geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+    geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+    ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+  
+  gg2 <- ggplot_gtable(ggplot_build(gg1))
+  stripr <- which(grepl('strip-t', gg2$layout$name))
+  k <- 1
+  for (i in stripr) {
+    j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+    k <- k+1
+  }
+  grid.draw(gg2)
+  dev.off()
   # # do Trial
   # emt <- ddf$emmeans_list$Tr
   # 

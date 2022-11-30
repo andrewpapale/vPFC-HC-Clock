@@ -4,16 +4,16 @@
 library(pracma)
 library(tidyverse)
 
-do_vPFC_fb = TRUE
-do_vPFC_clock = TRUE
+do_vPFC_fb = FALSE
+do_vPFC_clock = FALSE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
-do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = FALSE
+do_HC2vPFC_fb = TRUE
+do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
-do_symmetry = FALSE
-do_network = TRUE
+do_symmetry = TRUE
+do_network = FALSE
 
 if (do_vPFC_fb){
   if (do_network){
