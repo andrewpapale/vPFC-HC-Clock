@@ -15,9 +15,9 @@ ncores <- 26
 toalign <- 'clock'
 do_rand_slopes = FALSE
 do_rt_pred_fmri = FALSE
-plot_rt_pred_fmri = FALSE
-do_rt_pred_meg = TRUE
-plot_rt_pred_meg = FALSE
+plot_rt_pred_fmri = TRUE
+do_rt_pred_meg = FALSE
+plot_rt_pred_meg = TRUE
 #### clock ####
 
 if (do_rand_slopes){
