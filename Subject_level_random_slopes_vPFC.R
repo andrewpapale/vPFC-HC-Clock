@@ -12,11 +12,11 @@ repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
-toalign <- 'clock'
-do_rand_slopes = FALSE
-do_rt_pred_fmri = FALSE
+toalign <- 'feedback'
+do_rand_slopes = TRUE
+do_rt_pred_fmri = TRUE
 plot_rt_pred_fmri = TRUE
-do_rt_pred_meg = FALSE
+do_rt_pred_meg = TRUE
 plot_rt_pred_meg = TRUE
 #### clock ####
 
@@ -73,6 +73,7 @@ if (do_rand_slopes){
              abs_pe_max_sc = scale(abs(pe_max)),
              score_sc = scale(score_csv),
              iti_sc = scale(iti_ideal),
+             iti_lag_sc = scale(iti_lag),
              pe_max_sc = scale(pe_max),
              pe_max_lag_sc = scale(lag(pe_max)),
              abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
@@ -109,7 +110,7 @@ if (do_rand_slopes){
       run_trial > 15 & run_trial < 30 ~ 'Middle',
       run_trial >=30 ~ 'Late',
     )))
-    df <- df %>% select(id,run,run_trial,trial_bin,rt_vmax_change_sc,iti_lag_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+    df <- df %>% select(id,run,run_trial,trial_bin,v_entropy_wi_change,rt_vmax_change_sc,iti_lag_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
     Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
     Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
     Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -129,9 +130,9 @@ if (do_rand_slopes){
     decode_formula <- formula(~ (1|id))
     #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_sc |id/run))
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id/run))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_sc |id/run))
-    decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_max_wi |id/run))
-    decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change_lag |id/run))
+    decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_sc |id/run))
+    decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_max_wi |id/run))
+    decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change |id/run))
     
   } else if (strcmp(toalign,'clock')){
     df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
@@ -551,7 +552,7 @@ if (plot_rt_pred_meg){
     model_iter <- i
     totest <- paste0('rt_csv_sc-replication-',as.character(i))
     #toprocess <- 'symmetry-by'
-    toprocess <- 'network-by'
+    toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
     plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
