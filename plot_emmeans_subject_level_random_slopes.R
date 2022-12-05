@@ -56,11 +56,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_by_trial','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(network~HC_region) +
       geom_point(aes(color=trial_bin,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=trial_bin,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     print(gg1)
@@ -90,11 +90,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(network~HC_region) +
       geom_point(aes(color=last_outcome,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=last_outcome,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_lag_sc.trend-std.error.x, ymax=rt_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     
@@ -134,11 +134,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(network1~HC_region) +
       geom_point(aes(color=as.factor(levels),size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=as.factor(levels),linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     print(gg1)
@@ -152,8 +152,6 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     #emt <- emt %>% filter(trial_bin != 'Middle')
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile slope","90'th %ile slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile slope"))
-    emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
-    emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile slope","90'th %ile slope"))
     
     df0 <- df %>% filter(term=='trial_neg_inv_sc:subj_level_rand_slope:rt_vmax_lag_sc')
     
@@ -173,11 +171,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
       geom_point(aes(color=trial_bin,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=trial_bin,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     print(gg1)
@@ -207,11 +205,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
       geom_point(aes(color=last_outcome,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=last_outcome,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_lag_sc.trend-std.error.x, ymax=rt_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     
@@ -251,11 +249,11 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_sc','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
+    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network1) +
       geom_point(aes(color=as.factor(levels),size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=as.factor(levels),linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
+      geom_errorbar(aes(ymin=estimate-std.error.x, ymax=estimate+std.error.x), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
       ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
     print(gg1)
