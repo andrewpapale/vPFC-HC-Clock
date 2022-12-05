@@ -100,8 +100,8 @@ if (do_vPFC_fb){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  #Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
-  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  Q$v_entropy_wi_change_bin <- relevel(as.factor(Q$v_entropy_wi_change_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
@@ -267,8 +267,8 @@ if (do_vPFC_clock){
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  #Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
-  #Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
+  Q$v_entropy_wi_change_lag_bin <- relevel(as.factor(Q$v_entropy_wi_change_lag_bin),ref='No Change')
+  Q$rt_vmax_change_bin <- relevel(as.factor(Q$rt_vmax_change_bin),ref='No Change')
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
