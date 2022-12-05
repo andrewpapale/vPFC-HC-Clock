@@ -369,7 +369,7 @@ if (plot_rt_pred_fmri){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
-    #plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
@@ -558,7 +558,7 @@ if (plot_rt_pred_meg){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
-    #plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
