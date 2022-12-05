@@ -39,7 +39,8 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile HC slope"))
     
     df0 <- df %>% filter(term=='trial_neg_inv_sc:subj_level_rand_slope:rt_vmax_lag_sc')
-    
+    df0 <- df0 %>% select(!estimate)
+
     Q <- inner_join(emt,df0,by=c('evt_time','network','HC_region'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
@@ -75,7 +76,7 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     df0 <- df %>% filter(term=='rt_lag_sc:subj_level_rand_slope' | term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
     df0 <- df0 %>% mutate(last_outcome = case_when(term=='rt_lag_sc:subj_level_rand_slope' ~ 'Omission', 
                                                    term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward' ~ 'Reward'))
-    
+    df0 <- df0 %>% select(!estimate)
     Q <- inner_join(emt,df0,by=c('evt_time','network','last_outcome','HC_region'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
@@ -115,7 +116,7 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile HC slope","90'th %ile HC slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile HC slope"))
     df0 <- df %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
-    
+    df0 <- df0 %>% select(!estimate)
     Q <- inner_join(emt,df0,by=c('evt_time','network','HC_region'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
@@ -154,7 +155,7 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile slope"))
     
     df0 <- df %>% filter(term=='trial_neg_inv_sc:subj_level_rand_slope:rt_vmax_lag_sc')
-    
+    df0 <- df0 %>% select(!estimate)
     Q <- inner_join(emt,df0,by=c('evt_time','network'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
@@ -171,7 +172,8 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     
     fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
+
+     gg1 <- ggplot(Q,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
       geom_point(aes(color=trial_bin,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
       geom_line(aes(color=trial_bin,linetype=as.factor(levels)), size=1) + 
@@ -191,6 +193,7 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     df0 <- df0 %>% mutate(last_outcome = case_when(term=='rt_lag_sc:subj_level_rand_slope' ~ 'Omission', 
                                                    term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward' ~ 'Reward'))
     
+    df0 <- df0 %>% select(!estimate)
     Q <- inner_join(emt,df0,by=c('evt_time','network','last_outcome'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
@@ -230,7 +233,7 @@ plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totes
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile slope","90'th %ile slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile slope"))
     df0 <- df %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
-    
+    df0 <- df0 %>% select(!estimate)
     Q <- inner_join(emt,df0,by=c('evt_time','network'))
     Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
     Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 

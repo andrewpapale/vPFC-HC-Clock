@@ -12,7 +12,7 @@ repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
-toalign <- 'feedback'
+toalign <- 'clock'
 do_rand_slopes = FALSE
 do_rt_pred_fmri = FALSE
 plot_rt_pred_fmri = TRUE
