@@ -13,10 +13,10 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'feedback'
-do_rand_slopes = TRUE
-do_rt_pred_fmri = TRUE
+do_rand_slopes = FALSE
+do_rt_pred_fmri = FALSE
 plot_rt_pred_fmri = TRUE
-do_rt_pred_meg = TRUE
+do_rt_pred_meg = FALSE
 plot_rt_pred_meg = TRUE
 #### clock ####
 
@@ -356,6 +356,7 @@ if (do_rt_pred_fmri){
 if (plot_rt_pred_fmri){
   source('~/vmPFC/plot_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
+  source('~/vmPFC/plot_emmeans_subject_level_random_slopes.R')
   for (i in 1:3){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
@@ -368,8 +369,9 @@ if (plot_rt_pred_fmri){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
-    plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    #plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
 }
   # #test rt_swing
@@ -543,6 +545,7 @@ if (do_rt_pred_meg){
 if (plot_rt_pred_meg){
   source('~/vmPFC/plot_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
+  source('~/vmPFC/plot_emmeans_subject_level_random_slopes.R')
   for (i in 1:3){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
@@ -555,8 +558,9 @@ if (plot_rt_pred_meg){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
-    plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    #plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
 }
 # #test rt_swing

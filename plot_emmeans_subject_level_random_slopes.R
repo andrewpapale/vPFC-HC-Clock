@@ -1,8 +1,8 @@
 # 2022-05-10 AndyP
-# Plot emtrends_vmPFC_HC.R
-# Plot emtrends from model
+# Plot emmeans_vmPFC_HC.R
+# Plot emmeans from model
 
-plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR){
+plot_emmeans_subject_level_random_slopes <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR){
   
   
   if (strcmp(toalign,'feedback')){
@@ -31,7 +31,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
   
   if (strcmp(toprocess,'network-by-HC')){
     
-    emt <- ddq$emtrends_list$TrxVmax
+    emt <- ddq$emmeans_list$TrxVmax
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
     #emt <- emt %>% filter(trial_bin != 'Middle')
@@ -54,7 +54,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     
     
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_by_trial','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_by_trial','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
       facet_grid(network~HC_region) +
@@ -67,7 +67,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     dev.off()
     
     
-    emt <- ddq$emtrends_list$LO
+    emt <- ddq$emmeans_list$LO
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile HC slope","90'th %ile HC slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile HC slope"))
@@ -88,7 +88,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
         padj_BY_term <.00001 ~ '6'
       )))
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_lag_sc.trend)) + 
       facet_grid(network~HC_region) +
@@ -110,7 +110,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     dev.off()  
     
     
-    emt <- ddq$emtrends_list$Vmax
+    emt <- ddq$emmeans_list$Vmax
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile HC slope","90'th %ile HC slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile HC slope"))
@@ -132,7 +132,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     #emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
     #emt <- emt %>% filter(trial_bin != 'Middle')
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
       facet_grid(network1~HC_region) +
@@ -146,7 +146,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     
   } else if (strcmp(toprocess,'network')){
     
-    emt <- ddq$emtrends_list$TrxVmax
+    emt <- ddq$emmeans_list$TrxVmax
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
     #emt <- emt %>% filter(trial_bin != 'Middle')
@@ -171,7 +171,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     
     
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
       facet_grid(~network) +
@@ -184,7 +184,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     dev.off()
     
     
-    emt <- ddq$emtrends_list$LO
+    emt <- ddq$emmeans_list$LO
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile slope","90'th %ile slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile slope"))
@@ -205,7 +205,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
         padj_BY_term <.00001 ~ '6'
       )))
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_lag_sc.trend)) + 
       facet_grid(~network) +
@@ -227,7 +227,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     dev.off()  
     
     
-    emt <- ddq$emtrends_list$Vmax
+    emt <- ddq$emmeans_list$Vmax
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     emt$levels <- factor(emt$subj_level_rand_slope, labels = c("10'th %ile slope","90'th %ile slope"))
     emt$levels <- relevel(emt$levels,ref=c("90'th %ile slope"))
@@ -249,7 +249,7 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     #emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
     #emt <- emt %>% filter(trial_bin != 'Middle')
     
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc','-',hc_LorR, ".pdf", sep = "")
+    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'rt_vmax_lag_sc','-',hc_LorR, ".pdf", sep = "")
     pdf(fname, width = 9, height = 9)
     gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
       facet_grid(~network1) +
