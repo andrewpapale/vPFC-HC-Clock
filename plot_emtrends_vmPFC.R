@@ -119,7 +119,7 @@ if (!strcmp(totest,'online')){
   k <- 1
   for (i in stripr) {
     j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
     k <- k+1
   }
   grid.draw(gg2)
@@ -162,7 +162,7 @@ if (!strcmp(totest,'online')){
     k <- 1
     for (i in stripr) {
       j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
       k <- k+1
     }
     grid.draw(gg2)
@@ -190,7 +190,7 @@ if (!strcmp(totest,'online')){
     k <- 1
     for (i in stripr) {
       j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
       k <- k+1
     }
     grid.draw(gg2)
@@ -225,7 +225,7 @@ if (!strcmp(totest,'online')){
   k <- 1
   for (i in stripr) {
     j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+    gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
     k <- k+1
   }
   grid.draw(gg2)
@@ -268,7 +268,7 @@ if (!strcmp(totest,'online')){
     k <- 1
     for (i in stripr) {
       j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
       k <- k+1
     }
     grid.draw(gg2)
