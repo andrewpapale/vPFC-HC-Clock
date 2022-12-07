@@ -113,13 +113,13 @@ if (do_vPFC_fb){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change + outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change + v_max_wi + outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change + outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + (1 + v_entropy_sc |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_sc*last_outcome + v_entropy_sc*trial_neg_inv_sc + v_max_wi*last_outcome + v_entropy_wi_change + rt_csv_sc + iti_sc +  (1+v_max_wi + v_entropy_sc |id/run))
   qT <- c(-0.7,0.43)
   if (do_symmetry){
-    splits = c('evt_time','symmetry_group')
+    splits = c('online','symmetry_group')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -133,6 +133,8 @@ if (do_vPFC_fb){
                                  specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', 
+                                 specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1',
                                   specs=c("v_entropy_wi_change"), at=list(v_entropy_wi_change=c(-0.5,0.5)))
                       ),
@@ -150,7 +152,7 @@ if (do_vPFC_fb){
     }
   }
   if (do_network){
-    splits = c('evt_time','network')
+    splits = c('online','network')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -164,6 +166,8 @@ if (do_vPFC_fb){
                                  specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', 
+                                 specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1',
                                   specs=c("v_entropy_wi_change"), at=list(v_entropy_wi_change=c(-0.5,0.5)))
                       ),
@@ -172,6 +176,8 @@ if (do_vPFC_fb){
                                   specs = formula(~trial_neg_inv_sc),at=list(trial_neg_inv_sc = qT)),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
                                  specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
+                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
+                                 specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change',
                                   specs=formula(~v_entropy_wi_change), at=list(v_entropy_wi_change=c(-0.5,0.5)))
                       )
@@ -279,14 +285,14 @@ if (do_vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag +  v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_sc |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
   
   qT <- c(-0.7,0.43)
   if (do_symmetry){
-    splits = c('symmetry_group')
+    splits = c('online','symmetry_group')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -300,6 +306,8 @@ if (do_vPFC_clock){
                                  specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', 
+                                  specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1',
                                   specs=c('v_entropy_wi_change_lag'),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
                       ),
@@ -308,6 +316,8 @@ if (do_vPFC_clock){
                                  specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                   specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
+                                  specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag',
                                   specs=formula(~v_entropy_wi_change_lag),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
                       )
@@ -317,7 +327,7 @@ if (do_vPFC_clock){
     }
   }
   if (do_network){
-    splits = c('network')
+    splits = c('online','network')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -331,6 +341,8 @@ if (do_vPFC_clock){
                                  specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', 
+                                 specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1',
                                   specs=c('v_entropy_wi_change_lag'),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
                       ),
@@ -339,6 +351,8 @@ if (do_vPFC_clock){
                                  specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
                         Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
                                   specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=qT)),
+                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
+                                 specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag',
                                   specs=formula(~v_entropy_wi_change_lag),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
                       )
