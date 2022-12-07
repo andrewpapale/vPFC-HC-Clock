@@ -127,7 +127,7 @@ if (!strcmp(totest,'online')){
   
   
   
-  if (strcmp(toalign,'feedback')){
+
     
     rm(emt)
     
@@ -150,7 +150,7 @@ if (!strcmp(totest,'online')){
     fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=evt_time,y=var.trend)) + 
-      facet_grid(~newtork) +
+      facet_grid(~network) +
       geom_point(aes(color=levels),size=5) +
       scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-0.5 std Entropy Change","+0.5 std Entropy Change")) + 
       geom_errorbar(aes(ymin=var.trend-std.error, ymax=var.trend+std.error), width=0.5) +
@@ -167,11 +167,10 @@ if (!strcmp(totest,'online')){
     }
     grid.draw(gg2)
     dev.off()
-  }
+  
 
 } else if (strcmp(totest,'online')){
   tryCatch({
-    
     # do v_entropy
     emt <- ddf$emtrends_list$H
     emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
@@ -230,10 +229,7 @@ if (!strcmp(totest,'online')){
   }
   grid.draw(gg2)
   dev.off()  
-  
-  
-  
-  if (strcmp(toalign,'feedback')){
+
     
     rm(emt)
     
@@ -247,16 +243,16 @@ if (!strcmp(totest,'online')){
     
     if (strcmp(toalign,'clock')){
       emt$levels <- factor(emt$v_entropy_wi_change_lag, labels = c("-0.5 std Entropy Change","+0.5 std Entropy Change"))
-      emt$var.trend <- emt$v_entropy_wi_change_lag
+      emt$var.trend <- emt$v_entropy_wi_change_lag.trend
     } else if (strcmp(toalign,'feedback')){
       emt$levels <- factor(emt$v_entropy_wi_change, labels = c("-0.5 std Entropy Change","+0.5 std Entropy Change"))
-      emt$var.trend <- emt$v_entropy_wi_change
+      emt$var.trend <- emt$v_entropy_wi_change.trend
     }
-    
+    browser()
     fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=var.trend)) + 
-      facet_grid(~newtork) +
+      facet_grid(~network) +
       geom_point(aes(color=levels),size=5) +
       scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-0.5 std Entropy Change","+0.5 std Entropy Change")) + 
       geom_errorbar(aes(ymin=var.trend-std.error, ymax=var.trend+std.error), width=0.5) +
@@ -273,7 +269,7 @@ if (!strcmp(totest,'online')){
     }
     grid.draw(gg2)
     dev.off()
-  }
+  
 }
 }
 # gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
