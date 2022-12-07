@@ -173,6 +173,7 @@ if (!strcmp(totest,'online')){
   tryCatch({
     # do v_entropy
     emt <- ddf$emtrends_list$H
+    browser()
     emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
     fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy', ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)

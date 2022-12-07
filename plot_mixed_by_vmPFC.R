@@ -39,14 +39,22 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   fills[8] <- pal[3]
   
   sym_fill <- palette()
-  sym_fill[1] <- '#57007a'
-  sym_fill[2] <- '#2d26a4'
-  sym_fill[3] <- '#1f515d'
-  sym_fill[4] <- '#3b8e1d'
-  sym_fill[5] <- '#e2b410'
-  sym_fill[6] <- '#ff6769'
+  # sym_fill[1] <- '#57007a'
+  # sym_fill[2] <- '#2d26a4'
+  # sym_fill[3] <- '#1f515d'
+  # sym_fill[4] <- '#3b8e1d'
+  # sym_fill[5] <- '#e2b410'
+  # sym_fill[6] <- '#ff6769'
+  # sym_fill[7] <- '#ff6b6d'
+  # sym_fill[8] <- '#fff5fa'
+  sym_fill[1] <- '#ffcc00'
+  sym_fill[2] <- '#aa4400'
+  sym_fill[3] <- '#000080'
+  sym_fill[4] <- '#c87137'
+  sym_fill[5] <- '#f58b45'
+  sym_fill[6] <- '#ffb380'
   sym_fill[7] <- '#ff6b6d'
-  sym_fill[8] <- '#fff5fa'
+  sym_fill[8] <- '#0000ff'
   # edf$symmetry_group1 <- factor(edf$symmetry_group1, levels = c('rl9/10',"11/47","d10","24/32","14m25/32","fp10","11/13","14rc11m"))
   sym_fill_rearrange <- palette()
   sym_fill_rearrange[1] <- sym_fill[6]
@@ -166,6 +174,7 @@ if (!strcmp(totest,'online')){
     if (strcmp(toprocess,'symmetry_group') | strcmp(toprocess,"symmetry_group_by_rewFunc") | strcmp(toprocess,'symmetry_group_by_outcome')){
       edf$symmetry_group1 <- factor(edf$symmetry_group1, levels = c('rl9/10',"11/47","d10","24/32","14m25/32","fp10","11/13","14rc11m"))
       edf$symmetry_group2 <- factor(edf$symmetry_group1, levels = c("14rc11m","11/47",'rl9/10',"fp10","24/32","14m25/32","d10","11/13"))
+      # old
       # sym_fill[1] <- '#57007a'
       # sym_fill[2] <- '#2d26a4'
       # sym_fill[3] <- '#1f515d'
@@ -173,8 +182,17 @@ if (!strcmp(totest,'online')){
       # sym_fill[5] <- '#e2b410'
       # sym_fill[6] <- '#ff6769'
       # sym_fill[7] <- '#ff6b6d'
-      # sym_fill[8] <- '#fff5fa'
-      edf$sym_fill2 <- factor(edf$sym_fill1, levels = c('#ff6769','#57007a','#ff6b6d','#e2b410','#3b8e1d','#2d26a4','#fff5fa','#1f515d'))
+      # sym_fill[8] <- '#fff5fa' 
+      # new
+      # sym_fill[1] <- '#ffcc00'
+      # sym_fill[2] <- '#aa4400'
+      # sym_fill[3] <- '#000080'
+      # sym_fill[4] <- '#c87137'
+      # sym_fill[5] <- '#f58b45'
+      # sym_fill[6] <- '#ffb380'
+      # sym_fill[7] <- '#ff6b6d'
+      # sym_fill[8] <- '#0000ff'
+      edf$sym_fill2 <- factor(edf$sym_fill1, levels = c('#ffb380','#ffcc00','#ff6b6d','#f58b45','#c87137','#aa4400','#0000ff','#000080'))
       edf$network_group = factor(edf$network_group,levels = c('CTR','DMN','LIM'))
     }
     termstr <- str_replace_all(fe, "[^[:alnum:]]", "_")
@@ -377,7 +395,7 @@ if (!strcmp(totest,'online')){
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill2)) +
         geom_errorbar(size = 1) +
-        scale_color_manual(values = sym_fill_rearrange,labels=sym_fill_rearrange,guide="none") + 
+        scale_color_manual(values = sym_fill_rearrange,guide="none") + 
         geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
         xlab(epoch_label) +
         labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")

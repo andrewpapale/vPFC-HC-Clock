@@ -143,6 +143,8 @@ if (do_vPFC_fb){
                                   specs = formula(~trial_neg_inv_sc),at=list(trial_neg_inv_sc = qT)),
                         H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
                                  specs = formula(~v_entropy_sc),at=list(v_entropy_sc=c(-1.5,1.5))),
+                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
+                                 specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
                         dH = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi_change',
                                   specs=formula(~v_entropy_wi_change), at=list(v_entropy_wi_change=c(-0.5,0.5)))
                       )

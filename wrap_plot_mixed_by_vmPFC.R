@@ -3,11 +3,11 @@
 
 totest <- 'online'
 toprocess <- 'network'
-toalign <- 'feedback'
+toalign <- 'clock'
 behavmodel <- 'compressed'
 source('~/vmPFC/plot_mixed_by_vmPFC.R')
 source('~/vmPFC/plot_emmeans_vmPFC.R')
-source('~/vmPFC/plot_emtrends_vmPFC.R')
+#source('~/vmPFC/plot_emtrends_vmPFC.R')
 for (i in 1){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   model_str <- paste0('-vmPFC-network-',toalign,'-',totest,'-',i,'.Rdata')
@@ -16,5 +16,5 @@ for (i in 1){
   model_iter <- i
   plot_mixed_by_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
-  plot_emtrends_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
+  #plot_emtrends_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
 }
