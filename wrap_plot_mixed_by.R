@@ -4,8 +4,8 @@
 library(pracma)
 library(tidyverse)
 
-do_vPFC_fb = TRUE
-do_vPFC_clock = FALSE
+do_vPFC_fb = FALSE
+do_vPFC_clock = TRUE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
