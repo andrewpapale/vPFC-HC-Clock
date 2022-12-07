@@ -248,7 +248,6 @@ if (!strcmp(totest,'online')){
       emt$levels <- factor(emt$v_entropy_wi_change, labels = c("-0.5 std Entropy Change","+0.5 std Entropy Change"))
       emt$var.trend <- emt$v_entropy_wi_change.trend
     }
-    browser()
     fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=var.trend)) + 
