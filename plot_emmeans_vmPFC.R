@@ -59,9 +59,8 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1[[2]] <- pal[[1]]
   pal1[[1]] <- pal[[2]]
   pal1[[3]] <- pal[[3]]
-  pal1090[1] <- pal[[1]]
-  pal1090[2] <- '#574c35'
-  pal1090[3] <- '#f5b32a'
+  pal1090[1] <- '#939799'
+  pal1090[2] <- '#5A5A5A'
   
   if (!strcmp(totest,'online')){
     
@@ -69,7 +68,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     emt <- ddf$emmeans_list$H
     emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
     
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy', ".pdf", sep = "")
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
@@ -102,7 +101,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     emt <- ddf$emmeans_list$V
     emt$levels <- factor(emt$v_max_wi, labels = c("-1.5 std Value","+1.5 std Value"))
     
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value', ".pdf", sep = "")
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
@@ -139,7 +138,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     }else if (strcmp(toalign,'clock')){
       emt$levels <- factor(emt$v_entropy_wi_change_lag)
     }
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
@@ -172,7 +171,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     emt <- ddf$emmeans_list$Tr
     
     emt$levels <- factor(emt$trial_neg_inv_sc)
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Trial', ".pdf", sep = "")
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Trial-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
       facet_grid(~network) +
@@ -199,11 +198,16 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     emt <- ddf$emmeans_list$H
     emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
     if (strcmp(toalign,'feedback')){
-      x_lab_str <- 'feedback-aligned'
+      x_lab_str <- ''
     }else if (strcmp(toalign,'clock')){
-      x_lab_str <- 'clock-aligned'
+      x_lab_str <- ''
     }
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy', ".pdf", sep = "")
+    if (strcmp(toalign,'feedback')){
+      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+    } else if (strcmp(toalign,'clock')){
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
+    }
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=estimate)) + 
       facet_grid(~network) +
@@ -211,7 +215,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       scale_color_manual(values=c(pal1090[1],pal1090[2]),labels=c("-1.5 std Entropy","+1.5 std Entropy")) + 
       geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(x_lab_str)
+      ylab('') + xlab(x_lab_str) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
     
     gg2 <- ggplot_gtable(ggplot_build(gg1))
     stripr <- which(grepl('strip-t', gg2$layout$name))
@@ -227,20 +231,20 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     rm(emt)
     
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[2]]
-    pal1090[2] <- '#7a7745'
-    
     # do v_max_wi
     emt <- ddf$emmeans_list$V
     emt$levels <- factor(emt$v_max_wi, labels = c("-1.5 std Value","+1.5 std Value"))
     if (strcmp(toalign,'feedback')){
-      x_lab_str <- 'feedback-aligned'
+      x_lab_str <- ''
     }else if (strcmp(toalign,'clock')){
-      x_lab_str <- 'clock-aligned'
+      x_lab_str <- ''
     }
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value', ".pdf", sep = "")
+    if (strcmp(toalign,'feedback')){
+      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+    } else if (strcmp(toalign,'clock')){
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
+    }
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=estimate)) + 
       facet_grid(~network) +
@@ -248,7 +252,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       scale_color_manual(values=c(pal1090[1],pal1090[2]),labels= c("-1.5 std Value","+1.5 std Value")) + 
       geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(x_lab_str)
+      ylab('') + xlab(x_lab_str) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
     
     gg2 <- ggplot_gtable(ggplot_build(gg1))
     stripr <- which(grepl('strip-t', gg2$layout$name))
@@ -264,22 +268,22 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     rm(emt)
     
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[1]]
-    pal1090[2] <- '#574c35'
-    
     # do v_entropy_wi_change
     emt <- ddf$emmeans_list$dH
     
     if (strcmp(toalign,'feedback')){
       emt$levels <- factor(emt$v_entropy_wi_change)
-      x_lab_str <- 'feedback-aligned'
+      x_lab_str <- ''
     }else if (strcmp(toalign,'clock')){
       emt$levels <- factor(emt$v_entropy_wi_change_lag)
-      x_lab_str <- 'clock-aligned'
+      x_lab_str <- ''
     }
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change', ".pdf", sep = "")
+    if (strcmp(toalign,'feedback')){
+      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+    } else if (strcmp(toalign,'clock')){
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
+    }
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy_Change-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=estimate)) + 
       facet_grid(~network) +
@@ -287,7 +291,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       scale_color_manual(values=c(pal1090[1],pal1090[2])) + 
       geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(x_lab_str)
+      ylab('') + xlab(x_lab_str) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
     
     gg2 <- ggplot_gtable(ggplot_build(gg1))
     stripr <- which(grepl('strip-t', gg2$layout$name))
@@ -302,21 +306,20 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     
     rm(emt)
-    
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[1]]
-    pal1090[2] <- '#574c35'
-    
     # do Tr
     emt <- ddf$emmeans_list$Tr
     if (strcmp(toalign,'feedback')){
-      x_lab_str <- 'feedback-aligned'
+      x_lab_str <- ''
     }else if (strcmp(toalign,'clock')){
-      x_lab_str <- 'clock-aligned'
+      x_lab_str <- ''
+    }
+    if (strcmp(toalign,'feedback')){
+      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+    } else if (strcmp(toalign,'clock')){
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }
     emt$levels <- factor(emt$trial_neg_inv_sc)
-    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Trial', ".pdf", sep = "")
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Trial-',model_iter, ".pdf", sep = "")
     pdf(fname, width = 9, height = 3.5)
     gg1 <- ggplot(emt,aes(x=online,y=estimate)) + 
       facet_grid(~network) +
@@ -324,7 +327,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       scale_color_manual(values=c(pal1090[1],pal1090[2])) + 
       geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
       geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(x_lab_str)
+      ylab('') + xlab(x_lab_str) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
     
     gg2 <- ggplot_gtable(ggplot_build(gg1))
     stripr <- which(grepl('strip-t', gg2$layout$name))

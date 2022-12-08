@@ -23,9 +23,9 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
     toalign_str <- 'trial onset'
     epoch_label = paste("Time relative to",toalign_str, "[s]")
   } else if (strcmp(toalign,'feedback') & strcmp(totest,'online')){
-    epoch_label <- 'feedback-aligned'
+    epoch_label <- ''
   } else if (strcmp(toalign,'clock') & strcmp(totest,'online')){
-    epoch_label <- 'clock-aligned'
+    epoch_label <- ''
   }
   # fills for headers for symmetry_group.  Fill by network.
   fills <- palette()
@@ -160,6 +160,11 @@ if (strcmp(toprocess,'network')){
                                 network=='L'~'LIM'))
 }
 
+ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
+pal1 <- palette()
+pal1[1] <- pal[2]
+pal1[2] <- pal[1]
+pal1[3] <- pal[3]
 #fills = c('red','red','blue','blue','blue','blue','green','green')
 #fills1 = c('red','blue','green')
 
@@ -380,7 +385,7 @@ if (!strcmp(totest,'online')){
       dev.off()
     } else if (strcmp(toprocess,"symmetry_group")){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
-      pdf(fname, width = 9, height = 3.5)
+      pdf(fname, width = 12, height = 3.5)
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill1)) +
         geom_errorbar(size = 1) +
@@ -452,23 +457,27 @@ if (!strcmp(totest,'online')){
   for (fe in terms) {
     # fe <- terms[1] # test only
     edf <- ddf %>% filter(term == paste(fe) & ddf$effect=='fixed')
+    if (strcmp(toalign,'feedback')){
+      edf$online <- factor(edf$online,levels=c('offline_pre','online','offline_post'))
+    } else if (strcmp(toalign,'clock')){
+      edf$online <- factor(edf$online,levels=c('online_pre','offline_pre','online','offline_post'))
+    }
     if (strcmp(toprocess,'symmetry_group') | strcmp(toprocess,"symmetry_group_by_rewFunc") | strcmp(toprocess,'symmetry_group_by_outcome')){
       edf$symmetry_group1 <- factor(edf$symmetry_group1, levels = c('rl9/10',"11/47","d10","24/32","14m25/32","fp10","11/13","14rc11m"))
       edf$symmetry_group2 <- factor(edf$symmetry_group1, levels = c("14rc11m","11/47",'rl9/10',"fp10","24/32","14m25/32","d10","11/13"))
     }
       termstr <- str_replace_all(fe, "[^[:alnum:]]", "_")
-      edf <- edf %>% select(online,network,network1,network2,estimate,std.error)
-      edf <- edf %>% pivot_wider(names_from=online,values_from=c(estimate,std.error))
-      edf <- edf %>% mutate(online_ratio = estimate_online-estimate_offline,std_error1 = std.error_online+std.error_offline)
       # plot stream gradients
       if (strcmp(toprocess,"network")){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'_',model_iter,  ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
-          gg<-ggplot(edf,aes(x=network2,y=online_ratio,color=network1)) + 
-            geom_bar(stat='identity') + 
-            geom_errorbar(aes(ymin=online_ratio-std_error1,ymax=online_ratio+std_error1),width=0.2) +
-            xlab(epoch_label) + ylab('online - offline') +
-            scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + guides(color='none') +
+          gg<-ggplot(edf,aes(x=online,y=estimate,color=network2,fill=network2)) + 
+            facet_wrap(~network2) +
+            geom_bar(aes(alpha = p_level_fdr),stat='identity') + 
+            geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) +
+            xlab(epoch_label) + ylab('estimate') +
+            scale_color_manual(values = pal1,labels=c('CTR','DMN','LIM')) + guides(color='none') +
+            scale_fill_manual(values = pal1,labels=c('CTR','DMN','LIM')) + guides(color='none') +
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
             theme_bw(base_size=13) +
             #facet_wrap(~HC_region) +
@@ -477,19 +486,23 @@ if (!strcmp(totest,'online')){
                   panel.grid.minor = element_line(colour = "grey45"), 
                   panel.background = element_rect(fill = 'grey40'),
                   axis.title.y = element_text(margin=margin(r=6)),
-                  axis.title.x = element_text(margin=margin(t=6)))
+                  axis.title.x = element_text(margin=margin(t=6))) + 
+            theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
         print(gg)
         dev.off()  
       } else if (strcmp(toprocess,"symmetry_group")){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
-        pdf(fname, width = 9, height = 3.5)
-        gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
-          geom_point(aes(size=`p, FDR-corrected`,color=sym_fill)) +
-          geom_errorbar(size = 1) +
-          scale_color_manual(values = sym_fill_rearranged,labels=sym_fill_rearrange,guide="none") + 
+        pdf(fname, width = 12, height = 3.5)
+        gg1<-ggplot(edf,aes(x=online,y=estimate,color=sym_fill1,fill=sym_fill1)) + 
+          facet_wrap(~symmetry_group1) +
+          geom_bar(aes(alpha = p_level_fdr),stat='identity') + 
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) +
+          scale_color_manual(values = sym_fill_rearranged,guide="none") + 
+          scale_fill_manual(values = sym_fill_rearranged,guide="none") + 
           geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
           xlab(epoch_label) +
-          labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+          labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("estimate") + 
+          theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
         
         gg2 <- ggplot_gtable(ggplot_build(gg1))
         stripr <- which(grepl('strip-t', gg2$layout$name))
@@ -500,6 +513,7 @@ if (!strcmp(totest,'online')){
           k <- k+1
         }
         grid.draw(gg2)
+        dev.off()
       }
     }
   }

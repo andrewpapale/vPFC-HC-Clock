@@ -9,9 +9,9 @@ library(tidyverse)
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
 do_vPFC_fb = TRUE
-do_vPFC_clock = TRUE
+do_vPFC_clock = FALSE
 do_symmetry = TRUE
-do_network = TRUE
+do_network = FALSE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -90,11 +90,13 @@ if (do_vPFC_fb){
   df <- df %>% select(id,run,run_trial,rt_vmax_change_sc,v_entropy_wi_change,trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
+  browser()
   Q <- Q %>% mutate(online = case_when(
-    Q$evt_time < -Q$rt_csv ~ 'offline',
-    Q$evt_time >= -Q$rt_csv ~ 'online'
+    Q$evt_time < -Q$rt_csv & Q$evt_time <= 0 &Q$evt_time > -Q$rt_csv+Q$iti_prev ~ 'offline_pre',
+    Q$evt_time >= -Q$rt_csv & Q$evt_time <= 0 ~ 'online',
+    Q$evt_time > 0 ~ 'offline_post'
   ))
-  Q$online <- relevel(as.factor(Q$online),ref='offline')
+  Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
   #Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -264,12 +266,13 @@ if (do_vPFC_clock){
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q <- Q %>% mutate(online = case_when(
-    Q$evt_time <= -Q$iti_prev ~ 'online',
-    Q$evt_time > -Q$iti_prev ~ 'offline',
-    Q$evt_time <= Q$rt_csv ~ 'online',
-    Q$evt_time > Q$rt_csv ~ 'offline'
+    Q$evt_time <= -Q$iti_prev & Q$evt_time <= 0 & Q$run_trial > 1 ~ 'online_pre',
+    Q$evt_time > -Q$iti_prev & Q$evt_time <= 0 & Q$run_trial > 1 ~ 'offline_pre',
+    Q$evt_time <= Q$rt_csv & Q$evt_time >= 0 ~ 'online',
+    Q$evt_time > Q$rt_csv & Q$evt_time >= 0 ~ 'offline_post'
   ))
-  Q$online <- relevel(as.factor(Q$online),ref='offline')
+  Q <- Q %>% filter(!is.na(online))
+  Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
   #Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
