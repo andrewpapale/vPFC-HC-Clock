@@ -203,7 +203,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       x_lab_str <- ''
     }
     if (strcmp(toalign,'feedback')){
-      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     } else if (strcmp(toalign,'clock')){
       emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }
@@ -240,7 +240,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       x_lab_str <- ''
     }
     if (strcmp(toalign,'feedback')){
-      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     } else if (strcmp(toalign,'clock')){
       emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }
@@ -279,7 +279,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       x_lab_str <- ''
     }
     if (strcmp(toalign,'feedback')){
-      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     } else if (strcmp(toalign,'clock')){
       emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }
@@ -314,7 +314,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
       x_lab_str <- ''
     }
     if (strcmp(toalign,'feedback')){
-      emt$online <- factor(emt$online,levels=c('offline_pre','online','offline_post'))
+      emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     } else if (strcmp(toalign,'clock')){
       emt$online <- factor(emt$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }

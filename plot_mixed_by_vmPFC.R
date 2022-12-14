@@ -458,7 +458,7 @@ if (!strcmp(totest,'online')){
     # fe <- terms[1] # test only
     edf <- ddf %>% filter(term == paste(fe) & ddf$effect=='fixed')
     if (strcmp(toalign,'feedback')){
-      edf$online <- factor(edf$online,levels=c('offline_pre','online','offline_post'))
+      edf$online <- factor(edf$online,levels=c('online_pre','offline_pre','online','offline_post'))
     } else if (strcmp(toalign,'clock')){
       edf$online <- factor(edf$online,levels=c('online_pre','offline_pre','online','offline_post'))
     }
