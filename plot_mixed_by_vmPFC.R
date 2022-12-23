@@ -306,10 +306,11 @@ if (!strcmp(totest,'online')){
                 axis.title.x = element_text(margin=margin(t=6)))
       } else {
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+          geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
           # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
           geom_line(size = 1) + theme(legend.position = "none") +
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
@@ -387,10 +388,11 @@ if (!strcmp(totest,'online')){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
       pdf(fname, width = 12, height = 3.5)
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
+        geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill1)) +
         geom_errorbar(size = 1) +
         scale_color_manual(values = sym_fill_rearranged,guide="none") + 
-        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
         xlab(epoch_label) +
         labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
       
