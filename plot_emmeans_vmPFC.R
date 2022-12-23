@@ -64,6 +64,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   
   if (!strcmp(totest,'online')){
     
+    tryCatch({
     # do v_entropy
     emt <- ddf$emmeans_list$H
     emt$levels <- factor(emt$v_entropy_sc, labels = c("-1.5 std Entropy","+1.5 std Entropy"))
@@ -91,12 +92,14 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     
     rm(emt)
+    })
     
     pal1090 = palette()
     pal = wes_palette("FantasticFox1", 3, type = "discrete")
     pal1090[1] <- pal[[2]]
     pal1090[2] <- '#7a7745'
     
+    tryCatch({
     # do v_max_wi
     emt <- ddf$emmeans_list$V
     emt$levels <- factor(emt$v_max_wi, labels = c("-1.5 std Value","+1.5 std Value"))
@@ -124,12 +127,15 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     
     rm(emt)
+    })
     
     pal1090 = palette()
     pal = wes_palette("FantasticFox1", 3, type = "discrete")
     pal1090[1] <- pal[[1]]
     pal1090[2] <- '#574c35'
     
+    
+    tryCatch({
     # do v_entropy_wi_change
     emt <- ddf$emmeans_list$dH
     
@@ -158,7 +164,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     }
     grid.draw(gg2)
     dev.off()
-    
+    })
     
     rm(emt)
     
@@ -167,6 +173,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     pal1090[1] <- pal[[1]]
     pal1090[2] <- '#574c35'
     
+    tryCatch({
     # do v_entropy_wi_change
     emt <- ddf$emmeans_list$Tr
     
@@ -191,6 +198,8 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     }
     grid.draw(gg2)
     dev.off()
+    
+    })
     
   } else if (strcmp(totest,'online')){
     

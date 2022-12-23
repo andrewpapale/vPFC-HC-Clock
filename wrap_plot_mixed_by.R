@@ -12,14 +12,14 @@ do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
-do_symmetry = FALSE
+do_symmetry = TRUE
 do_network = TRUE
 
 if (do_vPFC_fb){
   if (do_network){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
     source('~/vmPFC/plot_emmeans_vmPFC.R')
-    for (i in 1:2){
+    for (i in 1:7){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-network-feedback-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -30,7 +30,7 @@ if (do_vPFC_fb){
       toalign <- 'feedback'
       behavmodel <- 'compressed'
       plot_mixed_by_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
-      plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
+      #plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
     }
   }
   # source('~/vmPFC/plot_mixed_by_vmPFC.R')
@@ -48,7 +48,7 @@ if (do_vPFC_fb){
   # }
   if (do_symmetry){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
-    for (i in 1:2){
+    for (i in 1:7){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-symmetry-feedback-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -66,7 +66,7 @@ if (do_vPFC_clock){
   if (do_network){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
     source('~/vmPFC/plot_emmeans_vmPFC.R')
-    for (i in 1:2){
+    for (i in 1:7){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-network-clock-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -77,12 +77,12 @@ if (do_vPFC_clock){
       toalign <- 'clock'
       behavmodel <- 'compressed'
       plot_mixed_by_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
-      plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
+      #plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
     }
   }
   if (do_symmetry){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
-    for (i in 1:2){
+    for (i in 1:7){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-symmetry-clock-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -98,7 +98,7 @@ if (do_vPFC_clock){
 }
 if (do_HC_fb){
   source('~/vmPFC/plot_mixed_by_HC.R')
-  for (i in 1:2){
+  for (i in 1:7){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     model_str <- paste0('-HC-axis-feedback-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
@@ -113,7 +113,7 @@ if (do_HC_fb){
 }
 if (do_HC_clock){
   source('~/vmPFC/plot_mixed_by_HC.R')
-  for (i in 1:2){
+  for (i in 1:7){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     model_str <- paste0('-HC-axis-clock-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
