@@ -4,7 +4,7 @@
 totest <- ''
 toprocess <- 'network'
 toalign <- 'feedback'
-behavmodel <- 'compressed'
+behavmodel <- 'Explore'
 source('~/vmPFC/plot_mixed_by_vmPFC.R')
 source('~/vmPFC/plot_emmeans_vmPFC.R')
 #source('~/vmPFC/plot_emtrends_vmPFC.R')
