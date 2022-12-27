@@ -19,10 +19,12 @@ load_MEDuSA_data_Explore <- function(m_dir,w_dir,name_to_save){
     m0 <- mf[iF]
     m1 <- sub("*.*run","",m0)
     m2 <- as.integer(sub("_interpolated.csv.gz","",m1))
-    m4 <- substr(m0,77,77)
+    m3 <- str_split(m0,'/sub')
+    m4 <- str_split(m3[[1]][2],'_')
+    id <- m4[[1]][1]
     message(paste('file ', iF, 'out of', nF))
     currF <- read_csv(mf[iF])
-    currF <- currF %>% mutate(run=m2,id=m4)
+    currF <- currF %>% mutate(run=m2,id=id)
     md <- rbind(md,currF)
   }
   
