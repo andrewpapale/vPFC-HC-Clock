@@ -1,13 +1,15 @@
 plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
   ## Check plots
-  if (strcmp(toalign,"clock")){
+  if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
-  } else if (strcmp(toalign,"feedback")){
+  } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback')
-  } else if (strcmp(toalign,'rt_vmax')){
+  } else if (strcmp(toalign,'rt_vmax') & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_rt_vmax')
+  } else if (strcmp(toalign,'feedback') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_feedback')
   }
-
+  
   message("\nPlotting streams decoding")
   library(wesanderson)
   library(pracma)
@@ -150,7 +152,7 @@ if (strcmp(toprocess,"symmetry_group") | strcmp(toprocess,"symmetry_group_by_rew
         symmetry_group1=='14rc11m' ~ sym_fill[8]
       ))
 }
-if (strcmp(toprocess,'network')){
+if (strcmp(toprocess,'network') & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
   ddf <- ddf %>% mutate(network1 = 
                           case_when(network=='C'~'2C',
                                     network=='D'~'1D',
@@ -158,6 +160,8 @@ if (strcmp(toprocess,'network')){
     mutate(network2 = case_when(network=='C'~'CTR',
                                 network=='D'~'DMN',
                                 network=='L'~'LIM'))
+} else if (strcmp(toprocess,'network') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  ddf <- ddf %>% mutate(network1 = network, network2 = network)
 }
 
 ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
