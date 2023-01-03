@@ -184,7 +184,6 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     print(gg1)
     dev.off()
     
-    
     emt <- ddq$emtrends_list$LO
     emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
     #emt <- emt %>% group_by(evt_time,last_outcome,subj_level_rand_slope,network) %>% summarize(mE = mean(rt_lag_sc.trend,na.rm=TRUE),dE = sd(rt_lag_sc.trend,na.rm=TRUE)) %>% ungroup()

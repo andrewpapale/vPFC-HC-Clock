@@ -61,7 +61,7 @@ plot_emtrends_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   pal1090[2] <- '#574c35'
   pal1090[3] <- '#f5b32a'
   
-
+if (!strcmp(behavmodel,'explore')){
 if (!strcmp(totest,'online')){
    
     tryCatch({
@@ -270,6 +270,175 @@ if (!strcmp(totest,'online')){
     grid.draw(gg2)
     dev.off()
   
+}
+} else if (strcmp(behavmodel,'explore')){
+  
+  if (strcmp(totest,'entropy')){
+    tryCatch({
+      emt <- ddf$emtrends_list$HxY
+      emt <- emt %>% filter(education_yrs=='-1' | education_yrs=='1')
+      emt$education_yrs <- factor(emt$education_yrs)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy-Education-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_entropy_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=education_yrs),size=5) +
+        geom_errorbar(aes(ymin=v_entropy_wi.trend-std.error, ymax=v_entropy_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+    
+    tryCatch({
+      emt <- ddf$emtrends_list$HxA
+      emt <- emt %>% filter(age=='-1' | age=='1')
+      emt$age <- factor(emt$age)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy-Age-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_entropy_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=age),size=5) +
+        geom_errorbar(aes(ymin=v_entropy_wi.trend-std.error, ymax=v_entropy_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+    
+    tryCatch({
+      emt <- ddf$emtrends_list$HxW
+      emt <- emt %>% filter(wtar=='-1' | wtar=='1')
+      emt$wtar <- factor(emt$wtar)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Entropy-WTAR-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_entropy_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=wtar),size=5) +
+        geom_errorbar(aes(ymin=v_entropy_wi.trend-std.error, ymax=v_entropy_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+  }
+  if (strcmp(totest,'value')){
+
+    tryCatch({
+      emt <- ddf$emtrends_list$HxY
+      emt <- emt %>% filter(education_yrs=='-1' | education_yrs=='1')
+      emt$education_yrs <- factor(emt$education_yrs)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Value-Education-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_max_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=education_yrs),size=5) +
+        geom_errorbar(aes(ymin=v_max_wi.trend-std.error, ymax=v_max_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+    
+    
+    tryCatch({
+      emt <- ddf$emtrends_list$HxA
+      emt <- emt %>% filter(age=='-1' | age=='1')
+      emt$age <- factor(emt$age)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Value-Age-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_max_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=age),size=5) +
+        geom_errorbar(aes(ymin=v_max_wi.trend-std.error, ymax=v_max_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+    
+    tryCatch({
+      emt <- ddf$emtrends_list$HxW
+      emt <- emt %>% filter(wtar=='-1' | wtar=='1')
+      emt$age <- factor(emt$wtar)
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'Value-WTAR-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=v_max_wi.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=wtar),size=5) +
+        geom_errorbar(aes(ymin=v_max_wi.trend-std.error, ymax=v_max_wi.trend+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+    })
+  }
 }
 }
 # gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
