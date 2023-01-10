@@ -691,12 +691,12 @@ if (do_entropy_plot){
   i <- 1 # entropy
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -785,12 +785,12 @@ if (do_entropy_plot){
   i <- 1 # entropy
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -887,15 +887,16 @@ if (do_value_plot){
   pal1 = palette()
   pal1[1] <- pal[2]
   pal1[2] <- pal[1]
+  pal1[3] <- pal[3]
   i <- 2 # value
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -951,8 +952,8 @@ if (do_value_plot){
   
   ddf <- rbind(ddq_r_emm,ddq_f_emm)
   #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-  ddf <- ddf %>% filter((network=='D' | network=='C'),(vPFC_Value_random_slope=='-2 std' | vPFC_Value_random_slope=='+2 std'))
-  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR')) %>% select(!std.error)
+  ddf <- ddf %>% filter(vPFC_Value_random_slope=='-2 std' | vPFC_Value_random_slope=='+2 std')
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM')) %>% select(!std.error)
   ddf1 <- ddf
   ddf <- ddf %>% group_by(network,dataset,evt_time,RT_vmax_bin) %>%
     pivot_wider(names_from = (vPFC_Value_random_slope), values_from=c(estimate)) %>% ungroup()
@@ -961,19 +962,19 @@ if (do_value_plot){
   ddf <- ddf %>% mutate(difference = '')
   
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_vmax-convergence-DC-randomintercept-nodiff.pdf',width=8,height=6)
-  gg1 <- ggplot(ddf1,aes(x=vPFC_Value_random_slope,y=estimate)) + geom_hline(yintercept=0) + 
+  pdf('Value-rt_vmax-convergence-DCL-nodiff.pdf',width=8,height=6)
+  gg1 <- ggplot(ddf1,aes(x=vPFC_Value_random_slope,y=estimate,color=network1)) + scale_color_manual(values = pal1) + geom_hline(yintercept=0) + 
     geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-    facet_grid(network~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') + 
+    facet_grid(RT_vmax_bin~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') + 
     guides(fill = guide_legend(byrow=TRUE))
   print(gg1)
   dev.off()
   
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_vmax-convergence-randomintercept-DC.pdf',width=8,height=6)
-  gg1 <- ggplot(ddf,aes(x=difference,y=diff,color=network1)) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + geom_hline(yintercept=0) + 
+  pdf('Value-rt_vmax-convergence-DC.pdf',width=8,height=6)
+  gg1 <- ggplot(ddf,aes(x=difference,y=diff,color=network1)) + scale_color_manual(values = pal1) + geom_hline(yintercept=0) + 
     geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-    facet_grid(~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Average Response') + ylim(-0.5, 0.5) + guides(color=guide_legend(title='Network')) + 
+    facet_grid(RT_vmax_bin~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Average Response') + ylim(-0.5, 0.5) + guides(color=guide_legend(title='Network')) + 
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) + 
     guides(fill = guide_legend(byrow=TRUE))
   print(gg1)
@@ -983,12 +984,12 @@ if (do_value_plot){
   i <- 2 # value
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-ranintercept-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -1068,8 +1069,8 @@ if (do_value_plot){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
   pdf('Value-rt_csv-convergence-randomintercept-DC.pdf',width=10,height=6)
   gg1 <- ggplot(ddf,aes(x=dum_order,y=diff,color=network1)) + geom_hline(yintercept=0) + scale_x_discrete(labels=c('Reward','Omission','Reward','Omission')) + 
-    geom_violin(position=position_dodge(width=0.9)) + geom_boxplot(position=position_dodge(width=0.9),width=0.1) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + 
-    facet_grid(~dataset) + ylab('RT swings (AU)') + xlab('Average Response') + ylim(-0.5,0.5) + guides(color=guide_legend(title='Network')) + 
+    geom_violin(position=position_dodge(width=0.9)) + geom_boxplot(position=position_dodge(width=0.9),width=0.1) + scale_color_manual(values = pal1) + 
+    facet_grid(~dataset) + ylab('RT swings (AU)') + xlab('Average Response') + ylim(-0.5,0.5) + guides(color=guide_legend(title='Network')) + scale_y_reversed() +
     theme(axis.text.x = element_text(size=20,angle=45,hjust=1), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30), legend.title = element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm'))
   print(gg1)
   dev.off()

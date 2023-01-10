@@ -1,5 +1,6 @@
 plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
   ## Check plots
+  
   if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
   } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
@@ -8,6 +9,8 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_rt_vmax')
   } else if (strcmp(toalign,'feedback') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_feedback')
+  } else if (strcmp(toalign,'clock') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_clock')
   }
   
   message("\nPlotting streams decoding")
@@ -161,7 +164,7 @@ if (strcmp(toprocess,'network') & !(strcmp(behavmodel,'explore') | strcmp(behavm
     mutate(network2 = case_when(network=='C'~'CTR',
                                 network=='D'~'DMN',
                                 network=='L'~'LIM'))
-} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction'))){
   ddf <- ddf %>% mutate(network1 = network, network2 = network)
 }
 
@@ -294,12 +297,12 @@ if (!strcmp(totest,'online')){
       #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
       #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
       if (all(edf$`p, FDR-corrected`=='p < .001')){
-        gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+        gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
           # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
           geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
-          scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+          scale_color_manual(values = pal1) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
@@ -314,13 +317,13 @@ if (!strcmp(totest,'online')){
                 axis.text.y = element_text(size=24)
           )
       } else {
-        gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+        gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Network Response') +
           geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
           # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
           geom_line(size = 1) + theme(legend.position = "none") +
-          scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+          scale_color_manual(values = pal1) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +

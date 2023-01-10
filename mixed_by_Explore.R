@@ -3,7 +3,7 @@ ncores = 26
 
 source('/Volumes/Users/Andrew/MEDuSA_data_Explore/get_trial_data_explore.R')
 
-load('/Volumes/Users/Andrew/MEDuSA_data_Explore/fb-vPFC.Rdata')
+load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
 
 df <- get_trial_data_explore(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',censor_early_trials=TRUE,trials_to_censor=10)
 df <- df %>% rename(run=run_number)
@@ -73,6 +73,15 @@ Q <- Q %>% mutate(network = case_when(
   atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
   atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
   atlas_value==55 | atlas_value==160 | atlas_value==56 | atlas_value==159 ~ 'LIM'
+)) %>% mutate(symmetry_group=case_when(
+  atlas_value==67 | atlas_value==171 ~ 6,
+  atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 1,
+  atlas_value==89 | atlas_value==194 ~ 7,
+  atlas_value==88 | atlas_value==192 ~ 5,
+  atlas_value==84 | atlas_value==191 ~ 4,
+  atlas_value==86 | atlas_value==161 ~ 2,
+  atlas_value==55 | atlas_value==160 ~ 8,
+  atlas_value==56 | atlas_value==159 ~ 3
 ))
 Q <- Q %>% rename(vmPFC_decon = decon_mean)
 Q <- Q %>% arrange(id,run,trial,evt_time)
@@ -101,16 +110,18 @@ Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1,
 #Q <- Q %>% filter(group=='HC')
 
 rm(decode_formula)
-decode_formula <- formula(~ (1|id))
-decode_formula[[1]] = formula(~ v_entropy_wi*wtar + v_entropy_wi*age + trial_bin + rt_bin + v_entropy_wi*education_yrs + gender + iti_sc + iti_prev_sc + last_outcome + outcome + (1|id/run))
+decode_formula <- NULL
+decode_formula[[1]] = formula(~ v_entropy_wi + trial_neg_inv_sc + rt_csv_sc + gender + wtar + education_yrs + age + iti_sc + iti_prev_sc + last_outcome*iti_prev_sc + outcome*rt_csv_sc + (1 |id/run))
 #decode_formula[[2]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
 #decode_formula[[3]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | id) + (1 | run))
 #decode_formula[[4]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | run) + (1| id))
 
-decode_formula[[2]] = formula(~ v_max_wi*wtar + v_max_wi*age + trial_bin + rt_bin + v_max_wi*education_yrs + gender + iti_sc + iti_prev_sc + last_outcome + outcome + (1|id/run))
+decode_formula[[2]] = formula(~ v_max_wi + trial_neg_inv_sc + rt_csv_sc + gender + wtar + education_yrs + age + iti_sc + iti_prev_sc + last_outcome*iti_prev_sc + outcome*rt_csv_sc + (1 |id/run))
 #decode_formula[[6]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi |id/run))
 #decode_formula[[7]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | id) + (1 | run))
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
+
+decode_formula[[3]] = formula(~age + wtar + education_yrs + v_max_wi + (1|id/run))
 
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))
 # decode_formula[[2]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
@@ -128,7 +139,7 @@ decode_formula[[2]] = formula(~ v_max_wi*wtar + v_max_wi*age + trial_bin + rt_bi
 qT <- c(-0.8,0.46)
 splits = c('evt_time','network')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1:length(decode_formula)){
+for (i in 3){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)
@@ -145,17 +156,17 @@ for (i in 1:length(decode_formula)){
                                specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,-1,0,1,2))),
                       Y = list(outcome='vmPFC_decon',model_name='model1',
                                specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    ),
-                    emtrends_spec = list(
-                      HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                                 specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                      HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                                specs = formula(~v_entropy_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
-                      H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                               specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
-                      HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
-                                 specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    )
+                    )#,
+                    # emtrends_spec = list(
+                    #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                    #              specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
+                    #   HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                    #             specs = formula(~v_entropy_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
+                    #   H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                    #            specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
+                    #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
+                    #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+                    # )
     )
   } else{
     ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
@@ -166,22 +177,22 @@ for (i in 1:length(decode_formula)){
                                specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
                       W = list(outcome='vmPFC_decon',model_name='model1',
                                specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
-                      H = list(outcome='vmPFC_decon', model_name='model1',
+                      V = list(outcome='vmPFC_decon', model_name='model1',
                                specs=formula(~v_max_wi), at = list(v_max_wi=c(-2,-1,0,1,2))),
                       Y = list(outcome='vmPFC_decon',model_name='model1',
                                specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    ),
-                    emtrends_spec = list(
-                      HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
-                                 specs = formula(~v_max_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                      HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
-                                 specs = formula(~v_max_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
-                      HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_max_wi',
-                                 specs=formula(~v_max_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    )
+                    )#,
+                    # emtrends_spec = list(
+                    #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
+                    #              specs = formula(~v_max_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
+                    #   HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
+                    #              specs = formula(~v_max_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
+                    #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_max_wi',
+                    #              specs=formula(~v_max_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+                    # )
     )       
   }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-feedback-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-',3,'.Rdata'))
 }
 

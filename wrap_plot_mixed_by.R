@@ -4,22 +4,22 @@
 library(pracma)
 library(tidyverse)
 
-do_vPFC_fb = TRUE
-do_vPFC_clock = TRUE
+do_vPFC_fb = FALSE
+do_vPFC_clock = FALSE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = FALSE
+do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
-do_symmetry = TRUE
+do_symmetry = FALSE
 do_network = TRUE
 
 if (do_vPFC_fb){
   if (do_network){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
     source('~/vmPFC/plot_emmeans_vmPFC.R')
-    for (i in 1:7){
+    for (i in 1:2){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-network-feedback-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -48,7 +48,7 @@ if (do_vPFC_fb){
   # }
   if (do_symmetry){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
-    for (i in 1:7){
+    for (i in 1:2){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-symmetry-feedback-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -66,7 +66,7 @@ if (do_vPFC_clock){
   if (do_network){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
     source('~/vmPFC/plot_emmeans_vmPFC.R')
-    for (i in 1:7){
+    for (i in 1:2){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-network-clock-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -82,7 +82,7 @@ if (do_vPFC_clock){
   }
   if (do_symmetry){
     source('~/vmPFC/plot_mixed_by_vmPFC.R')
-    for (i in 1:7){
+    for (i in 1:2){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       model_str <- paste0('-vmPFC-symmetry-clock-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
@@ -113,7 +113,7 @@ if (do_HC_fb){
 }
 if (do_HC_clock){
   source('~/vmPFC/plot_mixed_by_HC.R')
-  for (i in 1:7){
+  for (i in 1:2){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     model_str <- paste0('-HC-axis-clock-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
@@ -214,6 +214,10 @@ if (do_HC2vPFC_clock){
     }
   }
 }
+
+
+# nice HCwithin plot
+
 
 # source('~/vmPFC/plot_mixed_by_vmPFC_HC_entropy_split.R')
 # source('~/vmPFC/plot_emtrends_vmPFC_HC_entropy_split.R')

@@ -19,7 +19,7 @@ do_rt_pred_fmri = FALSE
 plot_rt_pred_fmri = FALSE
 do_rt_pred_meg = FALSE
 plot_rt_pred_meg = FALSE
-do_entropy_plot = TRUE
+do_entropy_plot = FALSE
 do_value_plot = TRUE
 
 #### clock ####
@@ -393,7 +393,7 @@ if (plot_rt_pred_fmri){
   for (i in 1:2){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-    model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     model_iter <- i
@@ -612,8 +612,8 @@ if (do_entropy_plot){
   library(wesanderson)
   pal = wes_palette("FantasticFox1", 3, type = "discrete")
   pal1 = palette()
-  pal1[1] <- pal[1]
-  pal1[2] <- pal[2]
+  pal1[1] <- pal[2]
+  pal1[2] <- pal[1]
   pal1[3] <- pal[3]
   i <- 1 # entropy
   toalign <- 'clock' #
@@ -700,7 +700,7 @@ if (do_entropy_plot){
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') +
-    scale_color_manual(values = pal1,labels=c('DMN','CTR')) + geom_hline(yintercept=0) +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
     guides(color=guide_legend(title='Network'))
   #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
   print(gg1)
@@ -725,7 +725,7 @@ if (do_entropy_plot){
      theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
      guides(fill = guide_legend(byrow=TRUE)) +
      ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') +
-     scale_color_manual(values = pal1,labels=c('DMN','CTR')) +
+     scale_color_manual(values = pal1) +
      guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
@@ -816,7 +816,7 @@ if (do_entropy_plot){
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) + scale_y_reverse() +
     ylab('RT swings (AU)') + xlab('Entropy Response') +
-    scale_color_manual(values = pal1,labels=c('DMN')) + geom_hline(yintercept=0) +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
     guides(color=guide_legend(title='Network'))
   #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
   print(gg1)
@@ -842,7 +842,7 @@ if (do_entropy_plot){
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     xlab('Entropy Response') + scale_y_reverse() +
-    scale_color_manual(values = pal1,labels=c('DMN')) +
+    scale_color_manual(values = pal1) +
     guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
@@ -897,7 +897,7 @@ if (do_entropy_plot){
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     xlab('Entropy Response') + scale_y_reverse() +
-    scale_color_manual(values = pal1,labels=c('DMN')) +
+    scale_color_manual(values = pal1) +
     guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
@@ -910,8 +910,8 @@ if (do_value_plot){
   library(wesanderson)
   pal = wes_palette("FantasticFox1", 3, type = "discrete")
   pal1 = palette()
-  pal1[1] <- pal[1]
-  pal1[2] <- pal[2]
+  pal1[1] <- pal[2]
+  pal1[2] <- pal[1]
   pal1[3] <- pal[3]
   i <- 2 # value
   toalign <- 'clock' #
@@ -987,17 +987,17 @@ if (do_value_plot){
       padj_fdr_term <.0001 ~ 'p < 0.0001'
     ))
   ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
-  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR')
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
   
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_vmax-convergence-D-main.pdf',width=10,height=6)
+  pdf('Value-rt_vmax-convergence-DCL-main.pdf',width=10,height=6)
   gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
     geom_violin() + facet_wrap(~dataset) + 
     geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     ylab('Convergence on Best RT (AU)') + xlab('Value Response') +
-    scale_color_manual(values = pal1,labels=c('DMN','CTR')) + geom_hline(yintercept=0) +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
     guides(color=guide_legend(title='Network'))
   #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
   print(gg1)
@@ -1006,24 +1006,25 @@ if (do_value_plot){
   ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_vmax_lag_sc_r)
   ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_vmax_lag_sc_f)
   ddf <- rbind(ddq_r_emm,ddq_f_emm)
-  ddf <- ddf %>% filter((network=='D') & (vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))# & RT_vmax_bin=='mean')
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))# & RT_vmax_bin=='mean')
   ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM')) %>% select(!std.error)
   
   
   #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std') & RT_vmax_bin=='mean')
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
   ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM'))
-  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR')
+  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
   ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
+  ddf$RT_vmax_bin <- factor(ddf$RT_vmax_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_vmax-convergence-DC-nodiff.pdf',width=10,height=6)
+  pdf('Value-rt_vmax-convergence-DCL-nodiff.pdf',width=16,height=12)
   gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
     geom_violin() + 
     facet_grid(RT_vmax_bin~dataset) + ylab('Convergence on Best RT (AU)') +
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     ylab('Convergence on Best RT (AU)') + xlab('Value Response') +
-    scale_color_manual(values = pal1,labels=c('DMN','CTR')) +
+    scale_color_manual(values = pal1) +
     guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
@@ -1105,16 +1106,16 @@ if (do_value_plot){
       padj_fdr_term <.0001 ~ 'p < 0.0001'
     ))
   ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
-  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR')
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_csv-divergence-D-main.pdf',width=10,height=6)
+  pdf('Value-rt_csv-divergence-DCL-main.pdf',width=10,height=6)
   gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
     geom_violin() + facet_wrap(~dataset) + 
     geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) + scale_y_reverse() +
     ylab('RT swings (AU)') + xlab('Value Response') +
-    scale_color_manual(values = pal1,labels=c('DMN')) + geom_hline(yintercept=0) +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
     guides(color=guide_legend(title='Network'))
   #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
   print(gg1)
@@ -1129,18 +1130,19 @@ if (do_value_plot){
   #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
   ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
   ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM')) %>% select(!std.error)
-  ddf <- ddf %>% filter(network=='D')
+  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
   ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
+  ddf$RT_lag_bin <- factor(ddf$RT_lag_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
   #ddf <- ddf %>% filter(RT_lag_bin=='mean')
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-  pdf('Value-rt_csv-divergence-D-nodiff.pdf',width=15,height=15)
+  pdf('Value-rt_csv-divergence-DCL-nodiff.pdf',width=15,height=15)
   gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
     geom_violin(position=position_dodge(width=1)) +
     facet_grid(RT_lag_bin~dataset) + ylab('RT Swings (AU)') + xlab('Value Response') +
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     xlab('Value Response') + scale_y_reverse() +
-    scale_color_manual(values = pal1,labels=c('DMN')) +
+    scale_color_manual(values = pal1) +
     guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
@@ -1182,7 +1184,7 @@ if (do_value_plot){
       padj_fdr_term <.0001 ~ 'p < 0.0001'
     ))
   ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
-  ddq <- ddq %>% filter(network1=='DMN')
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
   
   
   
@@ -1196,7 +1198,7 @@ if (do_value_plot){
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
     guides(fill = guide_legend(byrow=TRUE)) +
     xlab('Value Response') + scale_y_reverse() +
-    scale_color_manual(values = pal1,labels=c('DMN')) +
+    scale_color_manual(values = pal1) +
     guides(color=guide_legend(title='Network'))
   print(gg1)
   dev.off()
