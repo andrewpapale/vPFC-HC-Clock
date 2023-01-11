@@ -217,7 +217,114 @@ if (do_HC2vPFC_clock){
 
 
 # nice HCwithin plot
+setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+model_str <- paste0('-vmPFC-HC-network-clock-',1,'.Rdata')
+model_str <- Sys.glob(paste0('*',model_str))
+load(model_str)
 
+qdf <- ddf$coef_df_reml
+qdf <- qdf %>% filter(effect=='fixed' & term=='HCwithin')
+qdf <- qdf %>% mutate(network1 = case_when(network=='C'~'CTR', network=='D'~'DMN',network=='L'~'LIM'))
+pal3 = wes_palette("FantasticFox1", 3, type = "discrete")
+pal = palette()
+pal[1] = pal3[2]
+pal[2] = pal3[1]
+pal[3] = pal3[3]
+pdf('Nice-HCwihin-plot.pdf',height=3.5,width=6)
+gg1 <- ggplot(qdf,aes(x=HC_region,y=estimate,color=network1)) + geom_violin() + 
+  scale_color_manual(values = pal) + facet_wrap(~network1) +  
+  ylab('Network Response') +
+  xlab('') + guides(color='none') + 
+  geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+  theme(legend.title = element_blank(),
+        panel.grid.major = element_line(colour = "grey45"), 
+        panel.grid.minor = element_line(colour = "grey45"), 
+        panel.background = element_rect(fill = 'grey40'),
+        axis.title.y = element_text(margin=margin(r=6),size=22),
+        axis.title.x = element_text(margin=margin(t=6),size=22),
+        legend.text = element_text(size=22),
+        axis.text.x = element_text(size=22),
+        axis.text.y = element_text(size=22)
+  )
+print(gg1)
+dev.off()
+
+
+library(ggpattern)
+
+emt <- ddf$emtrends_list$H_HC
+emt <- emt %>% filter(network!='L')
+emt <- emt %>% mutate(entropy_levels = case_when(v_entropy_sc=='-1.5' ~ 'low entropy', v_entropy_sc=='1.5' ~ 'high entropy'))
+emt <- emt %>% mutate(network1 = case_when(network=='C'~'CTR', network=='D'~'DMN',network=='L'~'LIM'))
+emt$entropy_levels <- factor(emt$entropy_levels,levels=c('high entropy','low entropy'))
+pdf('Nice-HC-vPFC-Entropy-emt.pdf',height=4,width=7)
+gg1 <- ggplot(emt, aes(x=HC_region,y=HCwithin.trend,lty=entropy_levels,color=network1)) + 
+  geom_violin_pattern(width=1.25,aes(color=network1,pattern_spacing=entropy_levels)) + scale_color_manual(values = pal) +
+  facet_wrap(~network1) + guides(color='none') + scale_pattern_spacing_discrete(range=c(0.05,1)) + 
+  ylab('HC-vPFC coupling') +
+  xlab('Hippocampus region') + 
+  theme(legend.title = element_blank(),
+        panel.grid.major = element_line(colour = "grey45"), 
+        panel.grid.minor = element_line(colour = "grey45"), 
+        panel.background = element_rect(fill = 'grey40'),
+        axis.title.y = element_text(margin=margin(r=6),size=22),
+        axis.title.x = element_text(margin=margin(t=6),size=22),
+        legend.text = element_text(size=18),
+        axis.text.x = element_text(size=22),
+        axis.text.y = element_text(size=22)
+  )
+gg2 <- ggplot_gtable(ggplot_build(gg1))
+stripr <- which(grepl('strip-t', gg2$layout$name))
+k <- 1
+for (i in stripr) {
+  j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+  gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal[k]
+  k <- k+1
+}
+grid.draw(gg2)
+dev.off()
+
+
+pal3 = wes_palette("FantasticFox1", 3, type = "discrete")
+pal2 = palette()
+pal2[1] = pal3[2]
+pal2[2] = pal3[1]
+pal2[3] = pal3[3]
+
+emt <- ddf$emtrends_list$V_HC
+#emt <- emt %>% filter(network!='D')
+emt <- emt %>% filter(v_max_wi!=5.0)
+emt <- emt %>% mutate(value_levels = case_when(v_max_wi==-1.5 ~ 'low value', v_max_wi==1.0 ~ 'high value'))
+emt <- emt %>% mutate(network1 = case_when(network=='C'~'CTR', network=='D'~'DMN',network=='L'~'LIM'))
+emt$value_levels <- factor(emt$value_levels,levels=c('high value','low value'))
+pdf('Nice-HC-vPFC-Value-emt.pdf',height=4,width=7)
+gg1 <- ggplot(emt, aes(x=HC_region,y=HCwithin.trend,color=network1)) + 
+  geom_violin_pattern(width=1.25,aes(color=network1,pattern_spacing=value_levels)) + scale_color_manual(values = pal2) +
+  facet_wrap(~network1) + guides(color='none') + scale_pattern_spacing_discrete(range=c(0.03,200)) + 
+  ylab('HC-vPFC coupling') +
+  xlab('Hippocampus region') + 
+  theme(legend.title = element_blank(),
+        panel.grid.major = element_line(colour = "grey45"), 
+        panel.grid.minor = element_line(colour = "grey45"), 
+        panel.background = element_rect(fill = 'grey40'),
+        axis.title.y = element_text(margin=margin(r=6),size=22),
+        axis.title.x = element_text(margin=margin(t=6),size=22),
+        legend.text = element_text(size=18),
+        axis.text.x = element_text(size=22),
+        axis.text.y = element_text(size=22)
+  )
+gg2 <- ggplot_gtable(ggplot_build(gg1))
+stripr <- which(grepl('strip-t', gg2$layout$name))
+k <- 1
+for (i in stripr) {
+  j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+  gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal2[k]
+  k <- k+1
+}
+grid.draw(gg2)
+dev.off()
+
+#model_str <- paste0('-vmPFC-HC-full-network-',i,'.Rdata')
 
 # source('~/vmPFC/plot_mixed_by_vmPFC_HC_entropy_split.R')
 # source('~/vmPFC/plot_emtrends_vmPFC_HC_entropy_split.R')
