@@ -67,7 +67,7 @@ df <- df %>% select(iti_ideal,iti_prev,iti_sc,v_entropy_wi_change,iti_prev_sc,ou
 df$id <- as.character(df$id)
 Q <- full_join(md,df,by=c('id','run','trial'))
 
-Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA
+Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
 #Q$decon_mean[Q$evt_time < -Q$rt_csv] = NA
 Q <- Q %>% mutate(network = case_when(
   atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
@@ -139,7 +139,7 @@ decode_formula[[3]] = formula(~age + wtar + education_yrs + v_max_wi + (1|id/run
 qT <- c(-0.8,0.46)
 splits = c('evt_time','network')
 source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 3){
+for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)

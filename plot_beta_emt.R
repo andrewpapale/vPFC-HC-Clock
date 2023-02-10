@@ -1,7 +1,7 @@
 # plot_beta_emt
 # 2022-08-01 AndyP
-session = "fmri"
-model = "int"
+session = "meg"
+model = "slo"
 clock_folder <- "~/clock_analysis" 
 # source('~/code/Rhelpers/')
 fmri_dir <- '~/vmPFC/MEDUSA Schaefer Analysis/parcel_maps_l2/'
