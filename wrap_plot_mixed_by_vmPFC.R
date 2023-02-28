@@ -14,9 +14,9 @@ if (strcmp(totest,'online')){
 source('~/vmPFC/plot_mixed_by_vmPFC.R')
 source('~/vmPFC/plot_emmeans_vmPFC.R')
 source('~/vmPFC/plot_emtrends_vmPFC.R')
-for (i in 1:3){
+for (i in 1){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0(behavmodel,'-vmPFC-',toprocess,'-',toalign,totest,'-',i,'.Rdata')
+  model_str <- paste0(behavmodel,'-vmPFC-',toprocess,'-',toalign,totest,'-test-group',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   model_iter <- i

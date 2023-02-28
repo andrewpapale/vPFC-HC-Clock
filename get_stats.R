@@ -188,7 +188,7 @@ D <- rt_vmax_term %>% filter(network=='D')
 summary(D)
 
 
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-02-09-vmPFC-network-ranslopes-replication-clock-pred-rt_csv_sc-both-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-02-10-vmPFC-network-ranslopes-replication-clock-pred-rt_csv_sc-both-1.Rdata')
 
 ddq <- ddq$coef_df_reml
 #if (strcmp(toprocess,"network")){
@@ -204,12 +204,15 @@ ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels = c('1', '2', '3', '4'), label
 
 rt_term <- ddq %>% filter(term=='rt_lag:subj_level_rand_slope')
 D <- rt_term %>% filter(network=='D')
+C <- rt_term %>% filter(network=='C')
 summary(D)
+summary(C)
 
 rt_vmax_term <- ddq %>% filter(term=='subj_level_rand_slope:rt_vmax_lag')
 D <- rt_vmax_term %>% filter(network=='D')
+L <- rt_vmax_term %>% filter(network=='L')
 summary(D)
-
+summary(L)
 
 ##############################
 ##### B2B - Value ##########
@@ -242,3 +245,92 @@ summary(L)
 rt_vmax_term <- ddq %>% filter(term=='subj_level_rand_slope:rt_vmax_lag')
 D <- rt_vmax_term %>% filter(network=='D')
 summary(D)
+
+
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-02-10-vmPFC-network-ranslopes-replication-clock-pred-rt_csv_sc-both-2.Rdata')
+
+ddq <- ddq$coef_df_reml
+#if (strcmp(toprocess,"network")){
+ddq <- ddq  %>% mutate(p_fdr = padj_fdr_term)
+ddq <- ddq %>% mutate(p_level_fdr = as.factor(case_when(
+  # p_fdr > .1 ~ '0',
+  # p_fdr < .1 & p_fdr > .05 ~ '1',
+  p_fdr > .05 ~ '1',
+  p_fdr < .05 & p_fdr > .01 ~ '2',
+  p_fdr < .01 & p_fdr > .001 ~ '3',
+  p_fdr <.001 ~ '4')))
+ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels = c('1', '2', '3', '4'), labels = c("NS","p < .05", "p < .01", "p < .001"))
+
+rt_term <- ddq %>% filter(term=='rt_lag:subj_level_rand_slope')
+D <- rt_term %>% filter(network=='D')
+summary(D)
+
+C <- rt_term %>% filter(network=='C')
+summary(C)
+
+L <- rt_term %>% filter(network=='L')
+summary(L)
+
+rt_vmax_term <- ddq %>% filter(term=='subj_level_rand_slope:rt_vmax_lag')
+D <- rt_vmax_term %>% filter(network=='D')
+summary(D)
+
+
+############################
+#### HC ###################
+###########################
+
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2022-11-28-HC-axis-clock-2.Rdata')
+
+ddf <- ddf$coef_df_reml
+#if (strcmp(toprocess,"network")){
+ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term)
+ddf <- ddf %>% mutate(p_level_fdr = as.factor(case_when(
+  # p_fdr > .1 ~ '0',
+  # p_fdr < .1 & p_fdr > .05 ~ '1',
+  p_fdr > .05 ~ '1',
+  p_fdr < .05 & p_fdr > .01 ~ '2',
+  p_fdr < .01 & p_fdr > .001 ~ '3',
+  p_fdr <.001 ~ '4')))
+ddf$p_level_fdr <- factor(ddf$p_level_fdr, levels = c('1', '2', '3', '4'), labels = c("NS","p < .05", "p < .01", "p < .001"))
+
+v_term <- ddf %>% filter(term=='v_max_wi' & effect=='fixed')
+AH <- v_term %>% filter(HC_region=='AH')
+PH <- v_term %>% filter(HC_region=='PH')
+summary(AH)
+summary(PH)
+
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2022-11-28-vmPFC-HC-network-clock-1.Rdata')
+ddf <- ddf$coef_df_reml
+ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term)
+ddf <- ddf %>% mutate(p_level_fdr = as.factor(case_when(
+  # p_fdr > .1 ~ '0',
+  # p_fdr < .1 & p_fdr > .05 ~ '1',
+  p_fdr > .05 ~ '1',
+  p_fdr < .05 & p_fdr > .01 ~ '2',
+  p_fdr < .01 & p_fdr > .001 ~ '3',
+  p_fdr <.001 ~ '4')))
+ddf$p_level_fdr <- factor(ddf$p_level_fdr, levels = c('1', '2', '3', '4'), labels = c("NS","p < .05", "p < .01", "p < .001"))
+
+a_term <- ddf %>% filter(term=='HCwithin' & effect=='fixed')
+S <- aov(estimate ~ HC_region*network, data=a_term)
+anova(S)
+
+
+h_term <- ddf %>% filter(term=='HCwithin:v_entropy_sc' & effect=='fixed')
+D = h_term %>% filter(network=='D')
+summary(D)
+
+C = h_term %>% filter(network=='C')
+summary(C)
+
+
+v_term <- ddf %>% filter(term=='HCwithin:v_max_wi' & effect=='fixed')
+D = v_term %>% filter(network=='D')
+summary(D)
+
+C = v_term %>% filter(network=='C')
+summary(C)
+
+L = v_term %>% filter(network=='L')
+summary(L)

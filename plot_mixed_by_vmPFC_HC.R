@@ -23,8 +23,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   epoch_label = paste("Time relative to",toalign_str, "[s]")
   pal_hc = wes_palette("Royal2", 5, type = "discrete")
   pal_hc1 <- palette()
-  pal_hc1[1] <- '#fc795d'
-  pal_hc1[2] <- '#1f53ec'
+  pal_hc1[2] <- '#fc795d'
+  pal_hc1[1] <- '#1f53ec'
   fills <- palette()
   fills[1] <- pal[2]
   fills[2] <- pal[2]
@@ -118,20 +118,29 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   }
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
-  
   if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side')){
-    ddf <- ddf %>% mutate(network1 = 
-                            case_when(network=='C'~'2C',
-                                      network=='D'~'1D',
-                                      network=='L'~'3L')) %>% 
-      mutate(network2 = case_when(network=='C'~'CTR',
-                                  network=='D'~'DMN',
-                                  network=='L'~'LIM'))
+    if (totest!='Explore-'){
+      ddf <- ddf %>% mutate(network1 = 
+                              case_when(network=='C'~'2C',
+                                        network=='D'~'1D',
+                                        network=='L'~'3L')) %>% 
+        mutate(network2 = case_when(network=='C'~'CTR',
+                                    network=='D'~'DMN',
+                                    network=='L'~'LIM'))
+    } else if (totest=='Explore-'){
+      ddf <- ddf %>% mutate(network1 = 
+                              case_when(network=='CTR'~'2C',
+                                        network=='DMN'~'1D',
+                                        network=='LIM'~'3L')) %>% 
+        mutate(network2 = case_when(network=='CTR'~'CTR',
+                                    network=='DMN'~'DMN',
+                                    network=='LIM'~'LIM'))
+    }
   }
   
   pal1 = palette()
-  pal1[2] = '#ff484d'
-  pal1[1] = '#2a52ff'
+  pal1[1] = '#ff484d'
+  pal1[2] = '#2a52ff'
   
   if (!strcmp(totest,'anatomy')){
     for (fe in terms) {
@@ -474,7 +483,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           geom_line(size = 1) + geom_point() +
           geom_errorbar() +
           geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
-          scale_color_manual(values = pal_hc1,labels=c('AH','PH')) + xlab(epoch_label) +
+          scale_color_manual(values = pal_hc1,labels=c('Anterior Hippocampus','Posterior Hippocampus')) + xlab(epoch_label) +
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         
         gg2 <- ggplot_gtable(ggplot_build(gg1))

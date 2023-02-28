@@ -13,6 +13,9 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   epoch_label = paste("Time relative to",toalign, "[s]")
   ddq <- ddf
   ddf <- as_tibble(ddf$coef_df_reml)
+  if (strcmp(totest,'Explore-')){
+    ddf$bin_num <- ddf$atlas_value
+  }
   ddf$t <- ddf$evt_time
   #ddf$bin_num <- as.factor(ddf$bin_num)
   ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term, 
@@ -27,28 +30,30 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   ddf$pfdr = ddf$p_level_fdr
   terms <- unique(ddf$term[ddf$effect=="fixed"])
   
-  if (strcmp(toprocess,'axis')){
-    ddf <- ddf %>% mutate(bin_num1 = case_when(
-      bin_num==1 ~ 12,
-      bin_num==2 ~ 11,
-      bin_num==3 ~ 10,
-      bin_num==4 ~ 9,
-      bin_num==5 ~ 8,
-      bin_num==6 ~ 7,
-      bin_num==7 ~ 6,
-      bin_num==8 ~ 5,
-      bin_num==9 ~ 4,
-      bin_num==10 ~ 3,
-      bin_num==11 ~ 2,
-      bin_num==12 ~ 1
-    ))
-  }
+  
+  
+  # if (strcmp(toprocess,'axis')){
+  #   ddf <- ddf %>% mutate(bin_num1 = case_when(
+  #     bin_num==1 ~ 12,
+  #     bin_num==2 ~ 11,
+  #     bin_num==3 ~ 10,
+  #     bin_num==4 ~ 9,
+  #     bin_num==5 ~ 8,
+  #     bin_num==6 ~ 7,
+  #     bin_num==7 ~ 6,
+  #     bin_num==8 ~ 5,
+  #     bin_num==9 ~ 4,
+  #     bin_num==10 ~ 3,
+  #     bin_num==11 ~ 2,
+  #     bin_num==12 ~ 1
+  #   ))
+  # }
   if (strcmp(toprocess,'axis')){
     pal = wes_palette("Zissou1", 12, type = "continuous")
   } else if (strcmp(toprocess,'region')){
     pal = palette()
-    pal[2] = '#ff484d'
-    pal[1] = '#2a52ff'
+    pal[1] = '#ff484d'
+    pal[2] = '#2a52ff'
   }
   library(wesanderson)
   for (fe in terms) {
@@ -78,10 +83,10 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
         gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
           # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-          geom_line(size = 1) + theme(legend.position = "none") +
+          geom_line(size = 1) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
-          scale_color_manual(values = pal,labels=c('AH','PH')) + 
+          scale_color_manual(values = pal) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           theme(legend.title = element_blank(),
@@ -114,12 +119,12 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
         gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
           # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-          geom_line(size = 1) + theme(legend.position = "none") +
+          geom_line(size = 1) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
-          scale_color_manual(values = pal) + guides(color='none') +  
+          scale_color_manual(values = pal) +  
           geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
-          xlab('Time relative to trial onset [s]') + ylab('HC Response') +
+          xlab(epoch_label) + ylab('HC Response') +
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           theme(legend.title = element_blank(),
@@ -137,8 +142,8 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
       }
     } else if (strcmp(toprocess,'axis')){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
-      pdf(fname, width = 9, height = 3.5)
-      print(ggplot(edf, aes(t, as.factor(bin_num1))) + geom_tile(aes(fill = estimate, alpha = pfdr), size = 1) +
+      pdf(fname, width = 9, height = 5)
+      print(ggplot(edf, aes(t, as.factor(bin_num))) + geom_tile(aes(fill = estimate, alpha = pfdr), size = 1) +
               # geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~visuomotor_grad) +
               geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
               scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
@@ -146,26 +151,18 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
       dev.off()
       
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
-      pdf(fname, width = 9, height = 3.5)
+      pdf(fname, width = 9, height = 5)
       # gg <- ggplot(edf, aes(x=t, y=estimate,color=as.factor(bin_num))) +
       #   geom_line(size = 1) + geom_point(aes(size=pfdr), fill="red") +
       #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + #facet_wrap(~visuomotor_grad) +
       #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + xlab(epoch_label) +
       #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
-      gg<-ggplot(edf, aes(x=t, y=estimate,color = as.numeric(bin_num1), group = as.numeric(bin_num1))) + 
+      gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(bin_num), group = as.factor(bin_num))) + 
         geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
         # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-        geom_line(size = 1) + theme(legend.position = "none") +
-        geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
-        scale_color_gradientn(colors = pal, guide = 'none') + 
+        geom_line(size = 1) + 
+        geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('')
         #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
-        theme_bw(base_size=13) +
-        theme(legend.title = element_blank(),
-              panel.grid.major = element_line(colour = "grey45"), 
-              panel.grid.minor = element_line(colour = "grey45"), 
-              panel.background = element_rect(fill = 'grey40'),
-              axis.title.y = element_text(margin=margin(r=6)),
-              axis.title.x = element_text(margin=margin(t=6)))
       print(gg)
       dev.off()
     }
