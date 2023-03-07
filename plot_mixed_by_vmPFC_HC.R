@@ -10,7 +10,11 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   message("\nPlotting streams decoding")
   library(viridis)
   library(wesanderson)
-  pal = wes_palette("FantasticFox1", 3, type = "discrete")
+  pal3 = wes_palette("FantasticFox1", 3, type = "discrete")
+  pal = palette()
+  pal[1] = pal3[2]
+  pal[2] = pal3[1]
+  pal[3] = pal3[3]
   if (strcmp(toalign,'feedback')){
     toalign_str <- 'feedback'
   } else if (strcmp(toalign,'clock')){
@@ -19,8 +23,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   epoch_label = paste("Time relative to",toalign_str, "[s]")
   pal_hc = wes_palette("Royal2", 5, type = "discrete")
   pal_hc1 <- palette()
-  pal_hc1[1] <- '#fc795d'
-  pal_hc1[2] <- '#1f53ec'
+  pal_hc1[2] <- '#fc795d'
+  pal_hc1[1] <- '#1f53ec'
   fills <- palette()
   fills[1] <- pal[2]
   fills[2] <- pal[2]
@@ -114,17 +118,29 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   }
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
-  
   if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side')){
-    ddf <- ddf %>% mutate(network1 = 
-                            case_when(network=='C'~'2C',
-                                      network=='D'~'1D',
-                                      network=='L'~'3L')) %>% 
-      mutate(network2 = case_when(network=='C'~'CTR',
-                                  network=='D'~'DMN',
-                                  network=='L'~'LIM'))
+    if (totest!='Explore-'){
+      ddf <- ddf %>% mutate(network1 = 
+                              case_when(network=='C'~'2C',
+                                        network=='D'~'1D',
+                                        network=='L'~'3L')) %>% 
+        mutate(network2 = case_when(network=='C'~'CTR',
+                                    network=='D'~'DMN',
+                                    network=='L'~'LIM'))
+    } else if (totest=='Explore-'){
+      ddf <- ddf %>% mutate(network1 = 
+                              case_when(network=='CTR'~'2C',
+                                        network=='DMN'~'1D',
+                                        network=='LIM'~'3L')) %>% 
+        mutate(network2 = case_when(network=='CTR'~'CTR',
+                                    network=='DMN'~'DMN',
+                                    network=='LIM'~'LIM'))
+    }
   }
   
+  pal1 = palette()
+  pal1[1] = '#ff484d'
+  pal1[2] = '#2a52ff'
   
   if (!strcmp(totest,'anatomy')){
     for (fe in terms) {
@@ -139,8 +155,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
       # plot stream gradients
       
       if (!strcmp(toprocess,"symmetry-group-by-HC-by-outcome") & !strcmp(toprocess,"symmetry-group-by-HC-by-rewFunc")){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter,".pdf", sep = "")
-        pdf(fname, width = 9, height = 3.5)
+        # fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter,".pdf", sep = "")
+        # pdf(fname, width = 9, height = 3.5)
       }
       
       if (strcmp(toprocess,"symmetry_group")){
@@ -178,20 +194,20 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                 scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
                 labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
       } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag')){
-        gg1 <- ggplot(edf,aes(t,network2))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
-                facet_wrap(~HC_region) +
-                geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
-                scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
-                labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
-        gg2 <- ggplot_gtable(ggplot_build(gg1))
-        stripr <- which(grepl('strip-t', gg2$layout$name))
-        k <- 2
-        for (i in stripr) {
-          j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-          gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
-          k <- k-1
-        }
-        grid.draw(gg2)
+        # gg1 <- ggplot(edf,aes(t,network2))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
+        #         facet_wrap(~HC_region) +
+        #         geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #         scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
+        #         labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        # gg2 <- ggplot_gtable(ggplot_build(gg1))
+        # stripr <- which(grepl('strip-t', gg2$layout$name))
+        # k <- 2
+        # for (i in stripr) {
+        #   j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        #   gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+        #   k <- k-1
+        # }
+        # grid.draw(gg2)
         
       } else if (strcmp(toprocess,"network-by-HC-wEC") | strcmp(toprocess,"network-by-HC-wO")) {
         print(ggplot(edf,aes(t,network))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
@@ -332,22 +348,22 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
       } 
       
       if (!strcmp(toprocess,"symmetry-group-by-HC-by-outcome") & !strcmp(toprocess,'symmetry-group-by-HC-by-rewFunc')){
-        dev.off()
+        #dev.off()
       }
       
       
       if (strcmp(toprocess,"network")){
-        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-', model_iter, ".pdf", sep = "")
-        pdf(fname, width = 9, height = 3.5)
-        gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
-          geom_line(size = 1) + geom_point() +
-          geom_errorbar() +
-          geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + #facet_wrap(~visuomotor_grad) +
-          geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
-          scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
-          labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
-        print(gg)
-        dev.off()
+        # fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-', model_iter, ".pdf", sep = "")
+        # pdf(fname, width = 9, height = 3.5)
+        # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network2, size=`p, FDR-corrected`)) +
+        #   geom_line(size = 1) + geom_point() +
+        #   geom_errorbar() +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + #facet_wrap(~visuomotor_grad) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        # print(gg)
+        # dev.off()
       } else if (strcmp(toprocess,"side2")){
         fname = paste(behavmodel,'-',toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
@@ -371,40 +387,59 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
         #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         if (all(edf$`p, FDR-corrected`=='p < .001')){
-          gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
             geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
             # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
             geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
             geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
-            scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+            scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
-            theme_bw(base_size=13) +
-            facet_wrap(~HC_region) +
+            theme_bw(base_size=13) + ylab('Network Response') + 
+            geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+            facet_wrap(~HC_region) + ylab('Network Response') +
             theme(legend.title = element_blank(),
                   panel.grid.major = element_line(colour = "grey45"), 
                   panel.grid.minor = element_line(colour = "grey45"), 
                   panel.background = element_rect(fill = 'grey40'),
-                  axis.title.y = element_text(margin=margin(r=6)),
-                  axis.title.x = element_text(margin=margin(t=6)))
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
         } else {
-          gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
             geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
             # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
             geom_line(size = 1) + theme(legend.position = "none") +
             geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
-            scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+            scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
             theme_bw(base_size=13) +
-            facet_wrap(~HC_region) +
+            facet_wrap(~HC_region) + ylab('Network Response') +
+            geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
             theme(legend.title = element_blank(),
                   panel.grid.major = element_line(colour = "grey45"), 
                   panel.grid.minor = element_line(colour = "grey45"), 
                   panel.background = element_rect(fill = 'grey40'),
-                  axis.title.y = element_text(margin=margin(r=6)),
-                  axis.title.x = element_text(margin=margin(t=6)))
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
         }
-        print(gg)
+        gg2 <- ggplot_gtable(ggplot_build(gg1))
+        stripr <- which(grepl('strip-t', gg2$layout$name))
+        k <- 1
+        for (i in stripr) {
+          j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+          gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
+          k <- k+1
+        }
+        grid.draw(gg2)
         dev.off()
+        
       } else if (strcmp(toprocess,"network-by-HC-wEC") | strcmp(toprocess,"network-by-HC-wO")){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
@@ -448,7 +483,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           geom_line(size = 1) + geom_point() +
           geom_errorbar() +
           geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
-          scale_color_manual(values = pal_hc1,labels=c('AH','PH')) + xlab(epoch_label) +
+          scale_color_manual(values = pal_hc1,labels=c('Anterior Hippocampus','Posterior Hippocampus')) + xlab(epoch_label) +
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         
         gg2 <- ggplot_gtable(ggplot_build(gg1))

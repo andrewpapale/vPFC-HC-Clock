@@ -146,128 +146,174 @@ plot_emtrends_subject_level_random_slopes <- function(ddf,toalign,toprocess,tote
     
   } else if (strcmp(toprocess,'network')){
     
-    emt <- ddq$emtrends_list$TrxVmax
-    emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
-    emt <- emt %>% filter(trial_neg_inv_sc == min(trial_neg_inv_sc) | trial_neg_inv_sc==max(trial_neg_inv_sc))
-    emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
-    #emt <- emt %>% filter(trial_bin != 'Middle')
-    emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
-    emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
-    emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
-    emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
-    
-    df0 <- df %>% filter(term=='trial_neg_inv_sc:subj_level_rand_slope:rt_vmax_lag_sc')
-    
-    Q <- inner_join(emt,df0,by=c('evt_time','network'))
-    Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
-    Q <- Q  %>% group_by(evt_time,network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
-      mutate(p_level_fdr = as.factor(case_when(
-        padj_BY_term > .05 ~ '1',
-        padj_BY_term < .05 & padj_BY_term > .01 ~ '2',
-        padj_BY_term < .01 & padj_BY_term > .001 ~ '3',
-        padj_BY_term <.001 & padj_BY_term > .0001 ~ '4',
-        padj_BY_term <.0001 & padj_BY_term > .00001 ~ '5',
-        padj_BY_term <.00001 ~ '6'
-      )))
-    
-    
-    
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
-    pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
-      facet_grid(~network) +
-      geom_point(aes(color=trial_bin,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
-      geom_line(aes(color=trial_bin,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
-      geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
-    print(gg1)
-    dev.off()
-    
-    
-    emt <- ddq$emtrends_list$LO
-    emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
-    #emt <- emt %>% group_by(evt_time,last_outcome,subj_level_rand_slope,network) %>% summarize(mE = mean(rt_lag_sc.trend,na.rm=TRUE),dE = sd(rt_lag_sc.trend,na.rm=TRUE)) %>% ungroup()
-    emt <- emt %>% filter(rt_lag_sc==0)
-    emt <- emt %>% rename(mE=rt_lag_sc.trend, dE=std.error) %>% select(!p.value)
-    emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
-    emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
-    
-    df0 <- df %>% filter(term=='rt_lag_sc:subj_level_rand_slope' | term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
-    df0 <- df0 %>% mutate(last_outcome = case_when(term=='rt_lag_sc:subj_level_rand_slope' ~ 'Omission', 
-                                                   term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward' ~ 'Reward'))
-    
-    Q <- inner_join(emt,df0,by=c('evt_time','network','last_outcome'))
-    Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
-    Q <- Q  %>% group_by(evt_time,network1) %>% mutate(padj_BY_term = p.adjust(p.value, method = 'bonferroni')) %>% ungroup() %>% 
-      mutate(p_level_fdr = as.factor(case_when(
-        padj_BY_term > .05 ~ '1',
-        padj_BY_term < .05 & padj_BY_term > .01 ~ '2',
-        padj_BY_term < .01 & padj_BY_term > .001 ~ '3',
-        padj_BY_term <.001 & padj_BY_term > .0001 ~ '4',
-        padj_BY_term <.0001 & padj_BY_term > .00001 ~ '5',
-        padj_BY_term <.00001 ~ '6'
-      )))
-    
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
-    pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=mE)) + 
-      facet_grid(~network) +
-      geom_point(aes(color=last_outcome,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
-      geom_line(aes(color=last_outcome,linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=mE-dE, ymax=mE+dE), width=0.5) +
-      geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
-    
-    gg2 <- ggplot_gtable(ggplot_build(gg1))
-    stripr <- which(grepl('strip-t', gg2$layout$name))
-    k <- 1
-    for (i in stripr) {
-      j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
-      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
-      k <- k+1
+    if ("TrxVmax" %in% names(ddq$emtrends_list)){
+      emt <- ddq$emtrends_list$TrxVmax
+      emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
+      emt <- emt %>% filter(trial_neg_inv_sc == min(trial_neg_inv_sc) | trial_neg_inv_sc==max(trial_neg_inv_sc))
+      emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
+      #emt <- emt %>% filter(trial_bin != 'Middle')
+      emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
+      emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
+      emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
+      emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
+      
+      df0 <- df %>% filter(term=='trial_neg_inv_sc:subj_level_rand_slope:rt_vmax_lag_sc')
+      
+      Q <- inner_join(emt,df0,by=c('evt_time','network'))
+      Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+      Q <- Q  %>% 
+        mutate(p_level_fdr = as.factor(case_when(
+          p.value > .05 ~ '1',
+          p.value < .05 & p.value > .01 ~ '2',
+          p.value < .01 & p.value > .001 ~ '3',
+          p.value <.001 & p.value > .0001 ~ '4',
+          p.value <.0001 & p.value > .00001 ~ '5',
+          p.value <.00001 ~ '6'
+        )))
+      
+      
+      
+      fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc_by_trial','-',hc_LorR, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 9)
+      gg1 <- ggplot(Q,aes(x=evt_time,y=rt_vmax_lag_sc.trend)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=trial_bin,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
+        geom_line(aes(color=trial_bin,linetype=as.factor(levels)), size=1) + 
+        geom_errorbar(aes(ymin=rt_vmax_lag_sc.trend-std.error.x, ymax=rt_vmax_lag_sc.trend+std.error.x), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      print(gg1)
+      dev.off()
     }
-    grid.draw(gg2)
-    dev.off()  
+    if ("RT" %in% names(ddq$emtrends_list)){
+      emt <- ddq$emtrends_list$RT
+      emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
+      #emt <- emt %>% group_by(evt_time,subj_level_rand_slope,network) %>% summarize(mE = mean(rt_lag_sc,na.rm=TRUE),dE = sd(estimate,na.rm=TRUE)/sqrt(length(estimate))) %>% ungroup()
+      emt <- emt %>% rename(mE=rt_lag_sc.trend, dE=std.error) %>% select(!p.value)
+      
+      emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std mean","+2 std mean"))
+      emt$levels <- relevel(emt$levels,ref=c("+2 std mean"))
+      df0 <- df %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
+      
+      df0 <- df0 %>% select(!estimate)
+      Q <- inner_join(emt,df0,by=c('evt_time','network'))
+      Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+      Q <- Q  %>% 
+        mutate(p_level_fdr = as.factor(case_when(
+          padj_fdr_term > .05 ~ '1',
+          padj_fdr_term < .05 & padj_fdr_term > .01 ~ '2',
+          padj_fdr_term < .01 & padj_fdr_term > .001 ~ '3',
+          padj_fdr_term <.001 & padj_fdr_term > .0001 ~ '4',
+          padj_fdr_term <.0001 & padj_fdr_term > .00001 ~ '5',
+          padj_fdr_term <.00001 ~ '6'
+        )))
+      
+      fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'RT','-',hc_LorR, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 9)
+      gg1 <- ggplot(Q,aes(x=evt_time,y=mE)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=as.factor(levels),size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
+        geom_line(aes(color=as.factor(levels)), size=1) + 
+        geom_errorbar(aes(ymin=mE-dE, ymax=mE+dE), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()  
+    }
+    if ("LO" %in% names(ddq$emtrends_list)){
+      emt <- ddq$emtrends_list$LO
+      emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
+      #emt <- emt %>% group_by(evt_time,last_outcome,subj_level_rand_slope,network) %>% summarize(mE = mean(rt_lag_sc.trend,na.rm=TRUE),dE = sd(rt_lag_sc.trend,na.rm=TRUE)) %>% ungroup()
+      emt <- emt %>% rename(mE=rt_lag_sc.trend, dE=std.error) %>% select(!p.value)
+      emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
+      emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
+      
+      df0 <- df %>% filter(term=='rt_lag_sc:subj_level_rand_slope' | term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
+      df0 <- df0 %>% mutate(last_outcome = case_when(term=='rt_lag_sc:subj_level_rand_slope' ~ 'Omission', 
+                                                     term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward' ~ 'Reward'))
+      
+      Q <- inner_join(emt,df0,by=c('evt_time','network','last_outcome'))
+      Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+      Q <- Q  %>% 
+        mutate(p_level_fdr = as.factor(case_when(
+          p.value > .05 ~ '1',
+          p.value < .05 & p.value > .01 ~ '2',
+          p.value < .01 & p.value > .001 ~ '3',
+          p.value <.001 & p.value > .0001 ~ '4',
+          p.value <.0001 & p.value > .00001 ~ '5',
+          p.value <.00001 ~ '6'
+        )))
+      
+      fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'last_outcome','-',hc_LorR, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 9)
+      gg1 <- ggplot(Q,aes(x=evt_time,y=mE)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=last_outcome,size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
+        geom_line(aes(color=last_outcome,linetype=as.factor(levels)), size=1) + 
+        geom_errorbar(aes(ymin=mE-dE, ymax=mE+dE), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal_hc1[k]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()  
+    }
     
     
-    emt <- ddq$emtrends_list$Vmax
-    emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
-    #emt <- emt %>% group_by(evt_time,network,subj_level_rand_slope) %>% summarize(mE = mean(rt_vmax_lag_sc.trend,na.rm=TRUE), dE=sd(rt_vmax_lag_sc.trend,na.rm=TRUE)) %>% ungroup()
-    emt <- emt %>% filter(rt_vmax_lag_sc==0) %>% rename(mE=rt_vmax_lag_sc.trend,dE=std.error) %>% select(!p.value)
-    emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
-    emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
-    df0 <- df %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
-    
-    Q <- inner_join(emt,df0,by=c('evt_time','network'))
-    Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
-    Q <- Q  %>% group_by(evt_time,network1) %>% mutate(padj_BY_term = p.adjust(p.value, method = 'bonferroni')) %>% ungroup() %>% 
-      mutate(p_level_fdr = as.factor(case_when(
-        padj_BY_term > .05 ~ '1',
-        padj_BY_term < .05 & padj_BY_term > .01 ~ '2',
-        padj_BY_term < .01 & padj_BY_term > .001 ~ '3',
-        padj_BY_term <.001 & padj_BY_term > .0001 ~ '4',
-        padj_BY_term <.0001 & padj_BY_term > .00001 ~ '5',
-        padj_BY_term <.00001 ~ '6'
-      )))
-    
-    
-    #emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
-    #emt <- emt %>% filter(trial_bin != 'Middle')
-    
-    fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc','-',hc_LorR, ".pdf", sep = "")
-    pdf(fname, width = 9, height = 9)
-    gg1 <- ggplot(Q,aes(x=evt_time,y=mE)) + 
-      facet_grid(~network1) +
-      geom_point(aes(color=as.factor(levels),size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
-      geom_line(aes(color=as.factor(levels),linetype=as.factor(levels)), size=1) + 
-      geom_errorbar(aes(ymin=mE-dE, ymax=mE+dE), width=0.5) +
-      geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
-      ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
-    print(gg1)
-    dev.off()
-  } 
-  
+    if ("Vmax" %in% names(ddq$emtrends_list)){
+      emt <- ddq$emtrends_list$Vmax
+      emt <- emt %>% filter(subj_level_rand_slope==min(unique(subj_level_rand_slope)) | subj_level_rand_slope==max(unique(subj_level_rand_slope)))
+      #emt <- emt %>% group_by(evt_time,network,subj_level_rand_slope) %>% summarize(mE = mean(rt_vmax_lag_sc.trend,na.rm=TRUE), dE=sd(rt_vmax_lag_sc.trend,na.rm=TRUE)) %>% ungroup()
+      emt <- emt %>% rename(mE=rt_vmax_lag_sc.trend,dE=std.error) %>% select(!p.value)
+      emt$levels <- factor(emt$subj_level_rand_slope, labels = c("-2 std slope","+2 std slope"))
+      emt$levels <- relevel(emt$levels,ref=c("+2 std slope"))
+      df0 <- df %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
+      
+      Q <- inner_join(emt,df0,by=c('evt_time','network'))
+      Q <- Q %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+      Q <- Q  %>% 
+        mutate(p_level_fdr = as.factor(case_when(
+          padj_fdr_term > .05 ~ '1',
+          padj_fdr_term < .05 & padj_fdr_term > .01 ~ '2',
+          padj_fdr_term < .01 & padj_fdr_term > .001 ~ '3',
+          padj_fdr_term <.001 & padj_fdr_term > .0001 ~ '4',
+          padj_fdr_term <.0001 & padj_fdr_term > .00001 ~ '5',
+          padj_fdr_term <.00001 ~ '6'
+        )))
+      
+      
+      #emt <- emt %>% mutate(trial_bin=case_when(trial_neg_inv_sc < 0 ~ 'Early',trial_neg_inv_sc > 0 ~ 'Late'))
+      #emt <- emt %>% filter(trial_bin != 'Middle')
+      
+      fname = paste('randomslopes','-',behavmodel,'-',totest,"_",toalign, "_emtrends_", toprocess, "_", 'rt_vmax_lag_sc','-',hc_LorR, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 9)
+      gg1 <- ggplot(Q,aes(x=evt_time,y=mE)) + 
+        facet_grid(~network1) +
+        geom_point(aes(color=as.factor(levels),size=as.factor(p_level_fdr),alpha=as.factor(p_level_fdr))) +
+        geom_line(aes(color=as.factor(levels),linetype=as.factor(levels)), size=1) + 
+        geom_errorbar(aes(ymin=mE-dE, ymax=mE+dE), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      print(gg1)
+      dev.off()
+    } 
+  }
 }  
 
 

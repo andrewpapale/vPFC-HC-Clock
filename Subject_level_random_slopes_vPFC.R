@@ -6,6 +6,7 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(ggnewscale)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
@@ -20,6 +21,7 @@ do_rt_pred_meg = FALSE
 plot_rt_pred_meg = FALSE
 do_entropy_plot = TRUE
 do_value_plot = TRUE
+
 #### clock ####
 
 if (do_rand_slopes){
@@ -29,7 +31,7 @@ if (do_rand_slopes){
   if (strcmp(toalign,'feedback')){
     load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
     vmPFC <- fb_comb
-    vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+    vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
     rm(fb_comb)
     vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
     vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -40,7 +42,7 @@ if (do_rand_slopes){
   } else if (strcmp(toalign,'clock')){
     load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
     vmPFC <- clock_comb
-    vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
+    vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
     rm(clock_comb)
     vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
     vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -66,16 +68,16 @@ if (do_rand_slopes){
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
   
   if (strcmp(toalign,'feedback')){
-    df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+    df <- df %>% select(rewFunc,v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                         v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
-                        rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+                        rt_vmax_lag_sc,iti_prev,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
-      mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
+      mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>%
       mutate(v_chosen_sc = scale(v_chosen),
              abs_pe_max_sc = scale(abs(pe_max)),
              score_sc = scale(score_csv),
              iti_sc = scale(iti_ideal),
-             iti_lag_sc = scale(iti_lag),
+             iti_lag_sc = scale(iti_prev),
              pe_max_sc = scale(pe_max),
              pe_max_lag_sc = scale(lag(pe_max)),
              abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
@@ -112,7 +114,7 @@ if (do_rand_slopes){
       run_trial > 15 & run_trial < 30 ~ 'Middle',
       run_trial >=30 ~ 'Late',
     )))
-    df <- df %>% select(id,run,run_trial,trial_bin,v_entropy_wi_change,rt_vmax_change_sc,iti_lag_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+    df <- df %>% select(id,run,run_trial,trial_bin,iti_prev_sc,v_entropy_wi_change,rt_vmax_change_sc,iti_lag_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
     Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
     Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
     Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -132,19 +134,22 @@ if (do_rand_slopes){
     decode_formula <- formula(~ (1|id))
     #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_sc |id/run))
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id/run))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_sc |id/run))
-    decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_max_wi |id/run))
-    decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change |id/run))
+    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | id) + (1 | run))
+    decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi |id) + (1 | run))
+    #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | rewFunc) + (1|id/rewFunc))
+    #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
+    
+    #decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_max_wi + v_entropy_wi_change + trial_neg_inv_sc + outcome + rt_csv_sc + iti_sc + iti_lag_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change |id/run))
     
   } else if (strcmp(toalign,'clock')){
-    df <- df %>% select(v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                        v_max_wi, v_entropy_wi, v_entropy_wi_change,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
+    df <- df %>% select(rewFunc,v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+                        v_max_wi, v_entropy_wi,iti_prev, v_entropy_wi_change,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
                         rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
       mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% ungroup() %>%
       mutate(v_chosen_sc = scale(v_chosen),
              abs_pe_max_sc = scale(abs(pe_max)),
-             iti_lag_sc = scale(iti_lag),
+             iti_prev_sc = scale(iti_prev),
              score_sc = scale(score_csv),
              score_lag_sc = scale(lag(score_csv)),
              iti_sc = scale(iti_ideal),
@@ -186,7 +191,7 @@ if (do_rand_slopes){
       run_trial > 15 & run_trial < 30 ~ 'Middle',
       run_trial >=30 ~ 'Late',
     )))
-    df <- df %>% select(id,run,run_trial,trial_bin,iti_sc,v_max_wi,v_entropy_wi_change_lag,rt_vmax_change_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,score_lag_sc,iti_lag_sc,ev_lag_sc)
+    df <- df %>% select(id,run,run_trial,trial_bin,iti_sc,iti_prev_sc,outcome,v_max_wi,v_entropy_wi,rt_vmax_change_sc,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,score_lag_sc,ev_lag_sc)
     Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
     Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
     Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -200,15 +205,19 @@ if (do_rand_slopes){
     Q$female <- relevel(as.factor(Q$female),ref='0')
     Q$age <- scale(Q$age)
     
+    Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA
     #Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
     
     rm(decode_formula)
-    decode_formula <- formula(~ (1|id))
+    decode_formula <- NULL
     #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin +  v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag*HCwithin  + rt_csv_sc  + iti_lag_sc + last_outcome*HCwithin + HCwithin + HCbetween + (1 + HCwithin*v_entropy_lag_sc |id/run))
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag*HCwithin + rt_csv_sc  + iti_lag_sc + last_outcome*HCwithin + HCwithin + HCbetween + (1 + HCwithin*v_max_wi_lag  |id/run))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + (1 + v_entropy_sc |id/run))
-    decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + (1 + v_max_wi |id/run))
-    decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change_lag |id/run))
+    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + last_outcome + outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi |id/run))
+    decode_formula[[2]] = formula(~ age + female + v_max_wi + last_outcome + outcome + trial_neg_inv_sc + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi |id/run))
+    #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | rewFunc) + (1|id/rewFunc))
+    #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
+    
+    #decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change_lag |id/run))
   }
   
   
@@ -228,7 +237,7 @@ if (do_rand_slopes){
 }
 
 if (do_rt_pred_fmri){
-  for (i in 1:3){
+  for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
     model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
@@ -238,34 +247,39 @@ if (do_rt_pred_fmri){
     rm(Q2)
     if (strcmp(toalign,'clock')){
       if (i==1){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_sc' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='id')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='id')
       } else if (i==3){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change_lag' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='rewFunc')
+        #qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change_lag' & group=='id')
+      } else if (i==4){
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='rewFunc')
       }
     } else if (strcmp(toalign,'feedback')){
       if (i==1){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_sc' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='id')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='id')
       } else if (i==3){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change' & group=='id')
       } 
     }
-    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
+    #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
-    qdf$id <- as.character(qdf$id)
+    qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)
     source('~/vmPFC/get_trial_data_vmPFC.R')
     df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-    df <- df %>% select(rt_vmax_lag,v_max_wi_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                        v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
-                        rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+    df <- df %>% select(rewFunc,rt_vmax_lag,rt_lag,v_max_wi_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+                        v_max_wi, iti_ideal, iti_prev,v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
+                        trial_neg_inv_sc,rt_vmax_lag,rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
-      mutate(rt_sec = rt_csv/1000) %>% ungroup() %>%
+      mutate(rt_sec = rt_csv/1000) %>% 
       mutate(v_chosen_sc = scale(v_chosen),
              abs_pe_max_sc = scale(abs(pe_max)),
+             iti_sc = scale(iti_ideal),
+             iti_prev_sc = scale(iti_prev),
              score_sc = scale(score_csv),
              pe_max_sc = scale(pe_max),
              pe_max_lag_sc = scale(lag(pe_max)),
@@ -281,7 +295,7 @@ if (do_rt_pred_fmri){
              )) %>% mutate(log10kld4_lag = case_when(
                kld4_lag==0 ~NA_real_,
                kld4_lag>0 ~ log10(kld4_lag)
-             ))
+             )) %>% ungroup()
     df <- df %>% group_by(id,run) %>% mutate(expl_longer =(case_when(
       rt_csv - rt_lag > 1 ~ 'Longer',
       rt_csv - rt_lag < -1 ~ '0',
@@ -303,18 +317,20 @@ if (do_rt_pred_fmri){
       run_trial > 15 & run_trial < 30 ~ 'Middle',
       run_trial >=30 ~ 'Late',
     )))
-    
-    Q2 <- merge(qdf,df,by=c('id'))
+    df$id <- as.integer(df$id)
+    Q2 <- inner_join(qdf,df,by=c('id'))
     Q2$trial_bin <- factor(Q2$trial_bin)
     Q2$trial_bin <- relevel(Q2$trial_bin, ref='Middle')
     Q2 <- Q2 %>% rename(subj_level_rand_slope=estimate)
-    
+    Q2$last_outcome <- relevel(factor(Q2$last_outcome),ref='Reward')
     if (strcmp(toalign,'clock')){
-      decode_formula = formula(~ (trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_sc + subj_level_rand_slope + last_outcome)^2 +
-                                 rt_lag_sc*subj_level_rand_slope*last_outcome + rt_vmax_lag_sc*subj_level_rand_slope*trial_neg_inv_sc + (1|id/run))
+      decode_formula <- NULL
+      #decode_formula[[1]] = formula(~ rt_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1+rt_lag | id/run))
+      #decode_formula[[2]] = formula(~ rt_vmax_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1 + rt_vmax_lag | id/run))
+      decode_formula[[1]] <- formula(~(trial_neg_inv_sc + rt_lag + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag:last_outcome:subj_level_rand_slope + rt_vmax_lag * trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
     } else if (strcmp(toalign,'feedback')){
-      decode_formula = formula(~ (trial_neg_inv_sc + rt_csv_sc + v_max_wi + v_entropy_sc + subj_level_rand_slope + outcome)^2 +
-                                 rt_csv_sc*subj_level_rand_slope*outcome + rt_vmax_sc*subj_level_rand_slope + (1|id/run))      
+      decode_formula = formula(~ trial_neg_inv_sc + rt_csv_sc + last_outcome + outcome + iti_sc + iti_prev_sc +
+                                 rt_csv_sc*subj_level_rand_slope + rt_vmax_sc*subj_level_rand_slope*trial_neg_inv_sc + (1|id/run))     
     }
     qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
     qRTV <- quantile(df$rt_vmax_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
@@ -326,69 +342,70 @@ if (do_rt_pred_fmri){
     #qH <- c(1,2,3,4)
     qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     qRS <- quantile(Q2$subj_level_rand_slope, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
-    splits = c('network','evt_time')
+    
+    #write.csv(Q2,file=paste0('vPFC_network_ranslopes_pred_rt_csv','_',i,'.csv'))
+    
+    splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
-    if (strcmp(toalign,'clock')){
-      ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula, split_on = splits,return_models=TRUE,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        LO = list(outcome='rt_csv',model_name='model1',
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope:last_outcome),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        RT = list(outcome='rt_csv', model_name='model1', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1',
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1',
-                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=qT))
-                      ),
-                      emtrends_spec = list(
-                        LO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope:last_outcome),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc',
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1', var='rt_vmax_lag_sc',
-                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=qT))
-                      )
+    for (j in 1:length(decode_formula)){
+      print(j)
+      if (j==1){
+        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', 
+                                    specs=formula(~rt_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag=c(-2,-1,0,1,2))),
+                  RTxO = list(outcome='rt_csv',model_name='model1',
+                                      specs=formula(~rt_lag:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag=c(-2,-1,0,1,2)))        
+                          
+                        ),
+                        emtrends_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag', 
+                                    specs=formula(~rt_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag',
+                                      specs=formula(~rt_lag:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                          
+                        )
+        )
+      } else if (j==2){
+             ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                               padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                               tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                               emmeans_spec = list(
+                                 Vmax = list(outcome='rt_csv', model_name='model1', 
+                                           specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag=c(-2,-1,0,1,2)))
+                               ),
+                               emtrends_spec = list(
+                                 Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag', 
+                                           specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                               )
       )
-    } else if (strcmp(toalign,'feedback')){
-      ddq <- mixed_by(Q2, outcomes = "rt_next", rhs_model_formulae = decode_formula, split_on = splits,return_models=TRUE,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        LO = list(outcome='rt_next',model_name='model1',
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope:outcome),at=list(subj_level_rand_slope=qRS)),
-                        RT = list(outcome='rt_next', model_name='model1', 
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=qRS)),
-                        Vmax = list(outcome='rt_next', model_name='model1',
-                                    specs=formula(~rt_vmax_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=qRS))
-                      ),
-                      emtrends_spec = list(
-                        LO = list(outcome='rt_next',model_name='model1',var='rt_csv_sc',
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope:outcome),at=list(subj_level_rand_slope=qRS)),
-                        RT = list(outcome='rt_next', model_name='model1', var='rt_csv_sc', 
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=qRS)),
-                        Vmax = list(outcome='rt_next', model_name='model1', var='rt_vmax_sc',
-                                    specs=formula(~rt_vmax_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=qRS))
-                      )
-      )  
-    }
-    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-    curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata'))
+      }
+      setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      if (j==1){
+        #save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata'))
+      } else if (j==2){
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata'))
+      }
+  }
   }
 }
 if (plot_rt_pred_fmri){
   source('~/vmPFC/plot_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emmeans_subject_level_random_slopes.R')
-  for (i in 1:3){
+  for (i in 1){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-    model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     model_iter <- i
@@ -397,18 +414,31 @@ if (plot_rt_pred_fmri){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
-    plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
+    if (strcmp(toprocess,'network-by-HC')){
+      if (strcmp(toalign,"clock")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
+      } else if (strcmp(toalign,"feedback")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback_HC_interaction')
+      }
+    } else if (strcmp(toprocess,'network')){
+      if (strcmp(toalign,"clock")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
+      } else if (strcmp(toalign,"feedback")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback')
+      }
+    }
+    #plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
 }
- 
-  
-  # replication
-  
-  ### Does random slope predict rt_vmax or rt_swing?
+
+
+# replication
+
+### Does random slope predict rt_vmax or rt_swing?
 if (do_rt_pred_meg){
-  for (i in 1:3){
+  for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
     model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
@@ -418,34 +448,37 @@ if (do_rt_pred_meg){
     rm(Q2)
     if (strcmp(toalign,'clock')){
       if (i==1){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_sc' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='id')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='id')
       } else if (i==3){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change_lag' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='rewFunc')
+        #qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change_lag' & group=='id')
+      } else if (i==4){
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='rewFunc')
       }
     } else if (strcmp(toalign,'feedback')){
       if (i==1){
-        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_sc' & group=='id')
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi' & group=='id')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_max_wi' & group=='id')
       } else if (i==3){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change' & group=='id')
       } 
     }
-    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
+    #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
-    qdf$id <- as.character(qdf$id)
+    qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)
-    
-    source('~/vmPFC/get_trial_data_vmPFC.R')
-    df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_meg')
-    df <- df %>% select(rt_vmax_lag,v_max_wi_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                        v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
-                        rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
+    source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+    df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_meg')
+    df <- df %>% select(rewFunc,rt_vmax_lag,rt_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+                        v_max_wi,v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
+                        trial_neg_inv_sc,rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
-      mutate(rt_sec = rt_csv/1000) %>% ungroup() %>%
+      mutate(rt_sec = rt_csv/1000) %>% 
       mutate(v_chosen_sc = scale(v_chosen),
+             v_max_wi_lag = lag(v_max_wi),
              abs_pe_max_sc = scale(abs(pe_max)),
              score_sc = scale(score_csv),
              pe_max_sc = scale(pe_max),
@@ -462,7 +495,7 @@ if (do_rt_pred_meg){
              )) %>% mutate(log10kld4_lag = case_when(
                kld4_lag==0 ~NA_real_,
                kld4_lag>0 ~ log10(kld4_lag)
-             ))
+             )) %>% ungroup()
     df <- df %>% group_by(id,run) %>% mutate(expl_longer =(case_when(
       rt_csv - rt_lag > 1 ~ 'Longer',
       rt_csv - rt_lag < -1 ~ '0',
@@ -480,96 +513,100 @@ if (do_rt_pred_meg){
       rt_csv_sc > 1 ~ '1'
     )))
     df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
-      run_trial <= 21 ~ 'Early',
-      run_trial > 21 & run_trial < 42 ~ 'Middle',
-      run_trial >=42 ~ 'Late',
+      run_trial <= 15 ~ 'Early',
+      run_trial > 15 & run_trial < 30 ~ 'Middle',
+      run_trial >=30 ~ 'Late',
     )))
-    
-    Q2 <- merge(qdf,df,by=c('id'))
+    df$id <- as.integer(df$id)
+    Q2 <- inner_join(qdf,df,by=c('id'))
     Q2$trial_bin <- factor(Q2$trial_bin)
     Q2$trial_bin <- relevel(Q2$trial_bin, ref='Middle')
     Q2 <- Q2 %>% rename(subj_level_rand_slope=estimate)
-    
+    Q2$last_outcome <- relevel(factor(Q2$last_outcome),ref='Reward')
     if (strcmp(toalign,'clock')){
-      decode_formula = formula(~ (trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_sc + subj_level_rand_slope + last_outcome)^2 +
-                                 rt_lag_sc*subj_level_rand_slope*last_outcome + rt_vmax_lag_sc*subj_level_rand_slope*trial_neg_inv_sc + (1|id/run))
+      decode_formula <- NULL
+      #decode_formula[[1]] = formula(~ rt_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1+rt_lag | id/run))
+      #decode_formula[[2]] = formula(~ rt_vmax_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1 + rt_vmax_lag | id/run))
+      decode_formula[[1]] <- formula(~(trial_neg_inv_sc + rt_lag + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag:last_outcome:subj_level_rand_slope + rt_vmax_lag * trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
     } else if (strcmp(toalign,'feedback')){
-      decode_formula = formula(~ (trial_neg_inv_sc + rt_csv_sc + v_max_wi + v_entropy_sc + subj_level_rand_slope + outcome)^2 +
-                                 rt_csv_sc*subj_level_rand_slope*outcome + rt_vmax_sc*subj_level_rand_slope + (1|id/run))      
+      decode_formula = formula(~ trial_neg_inv_sc + rt_csv_sc + last_outcome + outcome + iti_sc + iti_prev_sc +
+                                 rt_csv_sc*subj_level_rand_slope + rt_vmax_sc*subj_level_rand_slope*trial_neg_inv_sc + (1|id/run))     
     }
     qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
     qRTV <- quantile(df$rt_vmax_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     qH <- NULL
     qH[1] <- mean(df$v_entropy_wi,na.rm=TRUE) - 2*sd(df$v_entropy_wi,na.rm=TRUE)
     qH[2] <- mean(df$v_entropy_wi,na.rm=TRUE) + 2*sd(df$v_entropy_wi,na.rm=TRUE)
-    qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
+    qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
     qRT <- quantile(df$rt_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     #qH <- c(1,2,3,4)
-    qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
+    qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     qRS <- quantile(Q2$subj_level_rand_slope, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
-    splits = c('network','evt_time')
+    
+    #write.csv(Q2,file=paste0('vPFC_network_ranslopes_pred_rt_csv','_',i,'.csv'))
+    
+    splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
-    if (strcmp(toalign,'clock')){
-      ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula, split_on = splits,return_models=TRUE,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        LO = list(outcome='rt_csv',model_name='model1',
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope:last_outcome),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        RT = list(outcome='rt_csv', model_name='model1', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1',
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1',
-                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=qT))
-                      ),
-                      emtrends_spec = list(
-                        LO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope:last_outcome),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc',
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1', var='rt_vmax_lag_sc',
-                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc),at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=qT))
-                      )
-      )
-    } else if (strcmp(toalign,'feedback')){
-      ddq <- mixed_by(Q2, outcomes = "rt_next", rhs_model_formulae = decode_formula, split_on = splits,return_models=TRUE,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        LO = list(outcome='rt_next',model_name='model1',
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope:outcome),at=list(subj_level_rand_slope=qRS)),
-                        RT = list(outcome='rt_next', model_name='model1', 
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=qRS)),
-                        Vmax = list(outcome='rt_next', model_name='model1',
-                                    specs=formula(~rt_vmax_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=qRS))
-                      ),
-                      emtrends_spec = list(
-                        LO = list(outcome='rt_next',model_name='model1',var='rt_csv_sc',
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope:outcome),at=list(subj_level_rand_slope=qRS)),
-                        RT = list(outcome='rt_next', model_name='model1', var='rt_csv_sc', 
-                                  specs=formula(~rt_csv_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=qRS)),
-                        Vmax = list(outcome='rt_next', model_name='model1', var='rt_vmax_sc',
-                                    specs=formula(~rt_vmax_sc:subj_level_rand_slope), at=list(subj_level_rand_slope=qRS))
-                      )
-      )  
+    for (j in 1:length(decode_formula)){
+      print(j)
+      if (j==1){
+        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', 
+                                    specs=formula(~rt_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag=c(-2,-1,0,1,2))),
+                          RTxO = list(outcome='rt_csv',model_name='model1',
+                                      specs=formula(~rt_lag:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag=c(-2,-1,0,1,2)))        
+                          
+                        ),
+                        emtrends_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag', 
+                                    specs=formula(~rt_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag',
+                                      specs=formula(~rt_lag:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                          
+                        )
+        )
+      } else if (j==2){
+        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag=c(-2,-1,0,1,2)))
+                        ),
+                        emtrends_spec = list(
+                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag', 
+                                      specs=formula(~rt_vmax_lag:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                        )
+        )
+      }
+      setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+      if (j==1){
+        #save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_lag-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata'))
+      } else if (j==2){
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-rt_vmax_lag-',i,'.Rdata'))
+      }
     }
-    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-    curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata'))
   }
 }
+  
 if (plot_rt_pred_meg){
   source('~/vmPFC/plot_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
   source('~/vmPFC/plot_emmeans_subject_level_random_slopes.R')
-  for (i in 1:3){
+  for (i in 1:2){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-    model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     model_iter <- i
@@ -578,462 +615,571 @@ if (plot_rt_pred_meg){
     toprocess <- 'network'
     behavmodel <- 'compressed'
     hc_LorR <- 'LR'
+    if (strcmp(toprocess,'network-by-HC')){
+      if (strcmp(toalign,"clock")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
+      } else if (strcmp(toalign,"feedback")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback_HC_interaction')
+      }
+    } else if (strcmp(toprocess,'network')){
+      if (strcmp(toalign,"clock")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
+      } else if (strcmp(toalign,"feedback")){
+        setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback')
+      }
+    }
     plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
     plot_emmeans_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
   }
 }
-# #test rt_swing
-# splits = c('evt_time','HC_region','network')
-# ddq <- mixed_by(Q2, outcomes = "rt_swing", rhs_model_formulae = decode_formula[[1]] , split_on = splits,
-#                 padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-#                 tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-#                 emtrends_spec = list(
-#                   V_HC = list(outcome='rt_swing', model_name='model1', var='estimate', 
-#                               specs='v_max_wi', at = list(v_max_wi=qV)),
-#                   T_HC = list(outcome='rt_swing', model_name='model1', var='estimate', 
-#                               specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=c(qT))),
-#                   O_HC = list(outcome='rt_swing', model_name='model1', var='estimate',
-#                               specs=c('last_outcome'))
-#                 )
-# )
-# setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-# curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-# save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-pred-rt_swing-replication-',i,'.Rdata'))
-# 
-# 
-# source('~/vmPFC/plot_subject_level_random_slopes.R')
-# source('~/vmPFC/plot_emtrends_subject_level_random_slopes.R')
-# for (i in 1){
-#   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-#   #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
-#   model_str <- paste0('-vmPFC-HC-network-ranslopes-pred-rt_swing-replication-',i,'.Rdata')
-#   model_str <- Sys.glob(paste0('*',model_str))
-#   load(model_str)
-#   model_iter <- i
-#   totest <- 'rt_swing-replication'
-#   #toprocess <- 'symmetry-by-HC'
-#   toprocess <- 'network-by-HC'
-#   toalign <- 'clock'
-#   behavmodel <- 'compressed'
-#   hc_LorR <- 'LR'
-#   plot_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
-#   plot_emtrends_subject_level_random_slopes(ddq,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
-# }
-# 
-# rm(decode_formula)
-# decode_formula <- formula(~ (1|id/run))
-# decode_formula[[1]] = formula(~ estimate + (1|id))
-# decode_formula[[2]] = formula(~ estimate +  + (1|id))
-# decode_formula[[3]] = formula(~ estimate +  + last_outcome + (1|id))
-# decode_formula[[4]] = formula(~ estimate +  + last_outcome:estimate + (1|id))
-# decode_formula[[5]] = formula(~ estimate + v_entropy_wi + (1|id))
-# 
-# Q2 <- Q2 %>% mutate(Swing_Category = case_when(rt_swing <= 0.333 ~ 'Exploitation', 
-#                                                rt_swing > 0.333  ~ 'Exploration' 
-#                                                ))
-# Q2$Swing_Category <- as.factor(Q2$Swing_Category)
-# Q2$Swing_Category <- relevel(Q2$Swing_Category,ref='Exploitation')
-# source('~/vmPFC/mixed_by.R')
-# for (i in 1:length(decode_formula)){
-#   print(i)
-#   ddq <- mixed_by(Q2, outcomes = "Swing_Category", rhs_model_formulae = decode_formula[[i]], 
-#                   split_on = splits,return_models=TRUE,padjust_by="term",padjust_method="fdr",
-#                   refit_on_nonconvergence = 0, calculate=c('parameter_estimates_ml','fit_statistics'),ncores=ncores,
-#                   tidy_args = list(effects=c("coefficients")), doclmm=TRUE)
-#   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-#   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-#   save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-pred-Swing_Category-',i,'.Rdata'))
-# }
-
 
 if (do_entropy_plot){
-# plot nice figure
+  # plot nice figure
   library(wesanderson)
   pal = wes_palette("FantasticFox1", 3, type = "discrete")
-i <- 1 # entropy
-toalign <- 'clock' #
-setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_r <- ddq
-rm(ddq)
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_f <- ddq
-rm(ddq)
+  pal1 = palette()
+  pal1[1] <- pal[2]
+  pal1[2] <- pal[1]
+  pal1[3] <- pal[3]
+  i <- 1 # entropy
+  toalign <- 'clock' #
+  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_r <- ddq
+  rm(ddq)
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_f <- ddq
+  rm(ddq)
+  
+  ddq_r_emm <- ddq_r$emmeans_list$Vmax
+  ddq_r_emt <- ddq_r$emtrends_list$Vmax
+  ddq_f_emm <- ddq_f$emmeans_list$Vmax
+  ddq_f_emt <- ddq_f$emtrends_list$Vmax
+  ddq_r <- ddq_r$coef_df_reml
+  ddq_f <- ddq_f$coef_df_reml
+  
+  ddq_r <- ddq_r %>% filter(effect=='fixed') 
+  ddq_f <- ddq_f %>% filter(effect=='fixed')
+  
+  ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'non-fMRI Replication') %>% rename(rt_vmax_lag_r = rt_vmax_lag, slrs_r=subj_level_rand_slope) 
+  uS <- sort(unique(ddq_r_emm$slrs_r))
+  uRTV <- sort(unique(ddq_r_emm$rt_vmax_lag_r))
+  uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
+  ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_r==uS[1] ~ '-2 std',
+    slrs_r==uS[2] ~ '-1 std',
+    slrs_r==uS[3] ~ 'mean',
+    slrs_r==uS[4] ~ '+1 std',
+    slrs_r==uS[5] ~ '+2 std'
+  ), RT_vmax_bin = case_when(
+    rt_vmax_lag_r==uRTV[1] ~ '-2 std',
+    rt_vmax_lag_r==uRTV[2] ~ '-1 std',
+    rt_vmax_lag_r==uRTV[3] ~ 'mean',
+    rt_vmax_lag_r==uRTV[4] ~ '+1 std',
+    rt_vmax_lag_r==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
+  ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI') %>% rename(rt_vmax_lag_f = rt_vmax_lag, slrs_f=subj_level_rand_slope)
+  uS <- sort(unique(ddq_f_emm$slrs_f))
+  uRTV <- sort(unique(ddq_f_emm$rt_vmax_lag_f))
+  ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_f==uS[1] ~ '-2 std',
+    slrs_f==uS[2] ~ '-1 std',
+    slrs_f==uS[3] ~ 'mean',
+    slrs_f==uS[4] ~ '+1 std',
+    slrs_f==uS[5] ~ '+2 std'
+  ), RT_vmax_bin = case_when(
+    rt_vmax_lag_f==uRTV[1] ~ '-2 std',
+    rt_vmax_lag_f==uRTV[2] ~ '-1 std',
+    rt_vmax_lag_f==uRTV[3] ~ 'mean',
+    rt_vmax_lag_f==uRTV[4] ~ '+1 std',
+    rt_vmax_lag_f==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
+  ddq_r <- ddq_r %>% mutate(dataset = 'non-fMRI Replication')
+  ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
+  
+  ddq <- rbind(ddq_r,ddq_f)
+  ddq <- ddq %>% filter(term=='subj_level_rand_slope:rt_vmax_lag')
+  ddq <- ddq%>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+  ddq <- ddq  %>% 
+    mutate(p_level_fdr = case_when(
+      padj_fdr_term > .05 ~ 'NS',
+      padj_fdr_term < .05 & padj_fdr_term > .01 ~ 'p < 0.05',
+      padj_fdr_term < .01 & padj_fdr_term > .001 ~ 'p < 0.01',
+      padj_fdr_term <.001 & padj_fdr_term > .0001 ~ 'p < 0.001',
+      padj_fdr_term <.0001 ~ 'p < 0.0001'
+    ))
+  ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR')
+  
+  
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Entropy-rt_vmax-convergence-DC-main.pdf',width=14,height=7)
+  gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
+    geom_violin() + facet_wrap(~dataset) +
+    geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
+    theme(axis.text.x = element_text(size=25), axis.text.y = element_text(size=25), axis.title = element_text(size=35), strip.text.x = element_text(size=35),strip.text.y = element_text(size=35),legend.title=element_text(size=35),legend.text=element_text(size=30),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    ylab('Convergence on Best RT (AU)') + xlab('') +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
+    guides(color=guide_legend(title='Network'))
+  #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
+  print(gg1)
+  dev.off()
+  
+  ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_vmax_lag_r)
+  ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_vmax_lag_f)
+  ddf <- rbind(ddq_r_emm,ddq_f_emm)
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std')) #& RT_vmax_bin=='mean')
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM')) %>% select(!std.error)
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std')) #& RT_vmax_bin=='mean')
+  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR')
+  ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
 
-ddq_r_emm <- ddq_r$emmeans_list$Vmax
-ddq_r_emt <- ddq_r$emtrends_list$Vmax
-ddq_f_emm <- ddq_f$emmeans_list$Vmax
-ddq_f_emt <- ddq_f$emtrends_list$Vmax
-ddq_r <- ddq_r$coef_df_reml
-ddq_f <- ddq_f$coef_df_reml
-
-ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'Replication') %>% rename(rt_vmax_lag_sc_r = rt_vmax_lag_sc, slrs_r=subj_level_rand_slope) %>% select(network,dataset,rt_vmax_lag_sc_r,slrs_r,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_r_emm$slrs_r))
-uRTV <- sort(unique(ddq_r_emm$rt_vmax_lag_sc_r))
-uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
-ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
-  slrs_r==uS[1] ~ '-2 std',
-  slrs_r==uS[2] ~ '-1 std',
-  slrs_r==uS[3] ~ 'mean',
-  slrs_r==uS[4] ~ '+1 std',
-  slrs_r==uS[5] ~ '+2 std'
-), RT_vmax_bin = case_when(
-  rt_vmax_lag_sc_r==uRTV[1] ~ '-2 std',
-  rt_vmax_lag_sc_r==uRTV[2] ~ '-1 std',
-  rt_vmax_lag_sc_r==uRTV[3] ~ 'mean',
-  rt_vmax_lag_sc_r==uRTV[4] ~ '+1 std',
-  rt_vmax_lag_sc_r==uRTV[5] ~ '+2 std'
-))
-#ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
-ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_vmax_lag_sc_f = rt_vmax_lag_sc, slrs_f=subj_level_rand_slope) %>% select(network,dataset,rt_vmax_lag_sc_f,slrs_f,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_f_emm$slrs_f))
-uRTV <- sort(unique(ddq_f_emm$rt_vmax_lag_sc_f))
-ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
-  slrs_f==uS[1] ~ '-2 std',
-  slrs_f==uS[2] ~ '-1 std',
-  slrs_f==uS[3] ~ 'mean',
-  slrs_f==uS[4] ~ '+1 std',
-  slrs_f==uS[5] ~ '+2 std'
-), RT_vmax_bin = case_when(
-  rt_vmax_lag_sc_f==uRTV[1] ~ '-2 std',
-  rt_vmax_lag_sc_f==uRTV[2] ~ '-1 std',
-  rt_vmax_lag_sc_f==uRTV[3] ~ 'mean',
-  rt_vmax_lag_sc_f==uRTV[4] ~ '+1 std',
-  rt_vmax_lag_sc_f==uRTV[5] ~ '+2 std'
-))
-#ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
-ddq_r <- ddq_r %>% mutate(dataset = 'Replication')
-ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
-
-ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_vmax_lag_sc_r)
-ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_vmax_lag_sc_f)
-
-ddf <- rbind(ddq_r_emm,ddq_f_emm)
-#ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-ddf <- ddf %>% filter((network=='D' | network=='C'),(vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std') & RT_vmax_bin=='mean')
-ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR')) %>% select(!std.error)
-ddf1 <- ddf
-ddf <- ddf %>% group_by(network,dataset,evt_time,RT_vmax_bin) %>%
-  pivot_wider(names_from = (vPFC_Entropy_random_slope), values_from=c(estimate)) %>% ungroup()
-ddf <- ddf %>% mutate(diff = `-2 std` - `+2 std`) %>% select(!`+2 std` & !`-2 std`)
-#ddf <- ddf %>% group_by(network1,dataset) %>% summarize(mD = mean(diff,na.rm=TRUE), dD = sd(diff,na.rm=TRUE)/sqrt(length(diff))) %>% ungroup()
-ddf <- ddf %>% mutate(difference = '')
-
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Entropy-rt_vmax-convergence-DC-nodiff.pdf',width=8,height=6)
-gg1 <- ggplot(ddf1,aes(x=vPFC_Entropy_random_slope,y=estimate)) + geom_hline(yintercept=0) + 
-  geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-  facet_grid(network~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') + 
-  guides(fill = guide_legend(byrow=TRUE))
-print(gg1)
-dev.off()
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Entropy-rt_vmax-convergence-DC.pdf',width=8,height=6)
-gg1 <- ggplot(ddf,aes(x=difference,y=diff,color=network1)) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + geom_hline(yintercept=0) + 
-  geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-  facet_grid(~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') + ylim(-0.25, 0.5) + guides(color=guide_legend(title='Network')) + 
-  theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) + 
-  guides(fill = guide_legend(byrow=TRUE))
-print(gg1)
-dev.off()
-
-
-i <- 1 # entropy
-toalign <- 'clock' #
-setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_r <- ddq
-rm(ddq)
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_f <- ddq
-rm(ddq)
-
-ddq_r_emm <- ddq_r$emmeans_list$LO
-ddq_r_emt <- ddq_r$emtrends_list$LO
-ddq_f_emm <- ddq_f$emmeans_list$LO
-ddq_f_emt <- ddq_f$emtrends_list$LO
-ddq_r <- ddq_r$coef_df_reml
-ddq_f <- ddq_f$coef_df_reml
-
-ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'Replication') %>% rename(rt_lag_sc_r = rt_lag_sc, slrs_r=subj_level_rand_slope) %>% select(network,dataset,last_outcome,rt_lag_sc_r,slrs_r,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_r_emm$slrs_r))
-uRTV <- sort(unique(ddq_r_emm$rt_lag_sc_r))
-uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
-ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
-  slrs_r==uS[1] ~ '-2 std',
-  slrs_r==uS[2] ~ '-1 std',
-  slrs_r==uS[3] ~ 'mean',
-  slrs_r==uS[4] ~ '+1 std',
-  slrs_r==uS[5] ~ '+2 std'
-), RT_lag_bin = case_when(
-  rt_lag_sc_r==uRTV[1] ~ '-2 std',
-  rt_lag_sc_r==uRTV[2] ~ '-1 std',
-  rt_lag_sc_r==uRTV[3] ~ 'mean',
-  rt_lag_sc_r==uRTV[4] ~ '+1 std',
-  rt_lag_sc_r==uRTV[5] ~ '+2 std'
-))
-#ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
-ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_lag_sc_f = rt_lag_sc, slrs_f=subj_level_rand_slope) %>% select(network,dataset,last_outcome,rt_lag_sc_f,slrs_f,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_f_emm$slrs_f))
-uRTV <- sort(unique(ddq_f_emm$rt_lag_sc_f))
-ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
-  slrs_f==uS[1] ~ '-2 std',
-  slrs_f==uS[2] ~ '-1 std',
-  slrs_f==uS[3] ~ 'mean',
-  slrs_f==uS[4] ~ '+1 std',
-  slrs_f==uS[5] ~ '+2 std'
-), RT_lag_bin = case_when(
-  rt_lag_sc_f==uRTV[1] ~ '-2 std',
-  rt_lag_sc_f==uRTV[2] ~ '-1 std',
-  rt_lag_sc_f==uRTV[3] ~ 'mean',
-  rt_lag_sc_f==uRTV[4] ~ '+1 std',
-  rt_lag_sc_f==uRTV[5] ~ '+2 std'
-))
-#ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
-ddq_r <- ddq_r %>% mutate(dataset = 'Replication')
-ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
-
-ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_lag_sc_r)
-ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_lag_sc_f)
-
-ddf <- rbind(ddq_r_emm,ddq_f_emm)
-#ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-ddf <- ddf %>% filter((network=='D' | network=='C') & (vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
-ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR')) %>% select(!std.error)
-ddf1 <- ddf
-ddf <- ddf %>% group_by(network,dataset,last_outcome,evt_time,RT_lag_bin) %>%
-  pivot_wider(names_from = (vPFC_Entropy_random_slope), values_from=c(estimate)) %>% ungroup()
-ddf <- ddf %>% mutate(diff = `-2 std` - `+2 std`) %>% select(!`+2 std` & !`-2 std`)
-#ddf <- ddf %>% group_by(network1,dataset,last_outcome) %>% summarize(mD = mean(diff,na.rm=TRUE), dD = sd(diff,na.rm=TRUE)/sqrt(length(diff))) %>% ungroup()
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Entropy-rt_csv-convergence-DC-nodiff.pdf',width=10,height=6)
-gg1 <- ggplot(ddf1,aes(x=last_outcome,y=estimate,color=vPFC_Entropy_random_slope)) + geom_hline(yintercept=0) + 
-  geom_violin(position=position_dodge(width=1),width=1) + geom_boxplot(position=position_dodge(width=1.5),width=0.1) + scale_y_reverse() +
-  facet_grid(network1~dataset) + ylab('RT swings (AU)') + xlab('Entropy Response') + guides(color=guide_legend(title='emmeans'))
-print(gg1)
-dev.off()
-
-ddf <- ddf %>% mutate(dum_order = case_when(network1=='CTR' & last_outcome =='Reward' ~ 1,
-                                            network1=='CTR' & last_outcome =='Omission' ~ 2,
-                                            network1=='DMN' & last_outcome == 'Reward' ~ 3,
-                                            network1=='DMN' & last_outcome == 'Omission' ~ 4))
-ddf$dum_order <- factor(ddf$dum_order,levels=c(1,2,3,4))
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Entropy-rt_csv-convergence-DC.pdf',width=10,height=6)
-gg1 <- ggplot(ddf,aes(x=dum_order,y=diff,color=network1)) + geom_hline(yintercept=0) + scale_x_discrete(labels=c('Reward','Omission','Reward','Omission')) + 
-  geom_violin(position=position_dodge(width=1),width=1) + geom_boxplot(position=position_dodge(width=1.5),width=0.1) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + 
-  facet_grid(~dataset) + ylab('RT swings (AU)') + xlab('Entropy Response') + ylim(-0.25, 0.5) + guides(color=guide_legend(title='Network')) + 
-  theme(axis.text.x = element_text(size=20,angle=45,hjust=1), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30), legend.title = element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm'))
-print(gg1)
-dev.off()
-
+  ddf$RT_vmax_bin <- factor(ddf$RT_vmax_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
+  
+   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+   pdf('Entropy-rt_vmax-convergence-DC-nodiff.pdf',width=14,height=12)
+   gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+     geom_violin() +
+     facet_grid(RT_vmax_bin~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') +
+     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
+     guides(fill = guide_legend(byrow=TRUE)) +
+     ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') +
+     scale_color_manual(values = pal1) +
+     guides(color=guide_legend(title='Network'))
+  print(gg1)
+  dev.off()
+  
+  
+  rm(ddf)
+  rm(ddq)
+  
+  i <- 1 # entropy
+  toalign <- 'clock' #
+  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_r <- ddq
+  rm(ddq)
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_f <- ddq
+  rm(ddq)
+  
+  ddq_r_emm <- ddq_r$emmeans_list$RTxO
+  ddq_r_emt <- ddq_r$emtrends_list$RTxO
+  ddq_f_emm <- ddq_f$emmeans_list$RTxO
+  ddq_f_emt <- ddq_f$emtrends_list$RTxO
+  ddq_r <- ddq_r$coef_df_reml
+  ddq_f <- ddq_f$coef_df_reml
+  
+  ddq_r <- ddq_r %>% filter(effect=='fixed') 
+  ddq_f <- ddq_f %>% filter(effect=='fixed') 
+  
+  ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'non-fMRI Replication') %>% rename(rt_lag_sc_r = rt_lag, slrs_r=subj_level_rand_slope)
+  uS <- sort(unique(ddq_r_emm$slrs_r))
+  uRTV <- sort(unique(ddq_r_emm$rt_lag_sc_r))
+  uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
+  ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_r==uS[1] ~ '-2 std',
+    slrs_r==uS[2] ~ '-1 std',
+    slrs_r==uS[3] ~ 'mean',
+    slrs_r==uS[4] ~ '+1 std',
+    slrs_r==uS[5] ~ '+2 std'
+  ), RT_lag_bin = case_when(
+    rt_lag_sc_r==uRTV[1] ~ '-2 std',
+    rt_lag_sc_r==uRTV[2] ~ '-1 std',
+    rt_lag_sc_r==uRTV[3] ~ 'mean',
+    rt_lag_sc_r==uRTV[4] ~ '+1 std',
+    rt_lag_sc_r==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
+  ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_lag_sc_f = rt_lag, slrs_f=subj_level_rand_slope)
+  uS <- sort(unique(ddq_f_emm$slrs_f))
+  uRTV <- sort(unique(ddq_f_emm$rt_lag_sc_f))
+  ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_f==uS[1] ~ '-2 std',
+    slrs_f==uS[2] ~ '-1 std',
+    slrs_f==uS[3] ~ 'mean',
+    slrs_f==uS[4] ~ '+1 std',
+    slrs_f==uS[5] ~ '+2 std'
+  ), RT_lag_bin = case_when(
+    rt_lag_sc_f==uRTV[1] ~ '-2 std',
+    rt_lag_sc_f==uRTV[2] ~ '-1 std',
+    rt_lag_sc_f==uRTV[3] ~ 'mean',
+    rt_lag_sc_f==uRTV[4] ~ '+1 std',
+    rt_lag_sc_f==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
+  ddq_r <- ddq_r %>% mutate(dataset = 'non-fMRI Replication')
+  ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
+  ddq <- rbind(ddq_r,ddq_f)
+  ddq <- ddq %>% filter(term=='rt_lag:subj_level_rand_slope')
+  ddq <- ddq %>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+  ddq <- ddq  %>% 
+    mutate(p_level_fdr = case_when(
+      padj_fdr_term > .05 ~ 'NS',
+      padj_fdr_term < .05 & padj_fdr_term > .01 ~ 'p < 0.05',
+      padj_fdr_term < .01 & padj_fdr_term > .001 ~ 'p < 0.01',
+      padj_fdr_term <.001 & padj_fdr_term > .0001 ~ 'p < 0.001',
+      padj_fdr_term <.0001 ~ 'p < 0.0001'
+    ))
+  ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR')
+  
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Entropy-rt_csv-divergence-DC-main.pdf',width=14,height=7)
+  gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
+    geom_violin() + facet_wrap(~dataset) +
+    geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
+    theme(axis.text.x = element_text(size=25), axis.text.y = element_text(size=25), axis.title = element_text(size=35), strip.text.x = element_text(size=35),strip.text.y = element_text(size=35),legend.title=element_text(size=35),legend.text=element_text(size=30),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) + scale_y_reverse() +
+    ylab('RT swings (AU)') + xlab('') +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
+    guides(color=guide_legend(title='Network'))
+  #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
+  print(gg1)
+  dev.off()
+  
+  
+  
+  ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_lag_sc_r)
+  ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_lag_sc_f)
+  
+  ddf <- rbind(ddq_r_emm,ddq_f_emm)
+  #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM')) %>% select(!std.error)
+  ddf <- ddf %>% filter(network=='D' | network=='C')
+  ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
+  ddf <- ddf %>% filter(last_outcome=='Reward')
+  #ddf <- ddf %>% filter(RT_lag_bin=='mean')
+  
+  ddf$RT_lag_bin <- factor(ddf$RT_lag_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
+  
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Entropy-rt_csv-divergence-DC-nodiff.pdf',width=17,height=15)
+  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+    geom_violin() + 
+    facet_grid(RT_lag_bin~dataset) + ylab('RT Swings (AU)') +
+    theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    xlab('Entropy Response') + scale_y_reverse() +
+    scale_color_manual(values = pal1) +
+    guides(color=guide_legend(title='Network'))
+  print(gg1)
+  dev.off()
+  
+  
+  ddq_r_emt <- ddq_r_emt %>% mutate(dataset = 'non-fMRI Replication') %>% rename(rt_lag_sc_r = rt_lag.trend, slrs_r=subj_level_rand_slope)
+  uS <- sort(unique(ddq_r_emt$slrs_r))
+  uRTV <- sort(unique(ddq_r_emt$rt_lag_sc_r))
+  ddq_r_emt <- ddq_r_emt %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_r==uS[1] ~ '-2 std',
+    slrs_r==uS[2] ~ '-1 std',
+    slrs_r==uS[3] ~ 'mean',
+    slrs_r==uS[4] ~ '+1 std',
+    slrs_r==uS[5] ~ '+2 std'
+  ))
+  
+  ddq_f_emt <- ddq_f_emt %>% mutate(dataset = 'fMRI')%>% rename(rt_lag_sc_f = rt_lag.trend, slrs_f=subj_level_rand_slope) 
+  uS <- sort(unique(ddq_f_emt$slrs_f))
+  uRTV <- sort(unique(ddq_f_emt$rt_lag_sc_f))
+  ddq_f_emt <- ddq_f_emt %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_f==uS[1] ~ '-2 std',
+    slrs_f==uS[2] ~ '-1 std',
+    slrs_f==uS[3] ~ 'mean',
+    slrs_f==uS[4] ~ '+1 std',
+    slrs_f==uS[5] ~ '+2 std'
+  ))
+  #ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
+  ddq_r <- ddq_r %>% mutate(dataset = 'non-fMRI Replication')
+  ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
+  ddq <- rbind(ddq_r,ddq_f)
+  ddq <- ddq %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
+  ddq <- ddq%>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+  ddq <- ddq  %>% 
+    mutate(p_level_fdr = case_when(
+      padj_fdr_term > .05 ~ 'NS',
+      padj_fdr_term < .05 & padj_fdr_term > .01 ~ 'p < 0.05',
+      padj_fdr_term < .01 & padj_fdr_term > .001 ~ 'p < 0.01',
+      padj_fdr_term <.001 & padj_fdr_term > .0001 ~ 'p < 0.001',
+      padj_fdr_term <.0001 ~ 'p < 0.0001'
+    ))
+  ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
+  ddq <- ddq %>% filter(network1=='DMN')
+  
+  
+  ddf$RT_lag_bin <- factor(ddf$RT_lag_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
+  
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Entropy-rt_csv-divergence-D-nodiff-ss.pdf',width=15,height=15)
+  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+    geom_violin(position=position_dodge(width=1)) +
+    facet_grid(RT_lag_bin~dataset) + ylab('RT Swings (AU)') + xlab('Entropy Response') +
+    theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    xlab('Entropy Response') + scale_y_reverse() +
+    scale_color_manual(values = pal1) +
+    guides(color=guide_legend(title='Network'))
+  print(gg1)
+  dev.off()
+  
 }
 
 if (do_value_plot){
-
-# plot nice figure
-library(wesanderson)
-pal = wes_palette("FantasticFox1", 3, type = "discrete")
-pal1 = palette()
-pal1[1] <- pal[2]
-pal1[2] <- pal[1]
-i <- 2 # value
-toalign <- 'clock' #
-setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_r <- ddq
-rm(ddq)
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_f <- ddq
-rm(ddq)
-
-ddq_r_emm <- ddq_r$emmeans_list$Vmax
-ddq_r_emt <- ddq_r$emtrends_list$Vmax
-ddq_f_emm <- ddq_f$emmeans_list$Vmax
-ddq_f_emt <- ddq_f$emtrends_list$Vmax
-ddq_r <- ddq_r$coef_df_reml
-ddq_f <- ddq_f$coef_df_reml
-
-ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'Replication') %>% rename(rt_vmax_lag_sc_r = rt_vmax_lag_sc, slrs_r=subj_level_rand_slope) %>% select(network,dataset,rt_vmax_lag_sc_r,slrs_r,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_r_emm$slrs_r))
-uRTV <- sort(unique(ddq_r_emm$rt_vmax_lag_sc_r))
-uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
-ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Value_random_slope = case_when(
-  slrs_r==uS[1] ~ '-2 std',
-  slrs_r==uS[2] ~ '-1 std',
-  slrs_r==uS[3] ~ 'mean',
-  slrs_r==uS[4] ~ '+1 std',
-  slrs_r==uS[5] ~ '+2 std'
-), RT_vmax_bin = case_when(
-  rt_vmax_lag_sc_r==uRTV[1] ~ '-2 std',
-  rt_vmax_lag_sc_r==uRTV[2] ~ '-1 std',
-  rt_vmax_lag_sc_r==uRTV[3] ~ 'mean',
-  rt_vmax_lag_sc_r==uRTV[4] ~ '+1 std',
-  rt_vmax_lag_sc_r==uRTV[5] ~ '+2 std'
-))
-#ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
-ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_vmax_lag_sc_f = rt_vmax_lag_sc, slrs_f=subj_level_rand_slope) %>% select(network,dataset,rt_vmax_lag_sc_f,slrs_f,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_f_emm$slrs_f))
-uRTV <- sort(unique(ddq_f_emm$rt_vmax_lag_sc_f))
-ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Value_random_slope = case_when(
-  slrs_f==uS[1] ~ '-2 std',
-  slrs_f==uS[2] ~ '-1 std',
-  slrs_f==uS[3] ~ 'mean',
-  slrs_f==uS[4] ~ '+1 std',
-  slrs_f==uS[5] ~ '+2 std'
-), RT_vmax_bin = case_when(
-  rt_vmax_lag_sc_f==uRTV[1] ~ '-2 std',
-  rt_vmax_lag_sc_f==uRTV[2] ~ '-1 std',
-  rt_vmax_lag_sc_f==uRTV[3] ~ 'mean',
-  rt_vmax_lag_sc_f==uRTV[4] ~ '+1 std',
-  rt_vmax_lag_sc_f==uRTV[5] ~ '+2 std'
-))
-#ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
-ddq_r <- ddq_r %>% mutate(dataset = 'Replication')
-ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
-
-ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_vmax_lag_sc_r)
-ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_vmax_lag_sc_f)
-
-ddf <- rbind(ddq_r_emm,ddq_f_emm)
-#ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-ddf <- ddf %>% filter((network=='D' | network=='C'),(vPFC_Value_random_slope=='-2 std' | vPFC_Value_random_slope=='+2 std'))
-ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR')) %>% select(!std.error)
-ddf1 <- ddf
-ddf <- ddf %>% group_by(network,dataset,evt_time,RT_vmax_bin) %>%
-  pivot_wider(names_from = (vPFC_Value_random_slope), values_from=c(estimate)) %>% ungroup()
-ddf <- ddf %>% mutate(diff = `-2 std` - `+2 std`) %>% select(!`+2 std` & !`-2 std`)
-#ddf <- ddf %>% group_by(network1,dataset) %>% summarize(mD = mean(diff,na.rm=TRUE), dD = sd(diff,na.rm=TRUE)/sqrt(length(diff))) %>% ungroup()
-ddf <- ddf %>% mutate(difference = '')
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Value-rt_vmax-convergence-DC-nodiff.pdf',width=8,height=6)
-gg1 <- ggplot(ddf1,aes(x=vPFC_Value_random_slope,y=estimate)) + geom_hline(yintercept=0) + 
-  geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-  facet_grid(network~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Entropy Response') + 
-  guides(fill = guide_legend(byrow=TRUE))
-print(gg1)
-dev.off()
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Value-rt_vmax-convergence-DC.pdf',width=8,height=6)
-gg1 <- ggplot(ddf,aes(x=difference,y=diff,color=network1)) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + geom_hline(yintercept=0) + 
-  geom_violin(position=position_dodge(width=1)) + geom_boxplot(position=position_dodge(width=1),width=0.1) + 
-  facet_grid(~dataset) + ylab('Convergence on Best RT (AU)') + xlab('Value Response') + ylim(-0.5, 0.5) + guides(color=guide_legend(title='Network')) + 
-  theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) + 
-  guides(fill = guide_legend(byrow=TRUE))
-print(gg1)
-dev.off()
-
-
-i <- 2 # value
-toalign <- 'clock' #
-setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-replication-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_r <- ddq
-rm(ddq)
-model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-',i,'.Rdata')
-model_str <- Sys.glob(paste0('*',model_str))
-load(model_str)
-ddq_f <- ddq
-rm(ddq)
-
-ddq_r_emm <- ddq_r$emmeans_list$LO
-ddq_r_emt <- ddq_r$emtrends_list$LO
-ddq_f_emm <- ddq_f$emmeans_list$LO
-ddq_f_emt <- ddq_f$emtrends_list$LO
-ddq_r <- ddq_r$coef_df_reml
-ddq_f <- ddq_f$coef_df_reml
-
-ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'Replication') %>% rename(rt_lag_sc_r = rt_lag_sc, slrs_r=subj_level_rand_slope) %>% select(network,dataset,last_outcome,rt_lag_sc_r,slrs_r,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_r_emm$slrs_r))
-uRTV <- sort(unique(ddq_r_emm$rt_lag_sc_r))
-uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
-ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Value_random_slope = case_when(
-  slrs_r==uS[1] ~ '-2 std',
-  slrs_r==uS[2] ~ '-1 std',
-  slrs_r==uS[3] ~ 'mean',
-  slrs_r==uS[4] ~ '+1 std',
-  slrs_r==uS[5] ~ '+2 std'
-), RT_lag_bin = case_when(
-  rt_lag_sc_r==uRTV[1] ~ '-2 std',
-  rt_lag_sc_r==uRTV[2] ~ '-1 std',
-  rt_lag_sc_r==uRTV[3] ~ 'mean',
-  rt_lag_sc_r==uRTV[4] ~ '+1 std',
-  rt_lag_sc_r==uRTV[5] ~ '+2 std'
-))
-#ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
-ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_lag_sc_f = rt_lag_sc, slrs_f=subj_level_rand_slope) %>% select(network,dataset,last_outcome,rt_lag_sc_f,slrs_f,estimate,evt_time,std.error)
-uS <- sort(unique(ddq_f_emm$slrs_f))
-uRTV <- sort(unique(ddq_f_emm$rt_lag_sc_f))
-ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Value_random_slope = case_when(
-  slrs_f==uS[1] ~ '-2 std',
-  slrs_f==uS[2] ~ '-1 std',
-  slrs_f==uS[3] ~ 'mean',
-  slrs_f==uS[4] ~ '+1 std',
-  slrs_f==uS[5] ~ '+2 std'
-), RT_lag_bin = case_when(
-  rt_lag_sc_f==uRTV[1] ~ '-2 std',
-  rt_lag_sc_f==uRTV[2] ~ '-1 std',
-  rt_lag_sc_f==uRTV[3] ~ 'mean',
-  rt_lag_sc_f==uRTV[4] ~ '+1 std',
-  rt_lag_sc_f==uRTV[5] ~ '+2 std'
-))
-#ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
-ddq_r <- ddq_r %>% mutate(dataset = 'Replication')
-ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
-
-ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_lag_sc_r)
-ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_lag_sc_f)
-
-ddf <- rbind(ddq_r_emm,ddq_f_emm)
-#ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
-ddf <- ddf %>% filter((network=='D' | network=='C') & (vPFC_Value_random_slope=='-2 std' | vPFC_Value_random_slope=='+2 std'))
-ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR')) %>% select(!std.error)
-ddf1 <- ddf
-ddf <- ddf %>% group_by(network,dataset,last_outcome,evt_time,RT_lag_bin) %>%
-  pivot_wider(names_from = (vPFC_Value_random_slope), values_from=c(estimate)) %>% ungroup()
-ddf <- ddf %>% mutate(diff = `-2 std` - `+2 std`) %>% select(!`+2 std` & !`-2 std`)
-#ddf <- ddf %>% group_by(network1,dataset,last_outcome) %>% summarize(mD = mean(diff,na.rm=TRUE), dD = sd(diff,na.rm=TRUE)/sqrt(length(diff))) %>% ungroup()
-ddf <- ddf %>% mutate(dum_order = case_when(network1=='CTR' & last_outcome =='Reward' ~ 1,
-                                            network1=='CTR' & last_outcome =='Omission' ~ 2,
-                                            network1=='DMN' & last_outcome == 'Reward' ~ 3,
-                                            network1=='DMN' & last_outcome == 'Omission' ~ 4))
-ddf$dum_order <- factor(ddf$dum_order,levels=c(1,2,3,4))
-
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Value-rt_csv-convergence-DC-nodiff.pdf',width=10,height=6)
-gg1 <- ggplot(ddf1,aes(x=last_outcome,y=estimate,color=vPFC_Value_random_slope)) + geom_hline(yintercept=0) +  scale_y_reverse() +
-  geom_violin(position=position_dodge(width=1),width=1) + geom_boxplot(position=position_dodge(width=1.5),width=0.1) +
-  facet_grid(network1~dataset) + ylab('RT swings (AU)') + xlab('Value Response') + guides(color=guide_legend(title='emmeans'))
+  
+  # plot nice figure
+  library(wesanderson)
+  pal = wes_palette("FantasticFox1", 3, type = "discrete")
+  pal1 = palette()
+  pal1[1] <- pal[2]
+  pal1[2] <- pal[1]
+  pal1[3] <- pal[3]
+  i <- 2 # value
+  toalign <- 'clock' #
+  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_r <- ddq
+  rm(ddq)
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_f <- ddq
+  rm(ddq)
+  
+  ddq_r_emm <- ddq_r$emmeans_list$Vmax
+  ddq_r_emt <- ddq_r$emtrends_list$Vmax
+  ddq_f_emm <- ddq_f$emmeans_list$Vmax
+  ddq_f_emt <- ddq_f$emtrends_list$Vmax
+  ddq_r <- ddq_r$coef_df_reml
+  ddq_f <- ddq_f$coef_df_reml
+  
+  ddq_r <- ddq_r %>% filter(effect=='fixed') 
+  ddq_f <- ddq_f %>% filter(effect=='fixed') 
+  
+  ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'non-fMRI Replication') %>% rename(rt_vmax_lag_sc_r = rt_vmax_lag, slrs_r=subj_level_rand_slope)
+  uS <- sort(unique(ddq_r_emm$slrs_r))
+  uRTV <- sort(unique(ddq_r_emm$rt_vmax_lag_sc_r))
+  uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
+  ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_r==uS[1] ~ '-2 std',
+    slrs_r==uS[2] ~ '-1 std',
+    slrs_r==uS[3] ~ 'mean',
+    slrs_r==uS[4] ~ '+1 std',
+    slrs_r==uS[5] ~ '+2 std'
+  ), RT_vmax_bin = case_when(
+    rt_vmax_lag_sc_r==uRTV[1] ~ '-2 std',
+    rt_vmax_lag_sc_r==uRTV[2] ~ '-1 std',
+    rt_vmax_lag_sc_r==uRTV[3] ~ 'mean',
+    rt_vmax_lag_sc_r==uRTV[4] ~ '+1 std',
+    rt_vmax_lag_sc_r==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
+  ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_vmax_lag_sc_f = rt_vmax_lag, slrs_f=subj_level_rand_slope)
+  uS <- sort(unique(ddq_f_emm$slrs_f))
+  uRTV <- sort(unique(ddq_f_emm$rt_vmax_lag_sc_f))
+  ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_f==uS[1] ~ '-2 std',
+    slrs_f==uS[2] ~ '-1 std',
+    slrs_f==uS[3] ~ 'mean',
+    slrs_f==uS[4] ~ '+1 std',
+    slrs_f==uS[5] ~ '+2 std'
+  ), RT_vmax_bin = case_when(
+    rt_vmax_lag_sc_f==uRTV[1] ~ '-2 std',
+    rt_vmax_lag_sc_f==uRTV[2] ~ '-1 std',
+    rt_vmax_lag_sc_f==uRTV[3] ~ 'mean',
+    rt_vmax_lag_sc_f==uRTV[4] ~ '+1 std',
+    rt_vmax_lag_sc_f==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
+  ddq_r <- ddq_r %>% mutate(dataset = 'non-fMRI Replication')
+  ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
+  
+  ddq <- rbind(ddq_r,ddq_f)
+  ddq <- ddq %>% filter(term=='subj_level_rand_slope:rt_vmax_lag')
+  ddq <- ddq%>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+  ddq <- ddq  %>% 
+    mutate(p_level_fdr = case_when(
+      padj_fdr_term > .05 ~ 'NS',
+      padj_fdr_term < .05 & padj_fdr_term > .01 ~ 'p < 0.05',
+      padj_fdr_term < .01 & padj_fdr_term > .001 ~ 'p < 0.01',
+      padj_fdr_term <.001 & padj_fdr_term > .0001 ~ 'p < 0.001',
+      padj_fdr_term <.0001 ~ 'p < 0.0001'
+    ))
+  ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
+  
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Value-rt_vmax-convergence-DCL-main.pdf',width=14,height=7)
+  gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
+    geom_violin() + facet_wrap(~dataset) + 
+    geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
+    theme(axis.text.x = element_text(size=25), axis.text.y = element_text(size=25), axis.title = element_text(size=35), strip.text.x = element_text(size=35),strip.text.y = element_text(size=35),legend.title=element_text(size=35),legend.text=element_text(size=30),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    ylab('Convergence on Best RT (AU)') + xlab('') +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
+    guides(color=guide_legend(title='Network'))
+  #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
   print(gg1)
-dev.off()
+  dev.off()
+  
+  ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_vmax_lag_sc_r)
+  ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_vmax_lag_sc_f)
+  ddf <- rbind(ddq_r_emm,ddq_f_emm)
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))# & RT_vmax_bin=='mean')
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM')) %>% select(!std.error)
+  
+  
+  #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR', network=='L'~'LIM'))
+  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
+  ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
+  ddf$RT_vmax_bin <- factor(ddf$RT_vmax_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Value-rt_vmax-convergence-DCL-nodiff.pdf',width=16,height=12)
+  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+    geom_violin() + 
+    facet_grid(RT_vmax_bin~dataset) + ylab('Convergence on Best RT (AU)') +
+    theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    ylab('Convergence on Best RT (AU)') + xlab('Value Response') +
+    scale_color_manual(values = pal1) +
+    guides(color=guide_legend(title='Network'))
+  print(gg1)
+  dev.off()
+  
+  
+  rm(ddf)
+  rm(ddq)
+  
+  i <- 2 # value
+  toalign <- 'clock' #
+  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_r <- ddq
+  rm(ddq)
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
+  model_str <- Sys.glob(paste0('*',model_str))
+  load(model_str)
+  ddq_f <- ddq
+  rm(ddq)
+  
+  ddq_r_emm <- ddq_r$emmeans_list$RTxO
+  ddq_r_emt <- ddq_r$emtrends_list$RTxO
+  ddq_f_emm <- ddq_f$emmeans_list$RTxO
+  ddq_f_emt <- ddq_f$emtrends_list$RTxO
+  ddq_r <- ddq_r$coef_df_reml
+  ddq_f <- ddq_f$coef_df_reml
+  
+  ddq_r <- ddq_r %>% filter(effect=='fixed') 
+  ddq_f <- ddq_f %>% filter(effect=='fixed') 
+  
+  ddq_r_emm <- ddq_r_emm %>% mutate(dataset = 'non-fMRI Replication') %>% rename(rt_lag_sc_r = rt_lag, slrs_r=subj_level_rand_slope)
+  uS <- sort(unique(ddq_r_emm$slrs_r))
+  uRTV <- sort(unique(ddq_r_emm$rt_lag_sc_r))
+  uT = sort(unique(ddq_r_emm$trial_neg_inv_sc))
+  ddq_r_emm <- ddq_r_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_r==uS[1] ~ '-2 std',
+    slrs_r==uS[2] ~ '-1 std',
+    slrs_r==uS[3] ~ 'mean',
+    slrs_r==uS[4] ~ '+1 std',
+    slrs_r==uS[5] ~ '+2 std'
+  ), RT_lag_bin = case_when(
+    rt_lag_sc_r==uRTV[1] ~ '-2 std',
+    rt_lag_sc_r==uRTV[2] ~ '-1 std',
+    rt_lag_sc_r==uRTV[3] ~ 'mean',
+    rt_lag_sc_r==uRTV[4] ~ '+1 std',
+    rt_lag_sc_r==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_r_emt <- ddq_r_emt %>% mutate(dataset_r = 'replication')%>% rename(rt_vmax_lag_sc_r.trend = rt_vmax_lag_sc.trend, slrs_r=subj_level_rand_slope) %>% select(network,dataset_r,rt_vmax_lag_sc_r.trend,slrs_r)
+  ddq_f_emm <- ddq_f_emm %>% mutate(dataset = 'fMRI')%>% rename(rt_lag_sc_f = rt_lag, slrs_f=subj_level_rand_slope)
+  uS <- sort(unique(ddq_f_emm$slrs_f))
+  uRTV <- sort(unique(ddq_f_emm$rt_lag_sc_f))
+  ddq_f_emm <- ddq_f_emm %>% mutate(vPFC_Entropy_random_slope = case_when(
+    slrs_f==uS[1] ~ '-2 std',
+    slrs_f==uS[2] ~ '-1 std',
+    slrs_f==uS[3] ~ 'mean',
+    slrs_f==uS[4] ~ '+1 std',
+    slrs_f==uS[5] ~ '+2 std'
+  ), RT_lag_bin = case_when(
+    rt_lag_sc_f==uRTV[1] ~ '-2 std',
+    rt_lag_sc_f==uRTV[2] ~ '-1 std',
+    rt_lag_sc_f==uRTV[3] ~ 'mean',
+    rt_lag_sc_f==uRTV[4] ~ '+1 std',
+    rt_lag_sc_f==uRTV[5] ~ '+2 std'
+  ))
+  #ddq_f_emt <- ddq_f_emt %>% mutate(dataset_f = 'fMRI')%>% rename(rt_vmax_lag_sc_f.trend = rt_vmax_lag_sc.trend, slrs_f=subj_level_rand_slope) %>% select(vPFC_Entropy_random_slope,network,dataset_f,rt_vmax_lag_sc_f.trend,slrs_f,evt_time)
+  ddq_r <- ddq_r %>% mutate(dataset = 'non-fMRI Replication')
+  ddq_f <- ddq_f %>% mutate(dataset = 'fMRI')
+  ddq <- rbind(ddq_r,ddq_f)
+  ddq <- ddq %>% filter(term=='rt_lag:subj_level_rand_slope')
+  ddq <- ddq%>% mutate(network1 = case_when(network=='D'~'DMN', network=='C'~'CTR',network=='L'~'LIM'))
+  ddq <- ddq  %>% 
+    mutate(p_level_fdr = case_when(
+      padj_fdr_term > .05 ~ 'NS',
+      padj_fdr_term < .05 & padj_fdr_term > .01 ~ 'p < 0.05',
+      padj_fdr_term < .01 & padj_fdr_term > .001 ~ 'p < 0.01',
+      padj_fdr_term <.001 & padj_fdr_term > .0001 ~ 'p < 0.001',
+      padj_fdr_term <.0001 ~ 'p < 0.0001'
+    ))
+  ddq$p_level_fdr <- factor(ddq$p_level_fdr, levels=c('NS','p < 0.05','p < 0.01','p < 0.001','p < 0.0001'))
+  ddq <- ddq %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Value-rt_csv-divergence-DCL-main.pdf',width=14,height=7)
+  gg1 <- ggplot(ddq,aes(x=network1,y=estimate,color=network1)) +
+    geom_violin() + facet_wrap(~dataset) + 
+    geom_point(aes(alpha=p_level_fdr,size=p_level_fdr)) +
+    theme(axis.text.x = element_text(size=25), axis.text.y = element_text(size=25), axis.title = element_text(size=35), strip.text.x = element_text(size=35),strip.text.y = element_text(size=35),legend.title=element_text(size=35),legend.text=element_text(size=30),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) + scale_y_reverse() +
+    ylab('RT swings (AU)') + xlab('') +
+    scale_color_manual(values = pal1) + geom_hline(yintercept=0) +
+    guides(color=guide_legend(title='Network'))
+  #gg1 <- ggplot(ddq, aes(x=network,y=estimate, color=network)) + geom_bar(aes(alpha=p_level_fdr),stat='identity') + geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) + facet_grid(~dataset)
+  print(gg1)
+  dev.off()
+  
+  
+  
+  ddq_r_emm <- ddq_r_emm %>% select(!slrs_r & !rt_lag_sc_r)
+  ddq_f_emm <- ddq_f_emm %>% select(!slrs_f & !rt_lag_sc_f)
+  
+  ddf <- rbind(ddq_r_emm,ddq_f_emm)
+  #ddf <- ddf %>% filter(`vPFC Entropy response`=='10th %ile' | `vPFC Entropy response`=='90th %ile')
+  ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
+  ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM')) %>% select(!std.error)
+  ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR' | network1=='LIM')
+  ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
+  ddf$RT_lag_bin <- factor(ddf$RT_lag_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
+  ddf <- ddf %>% filter(last_outcome=='Reward')
+  #ddf <- ddf %>% filter(RT_lag_bin=='mean')
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
+  pdf('Value-rt_csv-divergence-DCL-nodiff.pdf',width=15,height=15)
+  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+    geom_violin(position=position_dodge(width=1)) +
+    facet_grid(RT_lag_bin~dataset) + ylab('RT Swings (AU)') + xlab('Value Response') +
+    theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
+    guides(fill = guide_legend(byrow=TRUE)) +
+    xlab('Value Response') + scale_y_reverse() +
+    scale_color_manual(values = pal1) +
+    guides(color=guide_legend(title='Network'))
+  print(gg1)
+  dev.off()
+  
 
-setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
-pdf('Value-rt_csv-convergence-DC.pdf',width=10,height=6)
-gg1 <- ggplot(ddf,aes(x=dum_order,y=diff,color=network1)) + geom_hline(yintercept=0) + scale_x_discrete(labels=c('Reward','Omission','Reward','Omission')) + 
-  geom_violin(position=position_dodge(width=0.9)) + geom_boxplot(position=position_dodge(width=0.9),width=0.1) + scale_color_manual(values = pal1,labels=c('CTR','DMN')) + 
-  facet_grid(~dataset) + ylab('RT swings (AU)') + xlab('Value Response') + ylim(-0.5,0.5) + guides(color=guide_legend(title='Network')) + 
-  theme(axis.text.x = element_text(size=20,angle=45,hjust=1), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30), legend.title = element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm'))
-print(gg1)
-dev.off()
+  
 }

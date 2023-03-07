@@ -52,7 +52,6 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   # 
   # rm(emt)
   
-  
   pal1090 = palette()
   pal = wes_palette("FantasticFox1", 3, type = "discrete")
   pal1 <- palette()
@@ -61,6 +60,8 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1[[3]] <- pal[[3]]
   pal1090[1] <- '#939799'
   pal1090[2] <- '#5A5A5A'
+  
+  if (!strcmp(behavmodel,'explore')){
   
   if (!strcmp(totest,'online')){
     
@@ -94,11 +95,6 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     rm(emt)
     })
     
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[2]]
-    pal1090[2] <- '#7a7745'
-    
     tryCatch({
     # do v_max_wi
     emt <- ddf$emmeans_list$V
@@ -128,11 +124,6 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     
     rm(emt)
     })
-    
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[1]]
-    pal1090[2] <- '#574c35'
     
     
     tryCatch({
@@ -167,11 +158,6 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
     })
     
     rm(emt)
-    
-    pal1090 = palette()
-    pal = wes_palette("FantasticFox1", 3, type = "discrete")
-    pal1090[1] <- pal[[1]]
-    pal1090[2] <- '#574c35'
     
     tryCatch({
     # do v_entropy_wi_change
@@ -378,7 +364,231 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   # dev.off()
   
   
-  
+  } else if (strcmp(behavmodel,'explore')){
+    
+    if (strcmp(totest,'entropy')){
+      
+      emt <- ddf$emmeans_list$Y
+      emt <- emt %>% filter(education_yrs=='-1' | education_yrs=='1')
+      emt$levels <- factor(emt$education_yrs)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Education-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+      
+      
+      emt <- ddf$emmeans_list$A
+      emt <- emt %>% filter(age=='-1' | age=='1')
+      emt$levels <- factor(emt$age)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Age-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+      
+      emt <- ddf$emmeans_list$W
+      emt <- emt %>% filter(wtar=='-1' | wtar=='1')
+      emt$levels <- factor(emt$wtar)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'WTAR-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt) 
+      
+    tryCatch({
+    emt <- ddf$emmeans_list$H
+    emt <- emt %>% filter(v_entropy_wi=='-2' | v_entropy_wi=='2')
+    emt$levels <- factor(emt$v_entropy_wi)
+    
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Entropy-',model_iter, ".pdf", sep = "")
+    pdf(fname, width = 9, height = 3.5)
+    gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+      facet_grid(~network) +
+      geom_point(aes(color=levels),size=5) +
+      geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+      geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+      ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+    
+    gg2 <- ggplot_gtable(ggplot_build(gg1))
+    stripr <- which(grepl('strip-t', gg2$layout$name))
+    k <- 1
+    for (i in stripr) {
+      j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+      k <- k+1
+    }
+    grid.draw(gg2)
+    dev.off()
+    
+    rm(emt)
+    })
+    
+    
+    }
+    if (strcmp(totest,'value')){
+    
+      emt <- ddf$emmeans_list$Y
+      emt <- emt %>% filter(education_yrs=='-1' | education_yrs=='1')
+      emt$levels <- factor(emt$education_yrs)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Education-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+      
+      
+      emt <- ddf$emmeans_list$A
+      emt <- emt %>% filter(age=='-1' | age=='1')
+      emt$levels <- factor(emt$age)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Age-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt)
+      
+      emt <- ddf$emmeans_list$W
+      emt <- emt %>% filter(wtar=='-1' | wtar=='1')
+      emt$levels <- factor(emt$wtar)
+      
+      fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'WTAR-',model_iter, ".pdf", sep = "")
+      pdf(fname, width = 9, height = 3.5)
+      gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+        facet_grid(~network) +
+        geom_point(aes(color=levels),size=5) +
+        geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+        ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+      
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
+      
+      rm(emt) 
+      
+    tryCatch({
+    emt <- ddf$emmeans_list$H
+    emt <- emt %>% filter(v_max_wi=='-2' | v_max_wi=='2')
+    emt$v_max_wi <- factor(emt$v_max_wi)
+    
+    fname = paste(behavmodel,'-',totest,"_",toalign, "_emmeans_", toprocess, "_", 'Value-',model_iter, ".pdf", sep = "")
+    pdf(fname, width = 9, height = 3.5)
+    gg1 <- ggplot(emt,aes(x=evt_time,y=estimate)) + 
+      facet_grid(~network) +
+      geom_point(aes(color=v_max_wi),size=5) +
+      geom_errorbar(aes(ymin=estimate-std.error, ymax=estimate+std.error), width=0.5) +
+      geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) +
+      ylab('') + xlab(paste0('Time relative to ', toalign_str,' [s]'))
+    
+    gg2 <- ggplot_gtable(ggplot_build(gg1))
+    stripr <- which(grepl('strip-t', gg2$layout$name))
+    k <- 1
+    for (i in stripr) {
+      j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+      gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[[k]]
+      k <- k+1
+    }
+    grid.draw(gg2)
+    dev.off()
+    
+    rm(emt)
+    })
+    
+    
+    }
+  }
   
 }
 
