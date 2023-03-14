@@ -14,7 +14,7 @@ do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-do_Explore = FALSE
+do_Explore = TRUE
 
 if (do_vPFC_fb){
   if (do_network){
@@ -185,23 +185,23 @@ if (do_HC2vPFC_clock){
     source('~/vmPFC/plot_emtrends_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC2.R')
-    for (i in 1:4){
+    for (i in 1){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
       if (do_Explore){
-        model_str <- paste0('-Explore-vPFC-HC-network-clock-',i,'.Rdata')
+        model_str <- paste0('-Explore-vPFC-HC-network-clock-rewFunc-',i,'.Rdata')
         totest <- 'Explore-'
       } else {
-        model_str <- paste0('-vmPFC-HC-network-clock-testing-',i,'.Rdata')
+        model_str <- paste0('-vmPFC-HC-network-clock-rewFunc-',i,'.Rdata')
         totest <- 'testing-'
       }
       model_str <- Sys.glob(paste0('*',model_str))
       load(model_str)
       model_iter <- i
       #toprocess <- 'symmetry-by-HC'
-      toprocess <- 'network-by-HC'
+      toprocess <- 'network-by-HC-by-rewFunc'
       toalign <- 'clock'
-      behavmodel <- 'compressed'
+      behavmodel <- 'rewFunc'
       hc_LorR <- 'LR'
       plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
       #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
