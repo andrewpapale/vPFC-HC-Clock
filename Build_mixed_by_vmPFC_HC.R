@@ -9,7 +9,7 @@ library(tidyverse)
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
 do_vPFC_fb = FALSE
-do_vPFC_clock = FALSE
+do_vPFC_clock = TRUE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
@@ -255,7 +255,7 @@ if (do_vPFC_clock){
     run_trial >=30 ~ 'Late',
   )))
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,rt_lag_sc,rt_vmax_change_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   #Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -275,11 +275,11 @@ if (do_vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi |id/run))
   #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi | id) + (1 | id/run))
   #decode_formula[[4]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi | run) + (1 | id/run))
-  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 |id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
   #decode_formula[[5]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi |id/run))
   #decode_formula[[6]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi | id) + (1 | id/run))
   #decode_formula[[7]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi | run) + (1 | id/run))
@@ -320,7 +320,7 @@ if (do_vPFC_clock){
     }
   }
   if (do_network){
-    splits = c('evt_time','network')
+    splits = c('evt_time','network','rewFunc')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -350,7 +350,7 @@ if (do_vPFC_clock){
         )        
       }
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-',i,'.Rdata'))
+      save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-rewFunc-',i,'.Rdata'))
     }
   }
 }
@@ -599,8 +599,8 @@ if (do_HC_clock){
   
   rm(decode_formula)
   decode_formula <- NULL
-  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
-  decode_formula[[2]] = formula(~ age + female + v_max_wi + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
   
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_sc |id/run))
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_sc |id) + (1|run))
@@ -609,7 +609,7 @@ if (do_HC_clock){
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi |id) + (1|run))
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi |run) + (1|id))
   qT <- c(-0.7,0.43)
-  splits = c('evt_time','HC_region')
+  splits = c('evt_time','HC_region','rewFunc')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -648,7 +648,7 @@ if (do_HC_clock){
                     # )
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-HC-axis-clock-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-HC-region-clock-rewFunc-',i,'.Rdata'))
   }
 }
 ####################################
@@ -1252,7 +1252,7 @@ if (do_HC2vPFC_clock){
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,total_earnings_split,outcome,iti_ideal,iti_prev,rt_csv,abs_pe_max_lag_sc,v_entropy_wi,rt_vmax_change_sc,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,rt_lag_sc,total_earnings_split,outcome,iti_ideal,iti_prev,rt_csv,abs_pe_max_lag_sc,v_entropy_wi,rt_vmax_change_sc,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- inner_join(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   #Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -1284,13 +1284,13 @@ if (do_HC2vPFC_clock){
   #decode_formula[[2]] = formula(~ v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[1]] = formula(~v_max_wi + (1|id/run))
   #decode_formula[[1]] = formula(~v_max_wi*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + v_entropy_wi_change_lag * HCwithin + rt_csv_sc * HCwithin + iti_lag_sc * HCwithin + iti_sc * HCwithin + last_outcome * HCwithin + outcome*HCwithin + rt_vmax_change_sc * HCwithin +  HCbetween + (1 | id/run)) 
+  decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
 
   qT <- c(-0.7,0.43)
   
   if (do_network){
     
-    splits = c('evt_time','network','HC_region')
+    splits = c('evt_time','network','HC_region','rewFunc')
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -1323,7 +1323,7 @@ if (do_HC2vPFC_clock){
                       # )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-testing-',i,'.Rdata'))
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-rewFunc-',i,'.Rdata'))
     }
   }
   

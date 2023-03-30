@@ -118,7 +118,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   }
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
-  if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side')){
+  if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side') | strcmp(toprocess,'network-by-HC-by-rewFunc')){
     if (totest!='Explore-'){
       ddf <- ddf %>% mutate(network1 = 
                               case_when(network=='C'~'2C',
@@ -509,6 +509,69 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         print(gg)
         dev.off()
+      } else if (strcmp(toprocess,'network-by-HC-by-rewFunc')){
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter, ".pdf", sep = "")
+        pdf(fname, width = 12, height = 9)
+        # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
+        #   geom_line(size = 1) + geom_point() +
+        #   geom_errorbar() +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~HC_region) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        if (all(edf$`p, FDR-corrected`=='p < .001')){
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
+            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
+            # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
+            geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            scale_color_manual(values = pal) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) + ylab('Network Response') + 
+            geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+            facet_grid(rewFunc~HC_region) + ylab('Network Response') +
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
+        } else {
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
+            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
+            # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
+            geom_line(size = 1) + theme(legend.position = "none") +
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            scale_color_manual(values = pal) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) +
+            facet_grid(rewFunc~HC_region) + ylab('Network Response') +
+            geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
+        }
+        gg2 <- ggplot_gtable(ggplot_build(gg1))
+        stripr <- which(grepl('strip-t', gg2$layout$name))
+        k <- 1
+        for (i in stripr) {
+          j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+          gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
+          k <- k+1
+        }
+        grid.draw(gg2)
+        dev.off()
       } 
     }
   } else if (strcmp(totest,'anatomy')){
@@ -574,7 +637,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         print(gg)
         dev.off()
-      }
+      } 
     }
   }
 }
