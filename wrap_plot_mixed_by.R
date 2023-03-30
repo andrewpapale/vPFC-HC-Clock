@@ -5,16 +5,16 @@ library(pracma)
 library(tidyverse)
 
 do_vPFC_fb = FALSE
-do_vPFC_clock = FALSE
+do_vPFC_clock = TRUE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-do_Explore = TRUE
+do_Explore = FALSE
 
 if (do_vPFC_fb){
   if (do_network){
@@ -69,14 +69,20 @@ if (do_vPFC_clock){
     source('~/vmPFC/plot_emmeans_vmPFC.R')
     for (i in 1:2){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-      model_str <- paste0('-vmPFC-network-clock-',i,'.Rdata')
+      if (do_Explore){
+        model_str <- paste0('-Explore-vmPFC-network-clock-rewFunc-',i,'.Rdata')
+        totest <- 'Explore-'
+        behavmodel <- 'explore'
+      } else {
+        model_str <- paste0('-vmPFC-network-clock-rewFunc-',i,'.Rdata')
+        totest <- 'testing-'
+        behavmodel <- 'compressed'
+      }
       model_str <- Sys.glob(paste0('*',model_str))
       load(model_str)
       model_iter <- i
-      totest <- 'final-model'
-      toprocess <- 'network'
+      toprocess <- 'network-by-rewFunc'
       toalign <- 'clock'
-      behavmodel <- 'compressed'
       plot_mixed_by_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
       #plot_emmeans_vmPFC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
     }

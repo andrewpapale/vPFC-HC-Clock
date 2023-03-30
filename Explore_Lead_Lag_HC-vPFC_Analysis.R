@@ -50,11 +50,10 @@ Q <- Q %>% group_by(id,run,run_trial,network,HC_region) %>% mutate(evt_time_lag1
                                                                    evt_time_lead8 = lead(evt_time0,8),
                                                                    evt_time_lead9 = lead(evt_time0,9)) %>% ungroup()
 
-source('/Volumes/Users/Andrew/MEDuSA_data_Explore/get_trial_data_explore.R')
-df <- get_trial_data_explore(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',censor_early_trials=TRUE,trials_to_censor=10)
-df <- df %>% rename(run=run_number)
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
 df <- df %>% select(id,run,run_trial,iti_prev,rt_csv,iti_ideal)
-
+df$id <- as.character(df$id)
 Q <- inner_join(Q,df,by=c('id','run','run_trial'))
 
 Q$vPFC_scaled[Q$evt_time0 < -Q$iti_prev] = NA
@@ -114,30 +113,58 @@ for (iT1 in 1:20){
     # setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
     # save(Q1,file='Lead_lag_HC_to_vPFC_intermediate.Rdata')   
     
-    if (iT1==5 && iT2==20){
+    if (iT1==5 && iT2==10){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_1_of_3.Rdata')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_1_of_8.Rdata')
+      rm(Q2)
+      gc()
+      Q1 <- NULL
+      Q2 <- NULL
+    } else if (iT1==10 && iT2==10) {
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_2_of_8.Rdata')
+      rm(Q2)
+      gc()
+      Q1 <- NULL
+      Q2 <- NULL
+    } else if (iT1==15 && iT2==10) {
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_3_of_8.Rdata')
+      rm(Q2)
+      gc()
+      Q1 <- NULL
+      Q2 <- NULL
+    } else if (iT1==20 && iT2==10) {
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_4_of_8.Rdata')
+      rm(Q2)
+      gc()
+      Q1 <- NULL
+      Q2 <- NULL
+    } else if (iT1==5 && iT2==20){
+      setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_5_of_8.Rdata')
       rm(Q2)
       gc()
       Q1 <- NULL
       Q2 <- NULL
     } else if (iT1==10 && iT2==20) {
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_2_of_3.Rdata')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_6_of_8.Rdata')
       rm(Q2)
       gc()
       Q1 <- NULL
       Q2 <- NULL
     } else if (iT1==15 && iT2==20) {
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_3_of_4.Rdata')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_7_of_8.Rdata')
       rm(Q2)
       gc()
       Q1 <- NULL
       Q2 <- NULL
     } else if (iT1==20 && iT2==20) {
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/')
-      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_4_of_4.Rdata')
+      save(Q2,file='Lead_lag_HC_to_vPFC_Explore_intermediate_8_of_8.Rdata')
       rm(Q2)
       gc()
       Q1 <- NULL
@@ -148,7 +175,7 @@ for (iT1 in 1:20){
 
 splits <- c('lead_lag','network','HC_region')
 
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Lead_lag_HC_to_vPFC_Explore_intermediate_1_of_3.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Lead_lag_HC_to_vPFC_Explore_intermediate_1_of_8.Rdata')
 Q2$lead_lag <- paste(Q2$lead_lag1,Q2$lead_lag2)
 
 decode_formula <- formula(~ HCwithin + (1|id/run/run_trial))
