@@ -5,16 +5,16 @@ library(pracma)
 library(tidyverse)
 
 do_vPFC_fb = FALSE
-do_vPFC_clock = TRUE
+do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = FALSE
+do_HC_clock = TRUE
 do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-do_Explore = FALSE
+do_Explore = TRUE
 
 if (do_vPFC_fb){
   if (do_network){
@@ -108,7 +108,7 @@ if (do_HC_fb){
   for (i in 1:2){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     if (do_Explore){
-      model_str <- paste0('-Explore-HC-axis-feedback-',i,'.Rdata')
+      model_str <- paste0('-Explore-HC-region-feedback-',i,'.Rdata')
       totest <- 'Explore-'
     } else {
       model_str <- paste0('-HC-axis-feedback-',i,'.Rdata')
@@ -117,9 +117,9 @@ if (do_HC_fb){
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     model_iter <- i
-    toprocess <- 'axis'
+    toprocess <- 'region'
     toalign <- 'feedback'
-    behavmodel <- 'compressed'
+    behavmodel <- 'v10'
     plot_mixed_by_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   }
 }
@@ -128,7 +128,7 @@ if (do_HC_clock){
   for (i in 1:2){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     if (do_Explore){
-      model_str <- paste0('-Explore-HC-region-clock-',i,'.Rdata')
+      model_str <- paste0('-Explore-HC-region-clock-HConly-',i,'.Rdata')
       totest <- 'Explore-'
     } else {
       model_str <- paste0('-HC-axis-clock-',i,'.Rdata')
@@ -139,7 +139,7 @@ if (do_HC_clock){
     model_iter <- i
     toprocess <- 'region'
     toalign <- 'clock'
-    behavmodel <- 'compressed'
+    behavmodel <- 'v10-HConly-'
     plot_mixed_by_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   }
 }
@@ -191,23 +191,23 @@ if (do_HC2vPFC_clock){
     source('~/vmPFC/plot_emtrends_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC2.R')
-    for (i in 1){
+    for (i in 1:4){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
       if (do_Explore){
-        model_str <- paste0('-Explore-vPFC-HC-network-clock-rewFunc-',i,'.Rdata')
+        model_str <- paste0('-Explore-vPFC-HC-network-clock-HConly-',i,'.Rdata')
         totest <- 'Explore-'
       } else {
-        model_str <- paste0('-vmPFC-HC-network-clock-rewFunc-',i,'.Rdata')
+        model_str <- paste0('-vmPFC-HC-network-clock-',i,'.Rdata')
         totest <- 'testing-'
       }
       model_str <- Sys.glob(paste0('*',model_str))
       load(model_str)
       model_iter <- i
       #toprocess <- 'symmetry-by-HC'
-      toprocess <- 'network-by-HC-by-rewFunc'
+      toprocess <- 'network-by-HC'
       toalign <- 'clock'
-      behavmodel <- 'rewFunc'
+      behavmodel <- 'v10-HConly-'
       hc_LorR <- 'LR'
       plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
       #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
