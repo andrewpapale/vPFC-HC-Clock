@@ -11,9 +11,9 @@ doTesting = FALSE
 do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = FALSE
+do_HC_clock = TRUE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
@@ -506,17 +506,13 @@ if (do_HC_clock){
   rm(Q)
   setwd('~/vmPFC')
   message('adding HC signals to models...')
-  load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
-  hc <- clock_comb
+  #load(file.path(HC_cache_dir,'clock_hipp_tall_ts_1.Rdata'))
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock.Rdata')
+  #hc <- clock_comb
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
-  rm(clock_comb)
+  #rm(clock_comb)
   
-  hc <- hc %>% select(id,run,run_trial,decon_mean,evt_time,bin_num,side)
-  hc <- hc %>% mutate(
-    HC_region = case_when(
-      bin_num <= 8 ~ 'AH',
-      bin_num > 8 ~ 'PH'
-    ))
+  hc <- hc %>% select(id,run,run_trial,decon_mean,evt_time,bin_num,side, HC_region)
   hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon_mean1 = mean(decon_mean,na.rm=TRUE)) 
   hc <- hc %>% rename(decon_mean=decon_mean1)
   
@@ -579,7 +575,7 @@ if (do_HC_clock){
     run_trial >=30 ~ 'Late',
   )))
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,v_entropy_wi,outcome,v_entropy_wi_change_lag,rt_vmax_change_sc,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,iti_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
+  df <- df %>% select(id,run,run_trial,rt_lag_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag,rt_vmax_change_sc,iti_ideal,iti_prev,rt_csv,trial_bin,rewFunc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_lag_sc,iti_sc,ev_lag_sc,rt_csv_sc,trial_neg_inv_sc)
   Q <- merge(df, hc, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   #Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -677,6 +673,7 @@ if (do_anat_fb){
   
   Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
   Q <- Q %>% select(!decon1)
+  
   
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')

@@ -51,7 +51,7 @@ df0 <- inner_join(df0,label_vPFC, by='mask_value')
 
 Q <- inner_join(emt,df0,by=c('atlas_value','last_outcome'))
 
-Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() 
+Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'fdr')) %>% ungroup() 
 
 Q <- Q %>% 
   mutate(p_level_fdr = as.factor(case_when(
@@ -114,7 +114,7 @@ df0 <- inner_join(df0,label_vPFC, by='mask_value')
 
 Q <- inner_join(emt,df0,by=c('atlas_value'))
 
-Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'bonferroni')) %>% ungroup() %>% 
+Q <- Q  %>% group_by(network1) %>% mutate(padj_BY_term = p.adjust(p.value.y, method = 'fdr')) %>% ungroup() %>% 
   mutate(p_level_fdr = as.factor(case_when(
     padj_BY_term > .05 ~ '1',
     padj_BY_term < .05 & padj_BY_term > .01 ~ '2',

@@ -1,6 +1,6 @@
 plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
   ## Check plots
-  
+
   if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
   } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
@@ -12,7 +12,7 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   } else if (strcmp(toalign,'clock') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_clock')
   }
-  
+
   message("\nPlotting streams decoding")
   library(wesanderson)
   library(pracma)

@@ -2,8 +2,8 @@
 library(stringr)
 
 ncores = 26
-do_vPFC = FALSE
-do_HC = TRUE
+do_vPFC = TRUE
+do_HC = FALSE
 do_vPFC_HC = FALSE
 
 if (do_vPFC){
@@ -80,7 +80,7 @@ df$id <- as.character(df$id)
 Q <- full_join(md,df,by=c('id','run','trial'))
 
 Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-#Q$decon_mean[Q$evt_time < -Q$rt_csv] = NA
+Q$decon_mean[Q$evt_time < -Q$rt_csv] = NA
 Q <- Q %>% mutate(network = case_when(
   atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
   atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
@@ -120,9 +120,9 @@ Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1,
                             trial > 120 & trial <=160 ~ 4,
                             trial > 160 & trial <=200 ~ 5,
                             trial > 200 & trial <=240 ~ 6))
-#Q <- Q %>% filter(group=='HC')
+Q <- Q %>% filter(group=='HC')
 Q <- Q %>% filter(!is.na(rewFunc))
-Q <- Q %>% filter(trial > 10)
+#Q <- Q %>% filter(trial > 10)
 
 rm(decode_formula)
 decode_formula <- NULL
@@ -135,8 +135,10 @@ decode_formula <- NULL
 #decode_formula[[6]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi |id/run))
 #decode_formula[[7]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | id) + (1 | run))
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
-decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + condition_trial_neg_inv + rt_lag_sc + iti_prev_sc + (1|id/run))
-decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + condition_trial_neg_inv + rt_lag_sc + iti_prev_sc + (1|id/run))
+decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
+decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
+decode_formula[[3]] = formula(~age + v_max_wi +v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
+decode_formula[[4]] = formula(~v_max_wi + (1|id))
 
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))
 # decode_formula[[2]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
@@ -152,7 +154,7 @@ decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + condition_trial_n
 # decode_formula[[2]] = formula(~ v_max_wi + (1|id))
 
 qT <- c(-0.8,0.46)
-splits = c('evt_time','network','rewFunc')
+splits = c('evt_time','network')
 source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -208,7 +210,7 @@ for (i in 1:length(decode_formula)){
     #)       
   }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-rewFunc-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-',i,'.Rdata'))
 }
 
 
@@ -321,8 +323,8 @@ if (do_HC){
   hc$id <- as.character(hc$id)
   Q <- inner_join(hc,df,by=c('id','run','trial'))
   rm(hc)
-  Q$decon1[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-  Q$decon1[Q$evt_time < -Q$iti_prev] = NA
+  Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  Q$decon_mean[Q$evt_time < -Q$iti_prev] = NA
   #Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
   #Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
 
@@ -353,6 +355,7 @@ if (do_HC){
   #decode_formula[[1]] = formula(~ v_entropy_wi_change +  (1|id/run))
   #decode_formula[[1]] = formula(~ group + condition_trial_neg_inv_sc + v_max_wi + last_outcome + age + gender + iti_lag_sc + rt_lag_sc + (1|id/run)) 
   decode_formula[[1]] = formula(~age + condition_trial_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id))
+  decode_formula[[2]] = formula(~age + condition_trial_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id))
   
   qT <- c(-0.8,0.46)
   splits = c('evt_time','HC_region')
