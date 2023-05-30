@@ -4,17 +4,17 @@
 library(pracma)
 library(tidyverse)
 
-do_vPFC_fb = FALSE
+do_vPFC_fb = TRUE
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = TRUE
+do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = FALSE
+do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-do_Explore = FALSE
+do_Explore = TRUE
 
 if (do_vPFC_fb){
   if (do_network){
@@ -25,6 +25,7 @@ if (do_vPFC_fb){
       model_str <- paste0('-vmPFC-network-feedback-',i,'.Rdata')
       model_str <- Sys.glob(paste0('*',model_str))
       load(model_str)
+      ddf$coef_df_reml <- ddf$coef_df_reml %>% filter(evt_time > -4)
       model_iter <- i
       totest <- 'final-model'
       toprocess <- 'network'
@@ -207,7 +208,7 @@ if (do_HC2vPFC_clock){
       #toprocess <- 'symmetry-by-HC'
       toprocess <- 'network-by-HC'
       toalign <- 'clock'
-      behavmodel <- 'v10-HConly-'
+      behavmodel <- 'v11-'
       hc_LorR <- 'LR'
       plot_mixed_by_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)
       #plot_emtrends_vmPFC_HC(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR)

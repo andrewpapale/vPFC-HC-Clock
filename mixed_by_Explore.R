@@ -2,9 +2,9 @@
 library(stringr)
 
 ncores = 26
-do_vPFC = TRUE
+do_vPFC = FALSE
 do_HC = FALSE
-do_vPFC_HC = FALSE
+do_vPFC_HC = TRUE
 
 if (do_vPFC){
 
@@ -245,8 +245,8 @@ if (do_HC){
   #                                           trial > 120 & trial <= 160  ~ trial - 120,
   #                                           trial > 160 & trial <=200 ~ trial - 160,
   #                                           trial > 200 & trial <=240 ~ trial - 200))
-  #hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2  hc <- hc %>% rename(decon_mean=decon_mean1)
-  #hc <- hc %>% group_by(id,block) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2  hc <- hc %>% rename(decon_mean=decon_mean1)
+  hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
   df <- df %>%
@@ -323,10 +323,10 @@ if (do_HC){
   hc$id <- as.character(hc$id)
   Q <- inner_join(hc,df,by=c('id','run','trial'))
   rm(hc)
-  Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-  Q$decon_mean[Q$evt_time < -Q$iti_prev] = NA
-  #Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
-  #Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
+  Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
+  Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
 
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
@@ -417,6 +417,8 @@ if (do_vPFC_HC){
                                             trial > 160 & trial <=200 ~ trial - 160,
                                             trial > 200 & trial <=240 ~ trial - 200))
   hc <- hc %>% select(!atlas_value)
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+  hc <- hc %>% rename(decon_mean=decon1)
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
@@ -498,13 +500,13 @@ if (do_vPFC_HC){
                                       trial > 120 & trial <=160 ~ 4,
                                       trial > 160 & trial <=200 ~ 5,
                                       trial > 200 & trial <=240 ~ 6))
-  Q <- inner_join(Q,hc,by=c('id','run','trial','run_trial','evt_time'))
+  Q <- inner_join(Q,hc,by=c('id','run','run_trial','evt_time'))
   rm(hc)
   Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-  #Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
-  #Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
+  Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
+  Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
   Q <- Q %>% mutate(network = case_when(
     atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
     atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',

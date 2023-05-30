@@ -11,9 +11,9 @@ doTesting = FALSE
 do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = TRUE
+do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = FALSE
+do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
@@ -99,7 +99,7 @@ if (do_vPFC_fb){
   df <- df %>% select(id,run,run_trial,last_outcome,trial_bin,rt_bin,v_entropy_wi,v_chosen_sc,rt_vmax_change_sc,v_entropy_wi_change,trial_bin,iti_ideal,iti_prev,iti_prev_sc,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
-  #Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -1271,9 +1271,7 @@ if (do_HC2vPFC_clock){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
-  Q <- Q %>% filter(total_earnings_split=='richer')
-  #Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
-  
+
   rm(decode_formula)
   decode_formula <- NULL
   #decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + v_entropy_wi_change_lag * HCwithin + rt_csv_sc * HCwithin + iti_lag_sc * HCwithin + iti_sc * HCwithin + last_outcome * HCwithin + rt_vmax_change_sc * HCwithin + HCwithin * HCbetween + (1 | id/run)) 
