@@ -4,7 +4,7 @@
 library(pracma)
 library(tidyverse)
 
-do_vPFC_fb = TRUE
+do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
@@ -14,7 +14,7 @@ do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-do_Explore = TRUE
+do_Explore = FALSE
 
 if (do_vPFC_fb){
   if (do_network){
@@ -192,15 +192,15 @@ if (do_HC2vPFC_clock){
     source('~/vmPFC/plot_emtrends_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC.R')
     source('~/vmPFC/plot_emmeans_vmPFC_HC2.R')
-    for (i in 1:4){
+    for (i in 4){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       #model_str <- paste0('-vmPFC-HC-full-symmetry-',i,'.Rdata')
       if (do_Explore){
         model_str <- paste0('-Explore-vPFC-HC-network-clock-HConly-',i,'.Rdata')
         totest <- 'Explore-'
       } else {
-        model_str <- paste0('-vmPFC-HC-network-clock-',i,'.Rdata')
-        totest <- 'testing-'
+        model_str <- paste0('-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata')
+        totest <- 'abs_pe_max_lag_sc-'
       }
       model_str <- Sys.glob(paste0('*',model_str))
       load(model_str)

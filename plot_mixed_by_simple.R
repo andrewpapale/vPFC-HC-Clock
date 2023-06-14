@@ -1,6 +1,6 @@
 plot_mixed_by_simple <- function(ddf){
   
-  epoch_label <- 'time peri event (probably feedback)'
+  epoch_label <- 'time peri clock'
   
   message("\nPlotting streams decoding")
   library(wesanderson)

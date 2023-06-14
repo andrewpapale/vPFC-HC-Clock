@@ -1,6 +1,7 @@
 plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
   ## Check plots
-
+  library(pracma)
+  
   if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
   } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){

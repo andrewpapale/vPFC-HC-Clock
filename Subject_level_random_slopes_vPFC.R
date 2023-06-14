@@ -14,10 +14,10 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = TRUE
-do_rt_pred_fmri = TRUE
+do_rand_slopes = FALSE
+do_rt_pred_fmri = FALSE
 plot_rt_pred_fmri = FALSE
-do_rt_pred_meg = TRUE
+do_rt_pred_meg = FALSE
 plot_rt_pred_meg = FALSE
 do_entropy_plot = TRUE
 do_value_plot = TRUE
@@ -649,12 +649,12 @@ if (do_entropy_plot){
   i <- 1 # entropy
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -768,12 +768,12 @@ if (do_entropy_plot){
   i <- 1 # entropy
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -864,15 +864,13 @@ if (do_entropy_plot){
   ddf <- ddf %>% filter((vPFC_Entropy_random_slope=='-2 std' | vPFC_Entropy_random_slope=='+2 std'))
   ddf <- ddf %>% mutate(network1 = case_when(network=='D'~'DMN',network=='C'~'CTR',network=='L'~'LIM')) %>% select(!std.error)
   ddf <- ddf %>% filter(network1=='DMN' | network1=='CTR')
-  ddf <- inner_join(ddf,ddq,by=c('evt_time','dataset','network1'))
-  ddf <- ddf %>% filter(last_outcome=='Reward')
   #ddf <- ddf %>% filter(RT_lag_bin=='mean')
   
   ddf$RT_lag_bin <- factor(ddf$RT_lag_bin,levels=c('-2 std','-1 std','mean','+1 std','+2 std'))
   
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock/')
   pdf('Entropy-rt_csv-divergence-DC-nodiff.pdf',width=17,height=15)
-  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate.x,color=network1)) +
+  gg1 <- ggplot(ddf,aes(x=vPFC_Entropy_random_slope,y=estimate,color=network1)) +
     geom_violin() + 
     facet_grid(RT_lag_bin~dataset) + ylab('RT Swings (AU)') +
     theme(axis.text.x = element_text(size=20), axis.text.y = element_text(size=20), axis.title = element_text(size=30), strip.text.x = element_text(size=30),strip.text.y = element_text(size=30),legend.title=element_text(size=30),legend.text=element_text(size=20),legend.spacing.y=unit(1.0,'cm')) +
@@ -953,12 +951,12 @@ if (do_value_plot){
   i <- 2 # value
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq
@@ -1073,12 +1071,12 @@ if (do_value_plot){
   i <- 2 # value
   toalign <- 'clock' #
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_r <- ddq
   rm(ddq)
-  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-rs-',i,'.Rdata')
+  model_str <- paste0('-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-both-',i,'.Rdata')
   model_str <- Sys.glob(paste0('*',model_str))
   load(model_str)
   ddq_f <- ddq

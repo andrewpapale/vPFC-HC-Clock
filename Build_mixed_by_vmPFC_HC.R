@@ -1283,7 +1283,7 @@ if (do_HC2vPFC_clock){
   decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
   decode_formula[[2]] = formula(~age * HCwithin + female * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
   decode_formula[[3]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
-  
+  decode_formula[[4]] = formula(~age * HCwithin + female * HCwithin + abs_pe_max_lag_sc * HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
   
   qT <- c(-0.7,0.43)
   
@@ -1322,7 +1322,11 @@ if (do_HC2vPFC_clock){
                       # )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-',i,'.Rdata'))
+      if (i==4){
+        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
+      } else {
+        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-',i,'.Rdata'))
+      }
     }
   }
   
