@@ -116,10 +116,11 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         symmetry_group==8 ~ 'LIM'
       ))
   }
+
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
   if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side') | strcmp(toprocess,'network-by-HC-by-rewFunc')){
-    if (totest!='Explore-'){
+    if (totest!='Explore-' & !grepl('explore',totest,fixed=TRUE)){
       ddf <- ddf %>% mutate(network1 = 
                               case_when(network=='C'~'2C',
                                         network=='D'~'1D',
@@ -127,7 +128,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         mutate(network2 = case_when(network=='C'~'CTR',
                                     network=='D'~'DMN',
                                     network=='L'~'LIM'))
-    } else if (totest=='Explore-'){
+    } else if (totest=='Explore-' | grepl('explore',totest,fixed=TRUE)){
       ddf <- ddf %>% mutate(network1 = 
                               case_when(network=='CTR'~'2C',
                                         network=='DMN'~'1D',
@@ -387,7 +388,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
         #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         if (all(edf$`p, FDR-corrected`=='p < .001')){
-          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
             geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
             # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
             geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
@@ -408,7 +409,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                   axis.text.y = element_text(size=22)
             )
         } else {
-          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network2)) + 
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
             geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
             # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
             geom_line(size = 1) + theme(legend.position = "none") +

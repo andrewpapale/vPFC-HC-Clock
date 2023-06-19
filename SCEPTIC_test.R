@@ -95,6 +95,7 @@ if (do_mmc_vPFC){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
+  Q <- Q %>% filter(!is.na(v_max_wi_full) & !is.na(v_max_wi))
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
@@ -105,7 +106,7 @@ if (do_mmc_vPFC){
   
   splits = c('evt_time','network')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 1:length(decode_formula)){
+  for (i in c(2,4)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
@@ -349,6 +350,7 @@ if (do_mmc_HC){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
+  Q <- Q %>% filter(!is.na(v_max_wi_full) & !is.na(v_max_wi))
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -359,7 +361,7 @@ if (do_mmc_HC){
   
   splits = c('evt_time','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 1:length(decode_formula)){
+  for (i in c(2,4)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
@@ -474,6 +476,7 @@ if (do_mmc_vPFC_HC){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
+  Q <- Q %>% filter(!is.na(v_max_wi_full) & !is.na(v_max_wi))
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -485,7 +488,7 @@ if (do_mmc_vPFC_HC){
   
   splits = c('evt_time','network','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 1:length(decode_formula)){
+  for (i in c(2,4)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
