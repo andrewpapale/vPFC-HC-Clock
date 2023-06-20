@@ -2,15 +2,15 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   ## Check plots
   library(pracma)
   
-  if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') |  grepl('explore',behavmodel,fixed=TRUE))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
-  } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback')
-  } else if (strcmp(toalign,'rt_vmax') & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  } else if (strcmp(toalign,'rt_vmax') & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_rt_vmax')
-  } else if (strcmp(toalign,'feedback') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  } else if (strcmp(toalign,'feedback') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_feedback')
-  } else if (strcmp(toalign,'clock') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+  } else if (strcmp(toalign,'clock') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction')  | grepl('explore',behavmodel,fixed=TRUE))){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_clock')
   }
 
@@ -157,7 +157,7 @@ if (strcmp(toprocess,"symmetry_group") | strcmp(toprocess,"symmetry_group_by_rew
         symmetry_group1=='14rc11m' ~ sym_fill[8]
       ))
 }
-if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction'))){
+if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | !grepl('explore',behavmodel,fixed=TRUE))){
   ddf <- ddf %>% mutate(network1 = 
                           case_when(network=='C'~'2C',
                                     network=='D'~'1D',
@@ -165,7 +165,7 @@ if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(s
     mutate(network2 = case_when(network=='C'~'CTR',
                                 network=='D'~'DMN',
                                 network=='L'~'LIM'))
-} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction'))){
+} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction') | !grepl('explore',behavmodel,fixed=TRUE))){
   ddf <- ddf %>% mutate(network1 = network, network2 = network)
 }
 

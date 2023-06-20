@@ -61,7 +61,7 @@ plot_emmeans_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_ite
   pal1090[1] <- '#939799'
   pal1090[2] <- '#5A5A5A'
   
-  if (!strcmp(behavmodel,'explore')){
+  if (!strcmp(behavmodel,'explore' & !grepl('explore',totest,fixed=TRUE))){
   
   if (!strcmp(totest,'online')){
     
