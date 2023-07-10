@@ -82,7 +82,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
         #pal1 <- palette(c('#F21A00','#3B9AB2'))
         gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(size = 1) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
@@ -118,7 +118,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
         #pal1 <- palette(c('#F21A00','#3B9AB2'))
         gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(size = 1) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 

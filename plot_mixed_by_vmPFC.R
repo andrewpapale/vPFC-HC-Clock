@@ -157,7 +157,8 @@ if (strcmp(toprocess,"symmetry_group") | strcmp(toprocess,"symmetry_group_by_rew
         symmetry_group1=='14rc11m' ~ sym_fill[8]
       ))
 }
-if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | !grepl('explore',behavmodel,fixed=TRUE))){
+
+if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(strcmp(behavmodel,'explore') | grepl('explore',behavmodel,fixed=TRUE))){
   ddf <- ddf %>% mutate(network1 = 
                           case_when(network=='C'~'2C',
                                     network=='D'~'1D',
@@ -165,11 +166,12 @@ if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(s
     mutate(network2 = case_when(network=='C'~'CTR',
                                 network=='D'~'DMN',
                                 network=='L'~'LIM'))
+  ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
 } else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction') | !grepl('explore',behavmodel,fixed=TRUE))){
   ddf <- ddf %>% mutate(network1 = network, network2 = network)
+  ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
 }
 
-ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
 pal1 <- palette()
 pal1[1] <- pal[2]
 pal1[2] <- pal[1]
@@ -203,13 +205,13 @@ if (!strcmp(totest,'online')){
     fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'_',model_iter,'_',model_iter,  ".pdf", sep = "")
     
     if (strcmp(toprocess,"network")){
-      pdf(fname, width = 9, height = 3.5)
-      print(ggplot(edf, aes(t, network2)) + geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
-              # geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~visuomotor_grad) +
-              geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
-              scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
-              labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
-      dev.off()
+      # pdf(fname, width = 9, height = 3.5)
+      # print(ggplot(edf, aes(t, network2)) + geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
+      #         # geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~visuomotor_grad) +
+      #         geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+      #         scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
+      #         labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
+      # dev.off()
     } else if (strcmp(toprocess,"region")){
       print(ggplot(edf, aes(t, region)) + geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
               facet_wrap(~network) +
@@ -299,9 +301,9 @@ if (!strcmp(totest,'online')){
       #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
       if (all(edf$`p, FDR-corrected`=='p < .001')){
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
-          geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-          geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+          geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           scale_color_manual(values = pal1) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -311,19 +313,19 @@ if (!strcmp(totest,'online')){
                 panel.grid.major = element_line(colour = "grey45"), 
                 panel.grid.minor = element_line(colour = "grey45"), 
                 panel.background = element_rect(fill = 'grey40'),
-                axis.title.y = element_text(margin=margin(r=6),size=48),
-                axis.title.x = element_text(margin=margin(t=6),size=48),
-                legend.text = element_text(size=24),
-                axis.text.x = element_text(size=24),
-                axis.text.y = element_text(size=24)
+                axis.title.y = element_text(margin=margin(r=6),size=22),
+                axis.title.x = element_text(margin=margin(t=6),size=22),
+                legend.text = element_text(size=22),
+                axis.text.x = element_text(size=22),
+                axis.text.y = element_text(size=22)
           )
       } else {
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Network Response') +
           geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
-          geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-          geom_line(size = 1) + theme(legend.position = "none") +
+          geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
           scale_color_manual(values = pal1) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
@@ -500,8 +502,8 @@ if (!strcmp(totest,'online')){
       if (all(edf$`p, FDR-corrected`=='p < .001')){
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + facet_wrap(~block) + 
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
           geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -518,7 +520,7 @@ if (!strcmp(totest,'online')){
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
-          # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(size = 1) + theme(legend.position = "none") +
           scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -659,7 +661,7 @@ if (!strcmp(totest,'online')){
           gg<-ggplot(edf,aes(x=online,y=estimate,color=network2,fill=network2)) + 
             facet_wrap(~network2) +
             geom_bar(aes(alpha = p_level_fdr),stat='identity') + 
-            geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) +
+            geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
             xlab(epoch_label) + ylab('estimate') +
             scale_color_manual(values = pal1,labels=c('CTR','DMN','LIM')) + guides(color='none') +
             scale_fill_manual(values = pal1,labels=c('CTR','DMN','LIM')) + guides(color='none') +
@@ -681,7 +683,7 @@ if (!strcmp(totest,'online')){
         gg1<-ggplot(edf,aes(x=online,y=estimate,color=sym_fill1,fill=sym_fill1)) + 
           facet_wrap(~symmetry_group1) +
           geom_bar(aes(alpha = p_level_fdr),stat='identity') + 
-          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0.2) +
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           scale_color_manual(values = sym_fill_rearranged,guide="none") + 
           scale_fill_manual(values = sym_fill_rearranged,guide="none") + 
           geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 

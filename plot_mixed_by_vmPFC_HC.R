@@ -389,9 +389,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         if (all(edf$`p, FDR-corrected`=='p < .001')){
           gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
-            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + 
-            # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-            geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+            geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
+            geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
             geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
             scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -410,9 +410,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
             )
         } else {
           gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
-            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
-            # geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL),position = position_dodge(width = .5), size = .5) + 
-            geom_line(size = 1) + theme(legend.position = "none") +
+            geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
+            geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
             geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
             scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
