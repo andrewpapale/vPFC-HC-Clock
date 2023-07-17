@@ -2,7 +2,7 @@
 library(stringr)
 
 ncores = 26
-do_vPFC = FALSE
+do_vPFC = TRUE
 do_HC = FALSE
 do_vPFC_HC = TRUE
 
@@ -139,7 +139,7 @@ decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + condition_tri
 decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
 decode_formula[[3]] = formula(~age + v_max_wi +v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
 decode_formula[[4]] = formula(~v_max_wi + (1|id))
-
+decode_formula[[5]] = formula(~v_entropy_wi + (1|id))
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))
 # decode_formula[[2]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
 # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | id) + (1 | run))
@@ -324,9 +324,7 @@ if (do_HC){
   Q <- inner_join(hc,df,by=c('id','run','trial'))
   rm(hc)
   Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-  Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$HCwithin[Q$evt_time < -Q$rt_csv] = NA
-  Q$vmPFC_decon[Q$evt_time < -Q$rt_csv] = NA
 
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -4 & evt_time < 4)

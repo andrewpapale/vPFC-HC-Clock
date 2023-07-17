@@ -119,6 +119,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
 
   #fills = c('red','red','blue','blue','blue','cyan','green','magenta')
   #fills1 = c('green','magenta','red','blue','cyan')
+  
   if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side') | strcmp(toprocess,'network-by-HC-by-rewFunc')){
     if (totest!='Explore-' & !grepl('explore',totest,fixed=TRUE)){
       ddf <- ddf %>% mutate(network1 = 

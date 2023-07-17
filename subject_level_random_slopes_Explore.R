@@ -137,6 +137,7 @@ if (do_rand_slopes){
   decode_formula <- NULL
   decode_formula[[1]] = formula(~ age + last_outcome + rt_lag_sc + iti_lag_sc + v_entropy_wi + (1 + v_entropy_wi|id) + (1|run))
   decode_formula[[2]] = formula(~ age + last_outcome + rt_lag_sc + iti_lag_sc + v_max_wi + (1 + v_max_wi |id) + (1|run))
+  #decode_formula[[3]] = formula(~ age + last_outcome + rt_lag_sc + iti_lag_sc + v_max_wi + v_entropy_wi + (1 + v_entropy_wi + v_max_wi |id) + (1|run))
   splits = c('evt_time','network')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
@@ -148,14 +149,14 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vPFC-network-',toalign,'-Explore-ranslopes-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vPFC-network-',toalign,'-Explore-ranslopes-HConly-',i,'.Rdata'))
   }
 }
 
 if (do_rt_pred_fmri){
   for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vPFC-network-',toalign,'-Explore-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vPFC-network-',toalign,'-Explore-ranslopes-HConly-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -264,7 +265,8 @@ if (do_rt_pred_fmri){
     demo$education_yrs <- scale(demo$education_yrs)
     Q <- Q %>% select(!group)
     Q <- merge(demo,Q,by='id')
-    Q <- Q %>% filter(group!='ATT')
+    #Q <- Q %>% filter(group=='HC')
+    Q <- Q %>% filter(group !='ATT')
     Q$group <- relevel(factor(Q$group),ref='HC')
     Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                         trial > 40 & trial <= 80 ~ 2,
@@ -272,7 +274,7 @@ if (do_rt_pred_fmri){
                                         trial > 120 & trial <=160 ~ 4,
                                         trial > 160 & trial <=200 ~ 5,
                                         trial > 200 & trial <=240 ~ 6))
-    #Q <- Q %>% filter(group=='HC')
+    Q <- Q %>% filter(group=='HC')
     Q <- Q %>% filter(!is.na(rewFunc))
     Q <- Q %>% rename(subj_level_rand_slope=estimate)
     Q$last_outcome <- relevel(factor(Q$last_outcome),ref='Omission')
@@ -280,13 +282,13 @@ if (do_rt_pred_fmri){
     #decode_formula[[1]] = formula(~ rt_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1+rt_lag | id/run))
     #decode_formula[[2]] = formula(~ rt_vmax_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1 + rt_vmax_lag | id/run))
     decode_formula[[1]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
-    decode_formula[[2]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+    #decode_formula[[2]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     
     splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
-      ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[1]], split_on = splits,return_models=TRUE,
+      ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                       tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                       emmeans_spec = list(
@@ -312,9 +314,9 @@ if (do_rt_pred_fmri){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-',i,'.Rdata'))
       } else {
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-',i,'.Rdata'))
       }
     }
   }

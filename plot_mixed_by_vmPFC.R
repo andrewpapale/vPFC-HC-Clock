@@ -167,7 +167,7 @@ if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(s
                                 network=='D'~'DMN',
                                 network=='L'~'LIM'))
   ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
-} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction') | !grepl('explore',behavmodel,fixed=TRUE))){
+} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
   ddf <- ddf %>% mutate(network1 = network, network2 = network)
   ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
 }

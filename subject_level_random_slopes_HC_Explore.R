@@ -181,7 +181,7 @@ if (do_rand_slopes){
   Q <- merge(demo,Q,by='id')
   #Q <- Q %>% filter(total_earnings_split=='richer')
   Q$group <- relevel(factor(Q$group),ref='HC')
-  Q <- Q %>% filter(group!='ATT')
+  #Q <- Q %>% filter(group!='ATT')
   Q <- Q %>% filter(group=='HC')
   Q <- Q %>% filter(!is.na(rewFunc))
     
@@ -189,7 +189,7 @@ if (do_rand_slopes){
     decode_formula <- formula(~ (1|id))
     decode_formula[[1]] = formula(~ age*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + condition_trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
     decode_formula[[2]] = formula(~ age*HCwithin + gender*HCwithin + condition_trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
-  
+    decode_formula[[3]] = formula(~ age*HCwithin + gender*HCwithin + condition_trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin  |id) + (1|run))
   
   splits = c('evt_time','network','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
@@ -202,14 +202,14 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-',i,'.Rdata'))
   }
 }
 
 if (do_rt_pred_fmri){
-  for (i in 1:2){
+  for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -220,13 +220,17 @@ if (do_rt_pred_fmri){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin:v_entropy_wi')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin:v_max_wi')
+      } else if (i==3){
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin')
       }
     } else if (strcmp(toalign,'feedback')){
       if (i==1){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin:v_entropy_wi')
       } else if (i==2){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin:v_max_wi')
-      }  
+      } else if (i==3){
+        qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin')
+      }
     }
     qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
@@ -331,7 +335,7 @@ if (do_rt_pred_fmri){
     source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
-      ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[i]], split_on = splits,return_models=TRUE,
+      ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                       tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                       emmeans_spec = list(

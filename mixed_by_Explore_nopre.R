@@ -111,12 +111,12 @@ Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1,
 
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~ v_entropy_wi + trial_neg_inv_sc + rt_csv_sc + gender + wtar + education_yrs + age + iti_sc + iti_prev_sc + last_outcome*iti_prev_sc + outcome*rt_csv_sc + (1 |id/run))
+decode_formula[[1]] = formula(~ v_entropy_wi + trial_neg_inv_sc + rt_csv_sc + gender + age + iti_prev_sc + last_outcome + (1 |id/run))
 #decode_formula[[2]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
 #decode_formula[[3]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | id) + (1 | run))
 #decode_formula[[4]] = formula(~ age + gender + wtar + education_yrs + v_entropy_sc + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | run) + (1| id))
 
-decode_formula[[2]] = formula(~ v_max_wi + trial_neg_inv_sc + rt_csv_sc + gender + wtar + education_yrs + age + iti_sc + iti_prev_sc + last_outcome*iti_prev_sc + outcome*rt_csv_sc + (1 |id/run))
+decode_formula[[2]] = formula(~ v_max_wi + trial_neg_inv_sc + rt_csv_sc + gender + age + iti_prev_sc + last_outcome + (1 |id/run))
 #decode_formula[[6]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi |id/run))
 #decode_formula[[7]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | id) + (1 | run))
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
@@ -143,55 +143,10 @@ for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
   print(df0)
-  if (i < 2){
-    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+  ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                    tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                    emmeans_spec = list(
-                      A = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
-                      W = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
-                      H = list(outcome='vmPFC_decon', model_name='model1',
-                               specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,-1,0,1,2))),
-                      Y = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    )#,
-                    # emtrends_spec = list(
-                    #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                    #              specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                    #   HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                    #             specs = formula(~v_entropy_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
-                    #   H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                    #            specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
-                    #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
-                    #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    # )
-    )
-  } else{
-    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
-                    padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                    tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                    emmeans_spec = list(
-                      A = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
-                      W = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
-                      V = list(outcome='vmPFC_decon', model_name='model1',
-                               specs=formula(~v_max_wi), at = list(v_max_wi=c(-2,-1,0,1,2))),
-                      Y = list(outcome='vmPFC_decon',model_name='model1',
-                               specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    )#,
-                    # emtrends_spec = list(
-                    #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
-                    #              specs = formula(~v_max_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                    #   HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_max_wi',
-                    #              specs = formula(~v_max_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
-                    #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_max_wi',
-                    #              specs=formula(~v_max_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                    # )
+                    tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )       
-  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-nopre-',i,'.Rdata'))
 }

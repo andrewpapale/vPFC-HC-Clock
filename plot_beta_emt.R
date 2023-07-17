@@ -1,6 +1,6 @@
 # plot_beta_emt
 # 2022-08-01 AndyP
-session = "meg"
+session = "fmri"
 model = "slo"
 clock_folder <- "~/clock_analysis" 
 # source('~/code/Rhelpers/')

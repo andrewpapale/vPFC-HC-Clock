@@ -130,8 +130,8 @@ if (do_rand_slopes){
     decode_formula <- formula(~ (1|id))
     #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_sc |id/run))
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id/run))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | id) + (1 | run))
-    decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi  |id) + (1 | run))
+    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | id) + (1 | run))
+    decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi  |id) + (1 | run))
     #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | rewFunc) + (1|id/rewFunc))
     #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
     
@@ -193,6 +193,7 @@ if (do_rand_slopes){
     Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
     Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
     Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+    Q$last_outcome <- relevel(as.factor(Q$last_outcome),ref='Omission')
     # test age & sex
     demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
     demo <- demo %>% rename(id=lunaid)
@@ -216,6 +217,9 @@ if (do_rand_slopes){
     #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
     decode_formula[[1]] = formula(~ age + female + v_entropy_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_entropy_wi |id) + (1|run))
     decode_formula[[2]] = formula(~ age + female + v_max_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_max_wi |id) + (1|run))
+    decode_formula[[3]] = formula(~ age + female + v_max_wi + v_entropy_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_entropy_wi + v_max_wi |id) + (1|run))
+    #decode_formula[[3]] = formula(~ age + female + v_max_wi + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_max_wi + v_entropy_wi  |id) + (1 | run))
+    
     #decode_formula[[3]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + last_outcome + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + (1 + v_entropy_wi_change_lag |id/run))
   }
   
@@ -231,15 +235,15 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-network-',toalign,'-ranslopes-OmRefsep-',i,'.Rdata'))
   }
 }
 
 
-if (do_rt_pred_meg){
+if (do_rt_pred_fmri){
   for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-OmRefsep-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -353,6 +357,8 @@ if (do_rt_pred_meg){
                                   specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
                         Vmax = list(outcome='rt_csv', model_name='model1', 
                                     specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                        TrxVmax = list(outcome='rt_csv',model_name='model1',
+                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
                         RTxO = list(outcome='rt_csv',model_name='model1',
                                     specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
                         
@@ -362,6 +368,12 @@ if (do_rt_pred_meg){
                                   specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
                         Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                     specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                        TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
+                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
+                        TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
+                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))),
+                        TrxVmax2 = list(outcome='rt_csv',model_name='model1', var = 'subj_level_rand_slope',
+                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
                         RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
                                     specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                         
@@ -370,9 +382,9 @@ if (do_rt_pred_meg){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-sep-int-',i,'.Rdata'))
       } else if (j==2){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-slo-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-sep-slo-',i,'.Rdata'))
       }
     }
   }
@@ -383,7 +395,7 @@ if (do_rt_pred_meg){
 if (do_rt_pred_meg){
   for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',3,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -497,6 +509,8 @@ if (do_rt_pred_meg){
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
                           Vmax = list(outcome='rt_csv', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                          TrxVmax = list(outcome='rt_csv',model_name='model1',
+                                         specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
                           RTxO = list(outcome='rt_csv',model_name='model1',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
                           
@@ -506,6 +520,12 @@ if (do_rt_pred_meg){
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
                           Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
+                                         specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
+                          TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
+                                          specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))),
+                          TrxVmax2 = list(outcome='rt_csv',model_name='model1', var = 'subj_level_rand_slope',
+                                          specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope:trial_neg_inv_sc, at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
                           RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                           
@@ -514,9 +534,9 @@ if (do_rt_pred_meg){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-int-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-sep-int-',i,'.Rdata'))
       } else if (j==2){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-slo-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-replication-',toalign,'-pred-rt_csv_sc-sep-slo-',i,'.Rdata'))
       }
     }
   }
