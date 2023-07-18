@@ -4,7 +4,7 @@ library(stringr)
 ncores = 26
 do_vPFC = TRUE
 do_HC = FALSE
-do_vPFC_HC = TRUE
+do_vPFC_HC = FALSE
 
 if (do_vPFC){
 
@@ -122,7 +122,7 @@ Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1,
                             trial > 200 & trial <=240 ~ 6))
 Q <- Q %>% filter(group=='HC')
 Q <- Q %>% filter(!is.na(rewFunc))
-#Q <- Q %>% filter(trial > 10)
+Q <- Q %>% filter(trial > 10)
 
 rm(decode_formula)
 decode_formula <- NULL
@@ -137,7 +137,7 @@ decode_formula <- NULL
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
 decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
 decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
-decode_formula[[3]] = formula(~age + v_max_wi +v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
+decode_formula[[3]] = formula(~age + v_max_wi + v_entropy_wi + last_outcome + condition_trial_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id))
 decode_formula[[4]] = formula(~v_max_wi + (1|id))
 decode_formula[[5]] = formula(~v_entropy_wi + (1|id))
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))

@@ -312,6 +312,8 @@ if (do_rt_pred_fmri){
     Q2$trial_bin <- factor(Q2$trial_bin)
     Q2$trial_bin <- relevel(Q2$trial_bin, ref='Middle')
     Q2 <- Q2 %>% rename(subj_level_rand_slope=estimate)
+    
+    
     #~ (trial_neg_inv + rt_lag + v_max_wi_lag + v_entropy_wi + fmri_beta + last_outcome)^2 +
     #  rt_lag:last_outcome:fmri_beta +
     #  rt_vmax_lag*trial_neg_inv*fmri_beta +
