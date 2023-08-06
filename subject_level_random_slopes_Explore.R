@@ -7,6 +7,7 @@ library(pracma)
 library(wesanderson)
 library(tidyverse)
 library(ggnewscale)
+library(quest)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
@@ -16,6 +17,8 @@ ncores <- 26
 toalign <- 'clock'
 do_rand_slopes = FALSE
 do_rt_pred_fmri = TRUE
+simple_model = FALSE
+trial_mod_model = TRUE
 
 #### clock ####
 
@@ -92,7 +95,7 @@ if (do_rand_slopes){
   Q <- full_join(md,df,by=c('id','run','trial'))
   
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-  Q$decon_mean[Q$evt_time < -Q$rt_csv] = NA
+  Q$decon_mean[Q$evt_time < -Q$iti_prev] = NA
   Q <- Q %>% mutate(network = case_when(
     atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
     atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
@@ -175,7 +178,8 @@ if (do_rt_pred_fmri){
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)
-    
+    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate = estimate1)
+    #qdf %>% group_by(evt_time) %>% mutate(estimate = quest::winsor(estimate,z.min=2,z.max=2,to.na=TRUE)) %>% ungroup()
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
     df <- df %>%
@@ -244,81 +248,114 @@ if (do_rt_pred_fmri){
     df <- df %>% select(iti_ideal,condition_trial_neg_inv_sc,rt_vmax_lag_sc, rt_lag_sc,iti_prev,iti_sc,v_entropy_wi_change,iti_prev_sc,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
     df$id <- as.integer(df$id)
     df <- df %>% group_by(id,run) %>% mutate(v_max_wi_lag = lag(v_max_wi)) %>% ungroup()
-    Q <- full_join(qdf,df,by=c('id'))
-    Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
-    Q$decon_mean[Q$evt_time < -Q$rt_csv] = NA
+    Q <- inner_join(qdf,df,by=c('id'))
     
-    Q <- Q %>% rename(vmPFC_decon = decon_mean)
     Q <- Q %>% arrange(id,run,trial,evt_time)
     Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
     
     
     Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
     Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-    
-    demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
-    demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
-    demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
-    demo$gender <- relevel(as.factor(demo$gender),ref='M')
-    demo$age <- scale(demo$age)
-    demo$wtar <- scale(demo$wtar)
-    demo$education_yrs <- scale(demo$education_yrs)
-    Q <- Q %>% select(!group)
-    Q <- merge(demo,Q,by='id')
-    #Q <- Q %>% filter(group=='HC')
-    Q <- Q %>% filter(group !='ATT')
-    Q$group <- relevel(factor(Q$group),ref='HC')
-    Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
+        Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                         trial > 40 & trial <= 80 ~ 2,
                                         trial > 80 & trial <=120 ~ 3, 
                                         trial > 120 & trial <=160 ~ 4,
                                         trial > 160 & trial <=200 ~ 5,
                                         trial > 200 & trial <=240 ~ 6))
-    Q <- Q %>% filter(group=='HC')
-    Q <- Q %>% filter(!is.na(rewFunc))
+    Q <- Q %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                        trial > 40 & trial <= 80 ~ trial-40,
+                                        trial > 80 & trial <=120 ~ trial-80, 
+                                        trial > 120 & trial <=160 ~ trial-120,
+                                        trial > 160 & trial <=200 ~ trial-160,
+                                        trial > 200 & trial <=240 ~ trial-200))
     Q <- Q %>% rename(subj_level_rand_slope=estimate)
     Q$last_outcome <- relevel(factor(Q$last_outcome),ref='Omission')
     decode_formula <- NULL
     #decode_formula[[1]] = formula(~ rt_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1+rt_lag | id/run))
     #decode_formula[[2]] = formula(~ rt_vmax_lag*subj_level_rand_slope + last_outcome + v_entropy_wi + v_max_wi + trial_neg_inv_sc +  (1 + rt_vmax_lag | id/run))
-    decode_formula[[1]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
-    #decode_formula[[2]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
-    
+    if (!simple_model && !trial_mod_model){
+      decode_formula[[1]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
+      decode_formula[[2]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+    } else if (simple_model){
+      decode_formula[[1]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1|id/run))
+      decode_formula[[2]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc |id/run))
+    } else if (trial_mod_model){
+      decode_formula[[1]] <- formula(~(run_trial0 + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0 * subj_level_rand_slope + (1 | id/run))
+     # decode_formula[[2]] <- formula(~(run_trial0 + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0 * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+    }
     splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
+      if (!simple_model && !trial_mod_model){
+        ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', 
+                                    specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                                      specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                          RTxO = list(outcome='rt_csv',model_name='model1',
+                                      specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
+                          
+                        ),
+                        emtrends_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                                    specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                                      specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
+                                      specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                          
+                        )
+        )
+        
+        setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+        curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+        if (j==1){
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-',i,'.Rdata'))
+        } else {
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-',i,'.Rdata'))
+        }
+      } else if (simple_model){
+        ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', 
+                                    specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                                      specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))
+                        ),
+                        emtrends_spec = list(
+                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                                    specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
+                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                                      specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2)))
+                        )
+        )
+        
+        setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+        curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+        if (j==1){
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-simple-',i,'.Rdata'))
+        } else {
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-simple-',i,'.Rdata'))
+        }        
+    } else if (trial_mod_model){
       ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        RT = list(outcome='rt_csv', model_name='model1', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1', 
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        RTxO = list(outcome='rt_csv',model_name='model1',
-                                    specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
-                        
-                      ),
-                      emtrends_spec = list(
-                        RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                                  specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                        Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                        RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
-                                    specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
-                        
-                      )
-      )
+                      tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE))
       
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-trial_mod-',i,'.Rdata'))
       } else {
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-trial_mod-',i,'.Rdata'))
       }
     }
   }
 }
-    
+}

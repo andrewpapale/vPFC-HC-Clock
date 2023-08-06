@@ -42,6 +42,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   ddg <- ddf
   ddf <- as_tibble(ddf$coef_df_reml)
   ddf$t <- ddf$evt_time
+  if (strcmp(toalign,'feedback')){
+    ddf <- ddf %>% filter(t > -4)
+  }
   #if (strcmp(toprocess,"network")){
   ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term, 
                          p_level_fdr = as.factor(case_when(
@@ -397,8 +400,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
               geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
               scale_color_manual(values = pal) + 
               #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
-              theme_bw(base_size=13) + ylab('Network Response') + 
-              facet_wrap(~HC_region) + ylab('Network Response') +
+              theme_bw(base_size=13) + ylab('Response [AU]') + 
+              facet_wrap(~HC_region) + 
               theme(legend.title = element_blank(),
                     panel.grid.major = element_line(colour = "grey45"), 
                     panel.grid.minor = element_line(colour = "grey45"), 
@@ -417,9 +420,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
             geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
             scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
-            theme_bw(base_size=13) + ylab('Network Response') + 
+            theme_bw(base_size=13) +  
             geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
-            facet_wrap(~HC_region) + ylab('Network Response') +
+            facet_wrap(~HC_region) + ylab('Response [AU]') +
             theme(legend.title = element_blank(),
                   panel.grid.major = element_line(colour = "grey45"), 
                   panel.grid.minor = element_line(colour = "grey45"), 
@@ -440,7 +443,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
             scale_color_manual(values = pal) + 
             #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
             theme_bw(base_size=13) +
-            facet_wrap(~HC_region) + ylab('Network Response') +
+            facet_wrap(~HC_region) + ylab('Response [AU]') +
             geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
             theme(legend.title = element_blank(),
                   panel.grid.major = element_line(colour = "grey45"), 

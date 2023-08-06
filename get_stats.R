@@ -74,11 +74,12 @@ D <- h_term %>% filter(symmetry_group %in% c(2,4,5,7))
 L <- h_term %>% filter(symmetry_group == 3)
 rl9_10 <- h_term %>% filter(symmetry_group==6)
 r11_47 <- h_term %>% filter(symmetry_group==1)
+m142532 <- h_term %>% filter(symmetry_group == 4)
 summary(D)
 summary(L)
 summary(rl9_10)
 summary(r11_47)
-
+summary(m142532)
 
 ############################
 ###### Value ###############
@@ -152,12 +153,13 @@ fp10 <- v_term %>% filter(symmetry_group == 2)
 r11_13 <- v_term %>% filter(symmetry_group == 8)
 rl9_10 <- v_term %>% filter(symmetry_group==6)
 r11_47 <- v_term %>% filter(symmetry_group==1)
+m142532 <- v_term %>% filter(symmetry_group == 4)
 summary(D)
 summary(fp10)
 summary(r11_13)
 summary(rl9_10)
 summary(r11_47)
-
+summary(m142532)
 
 ##############################
 ##### B2B - Entropy ##########

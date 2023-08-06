@@ -215,6 +215,7 @@ if (do_vPFC_clock){
   df <- df %>% 
     group_by(id, run) %>% 
     mutate(v_chosen_sc = scale(v_chosen),
+           rt_lag = lag(rt_csv),
            abs_pe_max_sc = scale(abs(pe_max)),
            iti_lag_sc = scale(iti_prev),
            score_sc = scale(score_csv),
@@ -269,18 +270,18 @@ if (do_vPFC_clock){
     run_trial >=30 ~ 'Late',
   )))
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_sc,iti_prev,v_entropy_wi_change_lag,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,run_trial,rt_lag,rt_vmax_change_sc,iti_prev,v_entropy_wi_change_lag,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev + Q$rt_lag)] = NA;
   Q <- Q %>% mutate(online = case_when(
-    Q$evt_time <= -Q$iti_prev & Q$evt_time <= 0 & Q$run_trial > 1 ~ 'online_pre',
-    Q$evt_time > -Q$iti_prev & Q$evt_time <= 0 & Q$run_trial > 1 ~ 'offline_pre',
-    Q$evt_time <= Q$rt_csv & Q$evt_time >= 0 ~ 'online',
-    Q$evt_time > Q$rt_csv & Q$evt_time >= 0 ~ 'offline_post'
+    Q$evt_time < -Q$iti_prev & Q$run_trial > 1 ~ 'online_pre',
+    Q$evt_time <= 0 & Q$evt_time >= -Q$iti_prev & Q$run_trial > 1 ~ 'offline_pre',
+    Q$evt_time > 0 & Q$evt_time <= Q$rt_csv ~ 'online',
+    Q$evt_time > Q$rt_csv ~ 'offline_post'
   ))
   Q <- Q %>% filter(!is.na(online))
   Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
-  #Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -296,8 +297,9 @@ if (do_vPFC_clock){
   Q$age <- scale(Q$age)
   
   rm(decode_formula)
-  decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag +  v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1|id/run))
+  decode_formula <- NULL
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_sc |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))
@@ -306,33 +308,13 @@ if (do_vPFC_clock){
   if (do_symmetry){
     splits = c('online','symmetry_group')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1){
+    for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1', 
-                                  specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
-                        V = list(outcome='vmPFC_decon', model_name='model1', 
-                                  specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1',
-                                  specs=c('v_entropy_wi_change_lag'),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
-                      ),
-                      emtrends_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1', var='v_entropy_sc',
-                                 specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
-                                  specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=qT)),
-                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
-                                  specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag',
-                                  specs=formula(~v_entropy_wi_change_lag),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
-                      )
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       save(ddf,file=paste0(curr_date,'-vmPFC-symmetry-clock-online-',i,'.Rdata'))
@@ -341,33 +323,13 @@ if (do_vPFC_clock){
   if (do_network){
     splits = c('online','network')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1){
+    for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=c("v_entropy_sc"), at = list(v_entropy_sc=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1', 
-                                  specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
-                        V = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=c("v_max_wi"), at = list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1',
-                                  specs=c('v_entropy_wi_change_lag'),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
-                      ),
-                      emtrends_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1', var='v_entropy_sc',
-                                 specs=formula(~v_entropy_sc), at = list(v_entropy_sc=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1', var = 'trial_neg_inv_sc',
-                                  specs=formula(~trial_neg_inv_sc), at = list(trial_neg_inv_sc=qT)),
-                        V = list(outcome='vmPFC_decon', model_name='model1', var = 'v_max_wi',
-                                 specs=formula(~v_max_wi), at = list(v_max_wi=c(-1.5,1.5))),
-                        dH = list(outcome='vmPFC_decon', model_name='model1', var = 'v_entropy_wi_change_lag',
-                                  specs=formula(~v_entropy_wi_change_lag),at = list(v_entropy_wi_change_lag=c(-0.5,0.5)))
-                      )
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-online-',i,'.Rdata'))

@@ -1,7 +1,7 @@
 plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
   ## Check plots
   library(pracma)
-  
+
   if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') |  grepl('explore',behavmodel,fixed=TRUE))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
   } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
@@ -258,14 +258,14 @@ if (!strcmp(totest,'online')){
               scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
               labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
     } else if (strcmp(toprocess,"symmetry_group")){
-      pdf(fname, width = 9, height = 3.5)
-      gg1 <- (ggplot(edf,aes(t,symmetry_group1))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
-                facet_grid(network_group~.,scales="free_y",space="free_y") +
-                geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
-                scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
-                labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
-      print(gg1)
-      dev.off()
+      # pdf(fname, width = 9, height = 3.5)
+      # gg1 <- (ggplot(edf,aes(t,symmetry_group1))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
+      #           facet_grid(network_group~.,scales="free_y",space="free_y") +
+      #           geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+      #           scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
+      #           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
+      # print(gg1)
+      # dev.off()
     } else if (strcmp(toprocess,"network-by-outcome")){
       gg1 <- (ggplot(edf,aes(t,network))+geom_tile(aes(fill = estimate, alpha = `p, FDR-corrected`), size = 1) +
                 facet_grid(~outcome) +
@@ -304,8 +304,10 @@ if (!strcmp(totest,'online')){
           geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
           geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           scale_color_manual(values = pal1) + 
+          scale_y_continuous(n.breaks=3) + 
+          scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
@@ -321,12 +323,14 @@ if (!strcmp(totest,'online')){
           )
       } else {
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Network Response') +
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
           geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
           geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
           scale_color_manual(values = pal1) + 
+          scale_y_continuous(n.breaks=3) + 
+          scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
@@ -410,8 +414,9 @@ if (!strcmp(totest,'online')){
         geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
         geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill1)) +
-        geom_errorbar(size = 1) + ylab('Region Response') + 
+        geom_errorbar(size = 1) + ylab('Response [AU]') + 
         scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
+        scale_y_continuous(n.breaks=3) + 
         theme(legend.title = element_blank(),
               axis.title.y = element_text(margin=margin(r=6),size=22),
               axis.title.x = element_text(margin=margin(t=6),size=22),

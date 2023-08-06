@@ -10,7 +10,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   message("\nPlotting streams decoding")
   library(viridis)
   
-  epoch_label = paste("Time relative to",toalign, "[s]")
+  epoch_label = paste("Time relative to trial onset [s]")
   ddq <- ddf
   ddf <- as_tibble(ddf$coef_df_reml)
   if (strcmp(totest,'Explore-')){
@@ -117,14 +117,14 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
         #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         #pal1 <- palette(c('#F21A00','#3B9AB2'))
         gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
-          geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
-          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
-          geom_line(size = 1) + 
+          geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_line(position=position_dodge(width=0.33),size = 1) + 
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
           scale_color_manual(values = pal) +  
           geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
-          xlab(epoch_label) + ylab('HC Response') +
+          xlab(epoch_label) + ylab('Response [AU]') +
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           theme(legend.title = element_blank(),
