@@ -9,9 +9,9 @@ library(tidyverse)
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
 do_vPFC_fb = TRUE
-do_vPFC_clock = FALSE
-do_symmetry = TRUE
-do_network = FALSE
+do_vPFC_clock = TRUE
+do_symmetry = FALSE
+do_network = TRUE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -32,8 +32,8 @@ if (do_vPFC_fb){
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
-  source('~/vmPFC/get_trial_data_vmPFC.R')
-  df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
   df <- df %>% 
     group_by(id, run) %>% 
     mutate(v_chosen_sc = scale(v_chosen),
@@ -88,18 +88,19 @@ if (do_vPFC_fb){
     run_trial >=30 ~ 'Late',
   )))
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_bin))
-  df <- df %>% select(id,run,run_trial,rt_vmax_change_sc,last_outcome,v_entropy_wi,iti_prev_sc,v_entropy_wi_change_lag, trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
+  df <- df %>% select(id,run,run_trial,rt_next,rt_vmax_change_sc,last_outcome,v_entropy_wi,iti_prev_sc,v_entropy_wi_change_lag, trial_bin,iti_ideal,iti_prev,rt_csv,trial_neg_inv_sc,rt_csv_sc,rewFunc,v_entropy_sc,outcome,v_max_wi,score_sc,rt_bin,iti_sc,ev_sc,expl_longer,expl_shorter)
   Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
-  Q$vmPFC_decon[Q$evt_time > Q$iti_ideal] = NA;
+  Q$vmPFC_decon[Q$evt_time > Q$iti_ideal + Q$rt_next] = NA;
+  Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv + Q$iti_prev)] = NA;
   Q <- Q %>% mutate(online = case_when(
-    Q$evt_time <= -Q$rt_csv-Q$iti_prev ~ 'online_pre',
-    Q$evt_time < -Q$rt_csv & Q$evt_time <= 0 & Q$evt_time > -Q$rt_csv-Q$iti_prev ~ 'offline_pre',
-    Q$evt_time >= -Q$rt_csv & Q$evt_time <= 0 ~ 'online',
-    Q$evt_time > 0 ~ 'offline_post'
+    Q$evt_time < 0 & Q$evt_time < -Q$rt_csv & Q$run_trial > 1 ~ 'offline_pre',
+    Q$evt_time > -Q$rt_csv & Q$evt_time <= 0 & Q$run_trial >1 ~ 'online_pre',
+    Q$evt_time > 0 & Q$evt_time <= Q$iti_ideal < 50 ~ 'offline_post',
+    Q$evt_time > Q$iti_ideal & Q$run_trial < 50 ~ 'online_post'
   ))
   Q <- Q %>% filter(!is.na(online))
-  Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
-  #Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
+  Q <- Q %>% filter(run_trial > 1 & run_trial < 50)
+  Q$online <- relevel(as.factor(Q$online),ref='offline_post')
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
@@ -116,13 +117,13 @@ if (do_vPFC_fb){
   Q$age <- scale(Q$age)
   
   rm(decode_formula)
-  decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + female + v_entropy_sc + trial_bin + rt_bin  + iti_sc + iti_prev_sc + last_outcome + outcome + (1|id/run))
+  decode_formula <- NULL
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + rt_csv  + iti_sc + outcome + (1|id/run))
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +    (1 + v_entropy_sc |id/run))
   # decode_formula[[3]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome +  outcome +   (1 + v_entropy_sc | id) + (1 | run))
   # decode_formula[[4]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +    (1 + v_entropy_sc | run) + (1| id))
   # 
-  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_bin + rt_bin + iti_sc + iti_prev_sc + last_outcome + outcome +  (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + rt_csv + iti_sc + outcome +  (1|id/run))
   # decode_formula[[6]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi |id/run))
   # decode_formula[[7]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi | id) + (1 | run))
   # decode_formula[[8]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi | run) + (1| id))  
@@ -130,7 +131,7 @@ if (do_vPFC_fb){
   if (do_symmetry){
     splits = c('online','symmetry_group')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1:8){
+    for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
@@ -165,7 +166,7 @@ if (do_vPFC_fb){
   if (do_network){
     splits = c('online','network')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1:8){
+    for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
@@ -210,8 +211,8 @@ if (do_vPFC_clock){
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
-  source('~/vmPFC/get_trial_data_vmPFC.R')
-  df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
   df <- df %>% 
     group_by(id, run) %>% 
     mutate(v_chosen_sc = scale(v_chosen),
@@ -277,8 +278,8 @@ if (do_vPFC_clock){
   Q <- Q %>% mutate(online = case_when(
     Q$evt_time < -Q$iti_prev & Q$run_trial > 1 ~ 'online_pre',
     Q$evt_time <= 0 & Q$evt_time >= -Q$iti_prev & Q$run_trial > 1 ~ 'offline_pre',
-    Q$evt_time > 0 & Q$evt_time <= Q$rt_csv ~ 'online',
-    Q$evt_time > Q$rt_csv ~ 'offline_post'
+    Q$evt_time > 0 & Q$evt_time <= Q$rt_csv & Q$run_trial ~ 'online',
+    Q$evt_time > Q$rt_csv & Q$run_trial < 50 ~ 'offline_post'
   ))
   Q <- Q %>% filter(!is.na(online))
   Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
