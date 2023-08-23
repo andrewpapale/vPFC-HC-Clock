@@ -1,8 +1,10 @@
 # 2023-02-21 AndyP
 # HC-MMClock-MEDuSA
 
-hc_r <- read_csv('/Volumes/Users/Andrew/mmc_clock_aligned_HC_R.csv.gz')
-hc_l <- read_csv('/Volumes/Users/Andrew/mmc_clock_aligned_HC_L.csv.gz')
+library(tidyverse)
+
+hc_r <- read_csv('/Volumes/Users/Andrew/MMClock_10_2023/MMClock_HC_r_clock.csv.gz')
+hc_l <- read_csv('/Volumes/Users/Andrew/MMClock_10_2023/MMClock_HC_l_clock.csv.gz')
 
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory='~/clock_analysis',dataset='mmclock_fmri')
@@ -75,15 +77,15 @@ hc <- inner_join(hc,df,by=c('id','run','trial'))
 hc <- hc %>% select(!decon_median & !decon_sd)
 hc <- hc %>% mutate(HC_region = case_when(bin_num < 5 ~ 'PH', bin_num >=5 ~ 'AH'))
 
-save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock.Rdata')
+save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
 
 
 ################
 ## feedback ###
 ###############
 
-hc_r <- read_csv('/Volumes/Users/Andrew/mmc_rt_aligned_HC_R.csv.gz')
-hc_l <- read_csv('/Volumes/Users/Andrew/mmc_rt_aligned_HC_L.csv.gz')
+hc_r <- read_csv('/Volumes/Users/Andrew/MMClock_10_2023/MMClock_HC_r_fb.csv.gz')
+hc_l <- read_csv('/Volumes/Users/Andrew/MMClock_10_2023/MMClock_HC_l_fb.csv.gz')
 
 source('~/vmPFC/get_trial_data_vmPFC.R')
 df <- get_trial_data_vmPFC(repo_directory='~/clock_analysis',dataset='mmclock_fmri')
@@ -156,6 +158,6 @@ hc <- inner_join(hc,df,by=c('id','run','trial'))
 hc <- hc %>% select(!decon_median & !decon_sd)
 hc <- hc %>% mutate(HC_region = case_when(bin_num < 5 ~ 'PH', bin_num >=5 ~ 'AH'))
 
-save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_fb.Rdata')
+save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_fb_Aug2023.Rdata')
 
 

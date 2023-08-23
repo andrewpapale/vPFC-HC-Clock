@@ -28,7 +28,7 @@ if (do_vPFC_fb){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load(file.path(vmPFC_cache_dir,  'feedback_vmPFC_Schaefer_tall_ts_1.Rdata'))
   vmPFC <- fb_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -10 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -8 & evt_time < 5)
   rm(fb_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -95,7 +95,7 @@ if (do_vPFC_fb){
   Q <- Q %>% mutate(online = case_when(
     Q$evt_time < 0 & Q$evt_time < -Q$rt_csv & Q$run_trial > 1 ~ 'offline_pre',
     Q$evt_time > -Q$rt_csv & Q$evt_time <= 0 & Q$run_trial >1 ~ 'online_pre',
-    Q$evt_time > 0 & Q$evt_time <= Q$iti_ideal < 50 ~ 'offline_post',
+    Q$evt_time > 0 & Q$evt_time <= Q$iti_ideal & Q$run_trial < 50 ~ 'offline_post',
     Q$evt_time > Q$iti_ideal & Q$run_trial < 50 ~ 'online_post'
   ))
   Q <- Q %>% filter(!is.na(online))
@@ -116,14 +116,21 @@ if (do_vPFC_fb){
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
   
+  #Q$v_max_wi <- round(Q$v_max_wi,1)
+  #Q$v_entropy_wi <- round(Q$v_entropy_wi,1)
+  
+  #Q <- Q %>% filter(v_entropy_wi < 3.5 & v_entropy_wi > -4.8)
+  #Q <- Q %>% filter(v_max_wi < 4.2)
+  
+  
   rm(decode_formula)
   decode_formula <- NULL
-  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + rt_csv  + iti_sc + outcome + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + (1|id/run))
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +    (1 + v_entropy_sc |id/run))
   # decode_formula[[3]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome +  outcome +   (1 + v_entropy_sc | id) + (1 | run))
   # decode_formula[[4]] = formula(~ age + female + v_entropy_sc + trial_neg_inv_sc + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +    (1 + v_entropy_sc | run) + (1| id))
   # 
-  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + rt_csv + iti_sc + outcome +  (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi +  (1|id/run))
   # decode_formula[[6]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi |id/run))
   # decode_formula[[7]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi | id) + (1 | run))
   # decode_formula[[8]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_csv_sc + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_max_wi | run) + (1| id))  
@@ -278,10 +285,11 @@ if (do_vPFC_clock){
   Q <- Q %>% mutate(online = case_when(
     Q$evt_time < -Q$iti_prev & Q$run_trial > 1 ~ 'online_pre',
     Q$evt_time <= 0 & Q$evt_time >= -Q$iti_prev & Q$run_trial > 1 ~ 'offline_pre',
-    Q$evt_time > 0 & Q$evt_time <= Q$rt_csv & Q$run_trial ~ 'online',
+    Q$evt_time > 0 & Q$evt_time <= Q$rt_csv ~ 'online',
     Q$evt_time > Q$rt_csv & Q$run_trial < 50 ~ 'offline_post'
   ))
   Q <- Q %>% filter(!is.na(online))
+  Q <- Q %>% filter(run_trial > 1 & run_trial < 50)
   Q$online <- relevel(as.factor(Q$online),ref='offline_pre')
   Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
   Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -299,8 +307,8 @@ if (do_vPFC_clock){
   
   rm(decode_formula)
   decode_formula <- NULL
-  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_lag_sc + (1|id/run))
-  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + (1|id/run))
+  decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_entropy_wi_change_lag + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_sc |id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_lag_sc*last_outcome + v_entropy_lag_sc*trial_neg_inv_sc + v_max_wi_lag*last_outcome + v_entropy_wi_change_lag + rt_csv_sc + iti_lag_sc +  (1+v_max_wi_lag + v_entropy_lag_sc | id/run))

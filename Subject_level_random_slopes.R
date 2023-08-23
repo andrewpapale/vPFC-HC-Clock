@@ -14,7 +14,7 @@ vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
 do_rand_slopes = FALSE
-simple_model = TRUE
+simple_model = FALSE
 do_rt_pred_fmri = TRUE
 plot_rt_pred_fmri = FALSE
 do_rt_pred_meg = TRUE
@@ -33,21 +33,21 @@ if (do_rand_slopes){
     vmPFC <- fb_comb
     vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 4)
     rm(fb_comb)
-    vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
+    vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
     vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
     load(file.path(HC_cache_dir,'feedback_hipp_tall_ts_1.Rdata'))
     hc <- fb_comb
     hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
     rm(fb_comb)
   } else if (strcmp(toalign,'clock')){
-    load(file.path(vmPFC_cache_dir,  'clock_vmPFC_Schaefer_tall_ts_1.Rdata'))
+    load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
     vmPFC <- clock_comb
     vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 4)
     rm(clock_comb)
-    vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
+    vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
     vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
     
-    load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock.Rdata')
+    load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
     #hc <- clock_comb
     hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
     #rm(clock_comb)
@@ -60,8 +60,8 @@ if (do_rand_slopes){
   gc()
   Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
   rm(hc,vmPFC)
-  source('~/vmPFC/get_trial_data_vmPFC.R')
-  df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
   if (strcmp(toalign,'feedback')){
     df <- df %>% select(outcome,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                         v_max_wi, rt_lag_sc,v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
@@ -255,9 +255,9 @@ if (do_rt_pred_fmri){
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)
-    source('~/vmPFC/get_trial_data_vmPFC.R')
-    df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
-    df <- df %>% select(rt_vmax_lag,iti_prev,v_max_wi_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+    source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+    df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
+    df <- df %>% select(rt_vmax_lag,iti_prev,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                         v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
                         rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
@@ -455,9 +455,9 @@ if (do_rt_pred_meg) {
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)
-    source('~/vmPFC/get_trial_data_vmPFC.R')
-    df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_meg')
-    df <- df %>% select(rt_vmax_lag,iti_prev,v_max_wi_lag,ev,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+    source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+    df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
+    df <- df %>% select(rt_vmax_lag,iti_prev,ev,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
                         v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
                         rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
       group_by(id, run) %>% 
@@ -471,6 +471,7 @@ if (do_rt_pred_meg) {
              rt_vmax_sc = scale(rt_vmax),
              ev_sc = scale(ev),
              v_entropy_sc = scale(v_entropy),
+             v_max_wi_lag = lag(v_max_wi),
              v_max_lag_sc = scale(lag(v_max)),
              v_entropy_wi_change_lag = lag(v_entropy_wi_change),
              rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(

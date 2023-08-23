@@ -124,7 +124,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   #fills1 = c('green','magenta','red','blue','cyan')
   
   if (strcmp(toprocess,'network-by-HC') | strcmp(toprocess,'network-by-HC-by-side') | strcmp(toprocess,'network-by-HC-by-rewFunc')){
-    if (totest!='Explore-' & !grepl('explore',totest,fixed=TRUE)){
+    if (totest!='Explore-' & !grepl('explore',totest,fixed=TRUE) & !grepl('new',totest,fixed=TRUE)){
       ddf <- ddf %>% mutate(network1 = 
                               case_when(network=='C'~'2C',
                                         network=='D'~'1D',
@@ -132,7 +132,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         mutate(network2 = case_when(network=='C'~'CTR',
                                     network=='D'~'DMN',
                                     network=='L'~'LIM'))
-    } else if (totest=='Explore-' | grepl('explore',totest,fixed=TRUE)){
+    } else if (totest=='Explore-' | grepl('explore',totest,fixed=TRUE) | grepl('new',totest,fixed=TRUE)){
       ddf <- ddf %>% mutate(network1 = 
                               case_when(network=='CTR'~'2C',
                                         network=='DMN'~'1D',
