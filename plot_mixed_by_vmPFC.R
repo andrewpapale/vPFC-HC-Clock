@@ -158,19 +158,9 @@ if (strcmp(toprocess,"symmetry_group") | strcmp(toprocess,"symmetry_group_by_rew
       ))
 }
 
-if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-rewFunc')) & !(strcmp(behavmodel,'explore') | grepl('explore',behavmodel,fixed=TRUE) | grepl('new',totest,fixed=TRUE))){
-  ddf <- ddf %>% mutate(network1 = 
-                          case_when(network=='C'~'2C',
-                                    network=='D'~'1D',
-                                    network=='L'~'3L')) %>%
-    mutate(network2 = case_when(network=='C'~'CTR',
-                                network=='D'~'DMN',
-                                network=='L'~'LIM'))
-  ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
-} else if ((strcmp(toprocess,'network') | strcmp(toprocess,'network-by-block') | strcmp(toprocess,'network-by-rewFunc')) & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'Explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE)| grepl('new',totest,fixed=TRUE))){
-  ddf <- ddf %>% mutate(network1 = network, network2 = network)
-  ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
-}
+ddf <- ddf %>% mutate(network1 = network, network2 = network)
+ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
+
 
 pal1 <- palette()
 pal1[1] <- pal[2]
