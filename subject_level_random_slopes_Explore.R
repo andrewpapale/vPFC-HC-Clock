@@ -281,7 +281,7 @@ if (do_rt_pred_fmri){
       decode_formula[[2]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc |id/run))
     } else if (trial_mod_model){
       decode_formula[[1]] <- formula(~(run_trial0 + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0 * subj_level_rand_slope + (1 | id/run))
-     # decode_formula[[2]] <- formula(~(run_trial0 + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0 * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+      decode_formula[[2]] <- formula(~(run_trial0 + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0 * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     }
     splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')

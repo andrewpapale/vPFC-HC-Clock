@@ -7,13 +7,13 @@ library(wesanderson)
 library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
-doTesting = FALSE
+doTesting = TRUE
 do_vPFC_fb = FALSE
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
 do_anat_clock = FALSE
 do_symmetry = FALSE

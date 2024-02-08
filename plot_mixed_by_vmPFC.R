@@ -158,9 +158,10 @@ if (strcmp(toprocess,"symmetry_group") | strcmp(toprocess,"symmetry_group_by_rew
       ))
 }
 
-ddf <- ddf %>% mutate(network1 = network, network2 = network)
-ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
-
+if (!strcmp(toprocess,'symmetry_group')){
+  ddf <- ddf %>% mutate(network1 = network, network2 = network)
+  ddf$network2 <- factor(ddf$network2,levels=c('CTR','DMN','LIM'))
+}
 
 pal1 <- palette()
 pal1[1] <- pal[2]

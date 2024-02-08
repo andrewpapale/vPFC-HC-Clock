@@ -9,7 +9,7 @@ library(tidyverse)
 
 
 # network - MMClock
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-01-07-vmPFC-network-clock-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-08-22-vmPFC-network-clock-drop0-1.Rdata')
 
 ddf <- ddf$coef_df_reml
 #if (strcmp(toprocess,"network")){
@@ -24,14 +24,15 @@ ddf <- ddf %>% mutate(p_level_fdr = as.factor(case_when(
 ddf$p_level_fdr <- factor(ddf$p_level_fdr, levels = c('1', '2', '3', '4'), labels = c("NS","p < .05", "p < .01", "p < .001"))
 
 h_term <- ddf %>% filter(term=='v_entropy_wi' & effect=='fixed')
-D <- h_term %>% filter(network=='D')
-C <- h_term %>% filter(network=='C')
-
+D <- h_term %>% filter(network=='DMN')
+C <- h_term %>% filter(network=='CTR')
+L <- h_term %>% filter(network=='LIM')
 summary(D)
 summary(C)
+summary(L)
 
 # network - EXP
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-01-07-Explore-vmPFC-network-clock-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2023-07-20-Explore-vmPFC-network-clock-HConly-1.Rdata')
 
 ddf <- ddf$coef_df_reml
 #if (strcmp(toprocess,"network")){
