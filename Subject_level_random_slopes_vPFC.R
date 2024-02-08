@@ -371,7 +371,7 @@ if (do_rt_pred_fmri){
                           Vmax = list(outcome='rt_csv', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                           TrxVmax = list(outcome='rt_csv',model_name='model1',
-                                         specs=formula(~rt_vmax_lag_sc * trial_neg_inv_sc * subj_level_rand_slope, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
+                                         specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           RTxO = list(outcome='rt_csv',model_name='model1',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
                           
@@ -382,11 +382,11 @@ if (do_rt_pred_fmri){
                           Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
                           TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
-                                         specs=formula(~rt_vmax_lag_sc * trial_neg_inv_sc * subj_level_rand_slope, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
+                                         specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
-                                          specs=formula(~rt_vmax_lag_sc * trial_neg_inv_sc * subj_level_rand_slope, at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))),
+                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                           TrxVmax2 = list(outcome='rt_csv',model_name='model1', var = 'subj_level_rand_slope',
-                                          specs=formula(~rt_vmax_lag_sc * trial_neg_inv_sc * subj_level_rand_slope, at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))),
+                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                           
