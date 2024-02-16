@@ -351,7 +351,7 @@ if (do_rt_pred_fmri){
     #decode_formula[[2]] = formula(~ rt_lag_sc*subj_level_rand_slope + iti_sc + iti_prev_sc + last_outcome + outcome + v_entropy_wi + v_max_wi +  (1 + rt_lag_sc | id/run))
     #decode_formula[[3]] = formula(~ rt_vmax_lag_sc*subj_level_rand_slope + iti_sc + iti_prev_sc + last_outcome + outcome + v_entropy_wi + v_max_wi +  (1 | id/run))  
     #decode_formula[[4]] = formula(~ rt_vmax_lag_sc*subj_level_rand_slope + iti_sc + iti_prev_sc + last_outcome + outcome + v_entropy_wi + v_max_wi +  (1 + rt_vmax_lag_sc | id/run))   
-    if (!simple_model){
+    if (!simple_model && !trial_mod){
       decode_formula[[1]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
       decode_formula[[2]] <- formula(~(condition_trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * condition_trial_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     } else if (simple_model){
