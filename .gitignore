@@ -3,3 +3,4 @@
 *.pdf
 *.Rhistory
 *.DS_store
+*.csv.gz
