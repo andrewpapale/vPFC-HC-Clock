@@ -84,7 +84,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
           geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
           geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(size = 1) + 
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
           scale_color_manual(values = pal) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -120,7 +120,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
           geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
           geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
           geom_line(position=position_dodge(width=0.33),size = 1) + 
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           #scale_color_gradientn(colors = pal, guide = 'none') + 
           scale_color_manual(values = pal) +  
           geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
