@@ -522,6 +522,7 @@ if (do_vPFC_HC){
   decode_formula[[2]] = formula(~age*HCwithin + condition_trial_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id))
   decode_formula[[3]] = formula(~age*HCwithin + condition_trial_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id))
   decode_formula[[4]] = formula(~v_max_wi*HCwithin + HCbetween + (1|id))
+  decode_formula[[5]] = formula(~v_entropy_wi*HCwithin + HCbetween + (1|id))
   #decode_formula[[2]] = formula(~ v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_c  (1|id/run))
   # decode_formula[[4]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc +   (1|id/run))
@@ -995,6 +996,7 @@ if (do_HC_anatomy){
   decode_formula <- NULL
   decode_formula[[1]] <- formula(~ HCwithin + HCbetween + (1|id/run))
   decode_formula[[2]] <- formula(~ HCwithin + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
+  decode_formula[[3]] <- formula(~ age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
   #decode_formula[[3]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
   #decode_formula[[4]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id))
   #decode_formula[[5]] <- formula(~ HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))

@@ -60,7 +60,7 @@ if (do_rand_slopes){
   #                                           trial > 160 & trial <=200 ~ trial - 160,
   #                                           trial > 200 & trial <=240 ~ trial - 200))
   hc <- hc %>% select(!atlas_value)
-  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+  hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   hc <- hc %>% rename(decon_mean=decon1)
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
@@ -150,7 +150,7 @@ if (do_rand_slopes){
                                            trial > 120 & trial <=160 ~ trial-120,
                                            trial > 160 & trial <=200 ~ trial-160,
                                            trial > 200 & trial <=240 ~ trial-200))
-  Q <- inner_join(Q,hc,by=c('id','run','run_trial','evt_time'))
+  Q <- inner_join(Q,hc,by=c('id','run','trial','evt_time'))
   rm(hc)
   Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
