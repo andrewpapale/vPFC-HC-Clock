@@ -7,15 +7,15 @@ library(wesanderson)
 library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
-doTesting = TRUE
+doTesting = FALSE
 do_vPFC_fb = FALSE
-do_vPFC_clock = FALSE
+do_vPFC_clock = TRUE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE
 do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE
-do_anat_clock = FALSE
+do_anat_clock = TRUE
 do_symmetry = FALSE
 do_network = TRUE
 repo_directory <- "~/clock_analysis"
@@ -135,16 +135,16 @@ if (do_vPFC_fb){
       df0 <- decode_formula[[i]]
       print(df0)
       if (i < 2){
-      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1',
-                                 specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1',
-                                  specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
-                      )
-      )
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          H = list(outcome='vmPFC_decon', model_name='model1',
+                                   specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
+                          Tr = list(outcome='vmPFC_decon', model_name='model1',
+                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
+                        )
+        )
       } else{
         ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
@@ -277,14 +277,12 @@ if (do_vPFC_clock){
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
   decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
-  #decode_formula[[2]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi |id/run))
-  #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi | id) + (1 | id/run))
-  #decode_formula[[4]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + outcome+ rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_entropy_wi | run) + (1 | id/run))
   decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
-  #decode_formula[[5]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi |id/run))
-  #decode_formula[[6]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi | id) + (1 | id/run))
-  #decode_formula[[7]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi | run) + (1 | id/run))
-
+  decode_formula[[3]] = formula(~ age + female + v_entropy_wi + v_max_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+  decode_formula[[4]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 + v_entropy_wi |id/run))
+  decode_formula[[5]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 + v_max_wi |id/run))
+  decode_formula[[6]] = formula(~ age + female + v_max_wi + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 + v_entropy_wi + v_max_wi |id/run))
+  
   qT <- c(-0.7,0.43)
   if (do_symmetry){
     splits = c('evt_time','symmetry_group')
@@ -293,29 +291,10 @@ if (do_vPFC_clock){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
-      if (i < 2){
-      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                      emmeans_spec = list(
-                        H = list(outcome='vmPFC_decon', model_name='model1', 
-                                 specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon', model_name='model1', 
-                                  specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
-                      )
-                      )
-      } else {
         ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                        emmeans_spec = list(
-                          Tr = list(outcome='vmPFC_decon', model_name='model1', 
-                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
-                          V = list(outcome='vmPFC_decon', model_name='model1',
-                                   specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
                         )
-                        )
-      }
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       save(ddf,file=paste0(curr_date,'-vmPFC-symmetry-clock-',i,'.Rdata'))
     }
@@ -325,10 +304,9 @@ if (do_vPFC_clock){
     source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-      df0 <- decode_formula[[i]]
-      print(df0)
-      if (i < 2){
-        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+      print(decode_formula[[i]])
+      if (i == 1){
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                         emmeans_spec = list(
@@ -338,8 +316,8 @@ if (do_vPFC_clock){
                                     specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
                         )
         )
-      } else {
-        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+      } else if (i == 2) {
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                         emmeans_spec = list(
@@ -349,9 +327,57 @@ if (do_vPFC_clock){
                                    specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
                         )
         )        
-      }
-      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-drop0-',i,'.Rdata'))
+      } else if (i == 3){
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          H = list(outcome='vmPFC_decon', model_name='model1', 
+                                   specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
+                          Tr = list(outcome='vmPFC_decon', model_name='model1', 
+                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                          V = list(outcome='vmPFC_decon', model_name='model1',
+                                   specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
+                        )
+        )       
+      } else if (i == 4){
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          H = list(outcome='vmPFC_decon', model_name='model1', 
+                                   specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
+                          Tr = list(outcome='vmPFC_decon', model_name='model1', 
+                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
+                        )
+        )
+      } else if (i == 5) {
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          Tr = list(outcome='vmPFC_decon', model_name='model1', 
+                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                          V = list(outcome='vmPFC_decon', model_name='model1',
+                                   specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
+                        )
+        )        
+      } else if (i == 6){
+        ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+                        padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                        emmeans_spec = list(
+                          H = list(outcome='vmPFC_decon', model_name='model1', 
+                                   specs=c("v_entropy_wi"), at = list(v_entropy_wi=c(-1.5,1.5))),
+                          Tr = list(outcome='vmPFC_decon', model_name='model1', 
+                                    specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT)),
+                          V = list(outcome='vmPFC_decon', model_name='model1',
+                                   specs=c('v_max_wi'), at=list(v_max_wi=c(-1.5,1.5)))
+                        )
+        ) 
+      }        
+        curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+        save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-',i,'.Rdata'))
     }
   }
 }
@@ -737,7 +763,7 @@ if (do_anat_fb){
   Q$vmPFC_decon[Q$evt_time < -(Q$rt_csv)] = NA;
   Q$decon_mean[Q$evt_time > Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$rt_csv)] = NA;  
- 
+  
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -804,7 +830,7 @@ if (do_anat_fb){
     }
   }
 }
-  
+
 
 ####################################
 ### vPFC - HC clock - anatomy ###
@@ -879,7 +905,7 @@ if (do_anat_clock){
     run_trial > 15 & run_trial < 30 ~ 'Middle',
     run_trial >=30 ~ 'Late',
   )))
-
+  
   df <- df %>% select(id,run,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_lag_sc,rt_csv_sc,rewFunc,iti_lag_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
@@ -887,7 +913,7 @@ if (do_anat_clock){
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
   Q$decon_mean[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$decon_mean[Q$evt_time < -(Q$iti_prev)] = NA;  
-
+  
   # test age & sex
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
@@ -899,8 +925,8 @@ if (do_anat_clock){
   Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
   
   decode_formula <- NULL
-  decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id/run))
+  decode_formula[[1]] <- formula(~ HCwithin + HCbetween + (1|id/run))
+  decode_formula[[2]] <- formula(~ age + female + HCwithin + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id/run))
   qT <- c(-0.7,0.43)
   
   if (do_network){
@@ -917,8 +943,6 @@ if (do_anat_clock){
                       emmeans_spec = list(
                         HC = list(outcome='vmPFC_decon', model_name='model1', 
                                   specs=formula(~HCwithin), at = list(HCwithin=c(-1.5,1.5))),
-                        Tr = list(outcome='vmPFC_decon',model_name='model1',
-                                  specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5))),
                         HCbw = list(outcome='vmPFC_decon',model_name='model1',
                                     specs=formula(~HCbetween:HCwithin), at=list(HCwithin=c(-1.5,1.5),HCbetween=c(-1.5,1.5)))
                       )
@@ -1043,7 +1067,7 @@ if (do_HC2vPFC_fb){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
-
+  
   rm(decode_formula)
   decode_formula <- NULL
   decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin +v_max_wi*HCwithin + rt_csv_sc*HCwithin  + iti_sc*HCwithin + outcome*HCwithin + HCbetween + (1|id/run))
@@ -1052,7 +1076,7 @@ if (do_HC2vPFC_fb){
   #decode_formula[[2]] <- NULL
   
   qT <- c(-0.7,0.43)
-
+  
   
   if (do_network){
     
@@ -1219,7 +1243,7 @@ if (do_HC2vPFC_clock){
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q$age <- scale(Q$age)
-
+  
   rm(decode_formula)
   decode_formula <- NULL
   #decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + v_entropy_wi_change_lag * HCwithin + rt_csv_sc * HCwithin + iti_lag_sc * HCwithin + iti_sc * HCwithin + last_outcome * HCwithin + rt_vmax_change_sc * HCwithin + HCwithin * HCbetween + (1 | id/run)) 

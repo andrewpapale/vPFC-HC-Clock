@@ -381,6 +381,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
         #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
         #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        
         if (all(edf$`p, FDR-corrected`=='p < .001')){
           if (fe=='HCwithin'){
             gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
