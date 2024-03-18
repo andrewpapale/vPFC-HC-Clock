@@ -580,11 +580,11 @@ if (do_vPFC_HC){
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 6:length(decode_formula)){
+  for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
-    ddf <- mixed_by(Q1, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
     # emmeans_spec = list(
