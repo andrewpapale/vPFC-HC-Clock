@@ -2,7 +2,9 @@ library(pracma)
 library(tidyverse)
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
-md <- md %>% filter(evt_time > -5 & evt_time < 5)
+vmPFC <- md %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
+                                                                                           vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
+vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 4)
 # load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
 # hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
 # hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
@@ -121,6 +123,7 @@ df$id <- as.character(df$id)
 Q <- full_join(md,df,by=c('id','run','trial'))
 Q <- Q %>% rename(vmPFC_decon = decon_mean)
 rm(md)
+gc()
 hc$id <- as.character(hc$id)
 Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                     trial > 40 & trial <= 80 ~ 2,
@@ -139,11 +142,22 @@ Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
                   run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 Q <- inner_join(Q,hc,by=c('id','run','trial','evt_time'))
 rm(hc)
+gc()
 Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
 Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
 Q$HCwithin[Q$evt_time < -Q$iti_prev] = NA
 Q$vmPFC_decon[Q$evt_time < -Q$iti_prev] = NA
+Q$HC_lag1[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+Q$HC_lag1[Q$evt_time < -Q$iti_prev] = NA
+Q$HC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+Q$HC_lag2[Q$evt_time < -Q$iti_prev] = NA
+Q$HC_lag3[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+Q$HC_lag3[Q$evt_time < -Q$iti_prev] = NA
+Q$vmPFC_lag1[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+Q$vmPFC_lag1[Q$evt_time < -Q$iti_prev] = NA
+Q$vmPFC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+Q$vmPFC_lag2[Q$evt_time < -Q$iti_prev] = NA
 Q <- Q %>% mutate(network = case_when(
   atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
   atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
@@ -189,15 +203,36 @@ decode_formula <- NULL
 #decode_formula[[3]] = formula(~age*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
 decode_formula <- NULL
 decode_formula[[1]] <- formula(~ HCwithin + HCbetween + (1|id/run))
-decode_formula[[2]] <- formula(~ HCwithin + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
-decode_formula[[3]] <- formula(~ age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
-decode_formula[[3]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
-decode_formula[[4]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id))
-decode_formula[[5]] <- formula(~ HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
-decode_formula[[6]] <- formula(~ HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id))
-decode_formula[[7]] <- formula(~ HC_lag1 + HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
-decode_formula[[8]] <- formula(~ HC_lag1 + HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id))
-# 
+decode_formula[[2]] <- formula(~ HCwithin + HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[3]] <- formula(~ HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[4]] <- formula(~ HCwithin + HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[5]] <- formula(~ HCwithin + HC_lag1 + HC_lag2 +  HCbetween + (1 | id/run))
+decode_formula[[6]] <- formula(~ HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[7]] <- formula(~ HCwithin + HC_lag1 + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[8]] <- formula(~ HCwithin + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[9]] <- formula(~ HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[10]] <- formula(~ HC_lag1 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[11]] <- formula(~ vmPFC_lag1 + HCwithin + HCbetween + (1|id/run))
+decode_formula[[12]] <- formula(~ vmPFC_lag1 + HCwithin + HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[13]] <- formula(~ vmPFC_lag1 + HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[14]] <- formula(~ vmPFC_lag1 + HCwithin + HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[15]] <- formula(~ vmPFC_lag1 + HCwithin + HC_lag1 + HC_lag2 +  HCbetween + (1 | id/run))
+decode_formula[[16]] <- formula(~ vmPFC_lag1 + HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[17]] <- formula(~ vmPFC_lag1 + HCwithin + HC_lag1 + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[18]] <- formula(~ vmPFC_lag1 + HCwithin + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[19]] <- formula(~ vmPFC_lag1 + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[20]] <- formula(~ vmPFC_lag1 + HC_lag1 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[21]] <- formula(~ vmPFC_lag2 + HC_lag1 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[22]] <- formula(~ vmPFC_lag2 + HCwithin + HCbetween + (1|id/run))
+decode_formula[[23]] <- formula(~ vmPFC_lag2 + HCwithin + HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[24]] <- formula(~ vmPFC_lag2 + HC_lag1 + HCbetween + (1 | id/run))
+decode_formula[[25]] <- formula(~ vmPFC_lag2 + HCwithin + HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[26]] <- formula(~ vmPFC_lag2 + HCwithin + HC_lag1 + HC_lag2 +  HCbetween + (1 | id/run))
+decode_formula[[27]] <- formula(~ vmPFC_lag2 + HC_lag2 + HCbetween + (1 | id/run))
+decode_formula[[28]] <- formula(~ vmPFC_lag2 + HCwithin + HC_lag1 + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[29]] <- formula(~ vmPFC_lag2 + HCwithin + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[30]] <- formula(~ vmPFC_lag2 + HC_lag2 + HC_lag3 + HCbetween + (1 | id/run))
+decode_formula[[31]] <- formula(~ vmPFC_lag2 + HC_lag1 + HC_lag3 + HCbetween + (1 | id/run))# 
 
 
 qT <- c(-0.8,0.46)

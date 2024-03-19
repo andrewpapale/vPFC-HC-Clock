@@ -340,7 +340,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                 geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
                 scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
                 labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab(""))
-      } 
+      }
       
       if (!strcmp(toprocess,"symmetry-group-by-HC-by-outcome") & !strcmp(toprocess,'symmetry-group-by-HC-by-rewFunc')){
         #dev.off()
@@ -591,6 +591,82 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         grid.draw(gg2)
         dev.off()
       } 
+    } else if (strcmp(totest,'network-by-bin')){
+      if (all(edf$`p, FDR-corrected`=='p < .001')){
+        if (fe=='HCwithin'){
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
+            geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
+            geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            scale_color_manual(values = pal) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) + ylab('Response [AU]') + 
+            facet_wrap(~HC_region) + 
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
+        }else {
+          gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
+            geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
+            geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            scale_color_manual(values = pal) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) +  
+            geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+            facet_wrap(~HC_region) + ylab('Response [AU]') +
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6),size=22),
+                  axis.title.x = element_text(margin=margin(t=6),size=22),
+                  legend.text = element_text(size=22),
+                  axis.text.x = element_text(size=22),
+                  axis.text.y = element_text(size=22)
+            )
+        }
+      } else {
+        gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
+          geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
+          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+          scale_color_manual(values = pal) + 
+          #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+          theme_bw(base_size=13) +
+          facet_wrap(~HC_region) + ylab('Response [AU]') +
+          geom_hline(yintercept = 0, lty = 'dashed', color = 'white', size = 1) +
+          theme(legend.title = element_blank(),
+                panel.grid.major = element_line(colour = "grey45"), 
+                panel.grid.minor = element_line(colour = "grey45"), 
+                panel.background = element_rect(fill = 'grey40'),
+                axis.title.y = element_text(margin=margin(r=6),size=22),
+                axis.title.x = element_text(margin=margin(t=6),size=22),
+                legend.text = element_text(size=22),
+                axis.text.x = element_text(size=22),
+                axis.text.y = element_text(size=22)
+          )
+      }
+      gg2 <- ggplot_gtable(ggplot_build(gg1))
+      stripr <- which(grepl('strip-t', gg2$layout$name))
+      k <- 1
+      for (i in stripr) {
+        j <- which(grepl('rect', gg2$grobs[[i]]$grobs[[1]]$childrenOrder))
+        gg2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- pal1[k]
+        k <- k+1
+      }
+      grid.draw(gg2)
+      dev.off()
     }
   } else if (strcmp(totest,'anatomy')){
     
