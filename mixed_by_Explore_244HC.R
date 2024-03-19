@@ -378,7 +378,7 @@ if (do_vPFC_HC){
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   hc <- read_csv('/Volumes/Users/Bea/StriatumHippThalamus/clock_aligned_striatum_hipp_thalamus.csv.gz')
   hc <- hc %>% mutate(run1 = as.integer(str_sub(run,4,4))) %>% select(!run) %>% rename(run=run1)
-  #hc <- hc %>% filter(atlas_value %in% c(223,224,225,226,227,228,229,230))
+  hc <- hc %>% filter(atlas_value %in% c(223,224,225,226,227,228,229,230))
   #hc #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_fb.Rdata')
   #hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
   hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
