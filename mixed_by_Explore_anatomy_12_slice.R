@@ -130,7 +130,7 @@ if (do_1to6){
   
   df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
   df$id <- as.character(df$id)
-  Q <- full_join(md,df,by=c('id','run','trial'))
+  Q <- full_join(vmPFC,df,by=c('id','run','trial'))
   Q <- Q %>% rename(vmPFC_decon = decon_mean)
   rm(md)
   gc()
@@ -389,7 +389,7 @@ if (do_7to12){
   
   df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
   df$id <- as.character(df$id)
-  Q <- full_join(md,df,by=c('id','run','trial'))
+  Q <- full_join(vmPFC,df,by=c('id','run','trial'))
   Q <- Q %>% rename(vmPFC_decon = decon_mean)
   rm(md)
   gc()
