@@ -50,6 +50,7 @@ hc <- hc %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate
                                                                                  HC_lag3 = lag(HCwithin,3),
                                                                                  HC_lag4 = lag(HCwithin,4)) %>% ungroup()
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+hc <- hc %>% rename(bin = atlas_value)
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
 df <- df %>%
