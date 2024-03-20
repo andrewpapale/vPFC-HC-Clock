@@ -185,10 +185,6 @@ if (do_1to6){
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -5 & evt_time < 5)
   
-  
-  Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
-  Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
-  
   demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
   demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
   demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
@@ -443,10 +439,6 @@ if (do_7to12){
   ))
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -5 & evt_time < 5)
-  
-  
-  Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
-  Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
   
   demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
   demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
