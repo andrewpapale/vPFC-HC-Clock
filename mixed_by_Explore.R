@@ -2,13 +2,13 @@
 library(stringr)
 
 ncores = 26
-do_vPFC = TRUE
+do_vPFC = FALSE
 do_network = FALSE
 do_symmetry = FALSE
 do_HC = TRUE
 do_vPFC_HC = TRUE
 do_vPFC_HC_fb = FALSE
-do_HC_anatomy = TRUE
+do_HC_anatomy = FALSE
 if (do_vPFC){
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
@@ -225,7 +225,8 @@ if (do_HC){
   #                                           trial > 160 & trial <=200 ~ trial - 160,
   #                                           trial > 200 & trial <=240 ~ trial - 200))
   #hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2  hc <- hc %>% rename(decon_mean=decon_mean1)
-  hc <- hc %>% group_by(id,run,HC_region) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+  #hc <- hc %>% group_by(id,run,HC_region) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+  hc <- hc %>% rename(HCwithin = decon_mean)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
   df <- df %>%
@@ -340,8 +341,8 @@ if (do_HC){
   #decode_formula[[2]] = formula(~ v_max_wi + last_outcome + rt_csv_sc +  iti_lag_sc + (1|id/run))
   #decode_formula[[1]] = formula(~ v_entropy_wi_change +  (1|id/run))
   #decode_formula[[1]] = formula(~ group + condition_trial_neg_inv_sc + v_max_wi + last_outcome + age + gender + iti_lag_sc + rt_lag_sc + (1|id/run)) 
-  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1|id/run))
+  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id/run))
+  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id/run))
   decode_formula[[3]] = formula(~v_max_wi +  (1|id/run))
   decode_formula[[4]] = formula(~v_entropy_wi +  (1|id/run))
   qT <- c(-0.8,0.46)
