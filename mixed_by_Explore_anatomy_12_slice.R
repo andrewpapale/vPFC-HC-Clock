@@ -128,7 +128,7 @@ if (do_1to6){
   df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
-  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
+  df <- df %>% select(iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,last_outcome,rt_csv,rt_csv_sc,id,run,trial)
   df$id <- as.character(df$id)
   Q <- full_join(vmPFC,df,by=c('id','run','trial'))
   Q <- Q %>% rename(vmPFC_decon = decon_mean)
@@ -248,7 +248,7 @@ if (do_1to6){
   
   
   qT <- c(-0.8,0.46)
-  splits = c('evt_time','network','atlas_value')
+  splits = c('evt_time','network','bin')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -387,7 +387,7 @@ if (do_7to12){
   df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
-  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
+  df <- df %>% select(iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,last_outcome,rt_csv,rt_csv_sc,id,run,trial)
   df$id <- as.character(df$id)
   Q <- full_join(vmPFC,df,by=c('id','run','trial'))
   Q <- Q %>% rename(vmPFC_decon = decon_mean)
@@ -507,7 +507,7 @@ if (do_7to12){
   
   
   qT <- c(-0.8,0.46)
-  splits = c('evt_time','network','atlas_value')
+  splits = c('evt_time','network','bin')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
