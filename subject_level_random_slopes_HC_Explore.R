@@ -228,7 +228,7 @@ if (do_rand_slopes){
 if (do_rt_pred_fmri){
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     

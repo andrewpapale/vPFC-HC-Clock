@@ -1,5 +1,12 @@
-plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR){
+plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR,CTRflag){
   library(grid)
+  
+  
+  if (strcmp(CTRflag,'noCTR')){
+    noCTR = TRUE
+  } else if (strcmp(CTRflag,'onlyCTR')){
+    onlyCTR = FALSE
+  }
   ## Check plots
   if (strcmp(toalign,"clock")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
@@ -591,7 +598,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         grid.draw(gg2)
         dev.off()
       } 
-    } else if (strcmp(totest,'network-by-bin')){
+    # } else if (strcmp(totest,'network-by-bin')){
       if (all(edf$`p, FDR-corrected`=='p < .001')){
         if (fe=='HCwithin'){
           gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 

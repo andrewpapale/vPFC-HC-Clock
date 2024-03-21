@@ -1,7 +1,13 @@
-plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter){
+plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,CTRflag){
   ## Check plots
   library(pracma)
-
+  
+  if (strcmp(CTRflag,'noCTR')){
+    noCTR = TRUE
+  } else if (strcmp(CTRflag,'onlyCTR')){
+    onlyCTR = FALSE
+  }
+  
   if (strcmp(toalign,"clock") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') |  grepl('explore',behavmodel,fixed=TRUE))){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock')
   } else if (strcmp(toalign,"feedback") & !(strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction') | grepl('explore',behavmodel,fixed=TRUE))){
@@ -176,6 +182,11 @@ if (!strcmp(totest,'online')){
   for (fe in terms) {
     # fe <- terms[1] # test only
     edf <- ddf %>% filter(term == paste(fe) & ddf$effect=='fixed' & t < 8)
+    if (noCTR){
+      edf <- edf %>% filter(network != 'CTR')
+    } else if (onlyCTR){
+      edf <- edf %>% filter(network == 'CTR')
+    }
     if (strcmp(toprocess,'symmetry_group') | strcmp(toprocess,"symmetry_group_by_rewFunc") | strcmp(toprocess,'symmetry_group_by_outcome')){
       edf$symmetry_group1 <- factor(edf$symmetry_group1, levels = c('rl9/10',"11/47","d10","24/32","14m25/32","fp10","11/13","14rc11m"))
       edf$symmetry_group2 <- factor(edf$symmetry_group1, levels = c("14rc11m","11/47",'rl9/10',"fp10","24/32","14m25/32","d10","11/13"))
