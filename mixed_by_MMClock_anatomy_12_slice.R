@@ -1,8 +1,8 @@
 library(pracma)
 library(tidyverse)
 
-do_1to6 = FALSE
-do_7to12= TRUE
+do_1to6 = TRUE
+do_7to12= FALSE
 ncores = 26;
 
 
@@ -15,7 +15,7 @@ if (do_1to6){
   vmPFC <- vmPFC %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                       vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
   
-  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   gc()
@@ -61,14 +61,7 @@ if (do_1to6){
   gc()
   hc <- hc %>% rename(bin = atlas_value)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
-  df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
-  df <- df %>%
-    group_by(id,run_number) %>%
-    arrange(id, run_number, trial) %>%
-    mutate(condition_trial = run_trial-floor(run_trial/40.5)*40,
-           condition_trial_neg_inv = -1000 / condition_trial,
-           condition_trial_neg_inv_sc = as.vector(scale(condition_trial_neg_inv)),
-    ) %>% ungroup()
+  df <- get_trial_data(repo_directory="~/clock_analysis",dataset='mmclock_fmri')
   df <- df %>%
     group_by(id) %>% 
     mutate(v_entropy_sc_r = scale(v_entropy)) %>% ungroup() %>%
@@ -129,27 +122,11 @@ if (do_1to6){
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
   df <- df %>% select(iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,last_outcome,rt_csv,rt_csv_sc,id,run,trial)
-  df$id <- as.character(df$id)
+  df$id <- as.numeric(df$id)
   Q <- full_join(vmPFC,df,by=c('id','run','trial'))
-  Q <- Q %>% rename(vmPFC_decon = decon_mean)
-  rm(md)
+  rm(vmPFC)
   gc()
-  hc$id <- as.character(hc$id)
-  Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
-                                      trial > 40 & trial <= 80 ~ 2,
-                                      trial > 80 & trial <=120 ~ 3, 
-                                      trial > 120 & trial <=160 ~ 4,
-                                      trial > 160 & trial <=200 ~ 5,
-                                      trial > 200 & trial <=240 ~ 6))
-  Q <- Q %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
-                                           trial > 40 & trial <= 80 ~ trial-40,
-                                           trial > 80 & trial <=120 ~ trial-80, 
-                                           trial > 120 & trial <=160 ~ trial-120,
-                                           trial > 160 & trial <=200 ~ trial-160,
-                                           trial > 200 & trial <=240 ~ trial-200))
-  Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
-                    run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
-                    run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  hc$id <- as.numeric(hc$id)
   Q <- inner_join(Q,hc,by=c('id','run','trial','evt_time'))
   rm(hc)
   gc()
@@ -168,38 +145,9 @@ if (do_1to6){
   Q$vmPFC_lag1[Q$evt_time < -Q$iti_prev] = NA
   Q$vmPFC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$vmPFC_lag2[Q$evt_time < -Q$iti_prev] = NA
-  Q <- Q %>% mutate(network = case_when(
-    atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
-    atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
-    atlas_value==55 | atlas_value==160 | atlas_value==56 | atlas_value==159 ~ 'LIM'
-  )) %>% mutate(symmetry_group=case_when(
-    atlas_value==67 | atlas_value==171 ~ 6,
-    atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 1,
-    atlas_value==89 | atlas_value==194 ~ 7,
-    atlas_value==88 | atlas_value==192 ~ 5,
-    atlas_value==84 | atlas_value==191 ~ 4,
-    atlas_value==86 | atlas_value==161 ~ 2,
-    atlas_value==55 | atlas_value==160 ~ 8,
-    atlas_value==56 | atlas_value==159 ~ 3
-  ))
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -5 & evt_time < 5)
   
-  demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
-  demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
-  demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
-  demo$gender <- relevel(as.factor(demo$gender),ref='M')
-  demo$age <- scale(demo$age)
-  demo$wtar <- scale(demo$wtar)
-  demo$education_yrs <- scale(demo$education_yrs)
-  
-  Q <- merge(demo,Q,by='id')
-  #Q <- Q %>% filter(total_earnings_split=='richer')
-  Q$group <- relevel(factor(Q$group),ref='HC')
-  Q <- Q %>% filter(group!='ATT')
-  Q <- Q %>% filter(group=='HC')
-  #Q <- Q %>% filter(!is.na(rewFunc))
-  #Q <- Q %>% filter(trial > 10)
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -254,19 +202,23 @@ if (do_1to6){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-anatomy-12slice-1to6-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-network-clock-anatomy-12slice-1to6-',i,'.Rdata'))
   }
   rm(Q)
   gc()  
 }
 
 if (do_7to12){
+  rm(Q)
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
+  vmPFC <- clock_comb
+  rm(clock_comb)
+  vmPFC <- vmPFC %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
+                                                                                         vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
   
-  load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
-  vmPFC <- md %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
-                                                                                      vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
+  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+  vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
-  rm(md)
   gc()
   # load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   # hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
@@ -278,18 +230,11 @@ if (do_7to12){
   #                                     trial > 160 & trial <=200 ~ 5,
   #                                     trial > 200 & trial <=240 ~ 6))
   # hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2  hc <- hc %>% rename(decon_mean=decon_mean1)
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   #hc <- read_csv('/Volumes/Users/Bea/StriatumHippThalamus/clock_aligned_striatum_hipp_thalamus.csv.gz')
   #hc <- hc %>% mutate(run1 = as.integer(str_sub(run,4,4))) %>% select(!run) %>% rename(run=run1)
   #hc <- hc %>% filter(atlas_value %in% c(223,224,225,226,227,228,229,230))
   #hc #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_fb.Rdata')
   #hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
-  hc <- hc %>% mutate(block = case_when(trial <= 40 ~ 1, 
-                                        trial > 40 & trial <= 80 ~ 2,
-                                        trial > 80 & trial <=120 ~ 3, 
-                                        trial > 120 & trial <=160 ~ 4,
-                                        trial > 160 & trial <=200 ~ 5,
-                                        trial > 200 & trial <=240 ~ 6))
   # hc <- hc %>% mutate(HC_region = case_when(atlas_value==223 ~ 'PH',
   #                                           atlas_value==224 ~ 'PH',
   #                                           atlas_value==225 ~ 'AH',
@@ -304,27 +249,20 @@ if (do_7to12){
   #                                           trial > 120 & trial <= 160  ~ trial - 120,
   #                                           trial > 160 & trial <=200 ~ trial - 160,
   #                                           trial > 200 & trial <=240 ~ trial - 200))
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% select(!atlas_value0)
   #hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   #hc <- hc %>% rename(decon_mean=decon1)
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   hc <- hc %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(HC_lag1 = lag(HCwithin,1),
                                                                                    HC_lag2 = lag(HCwithin,2),
-                                                                                   HC_lag3 = lag(HCwithin,3),
-                                                                                   HC_lag4 = lag(HCwithin,4)) %>% ungroup()
+                                                                                   HC_lag3 = lag(HCwithin,3)) %>% ungroup()
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   hc <- hc %>% filter(atlas_value %in% c(7,8,9,10,11,12))
   gc()
   hc <- hc %>% rename(bin = atlas_value)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
-  df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
-  df <- df %>%
-    group_by(id,run_number) %>%
-    arrange(id, run_number, trial) %>%
-    mutate(condition_trial = run_trial-floor(run_trial/40.5)*40,
-           condition_trial_neg_inv = -1000 / condition_trial,
-           condition_trial_neg_inv_sc = as.vector(scale(condition_trial_neg_inv)),
-    ) %>% ungroup()
+  df <- get_trial_data(repo_directory="~/clock_analysis",dataset='mmclock_fmri')
   df <- df %>%
     group_by(id) %>% 
     mutate(v_entropy_sc_r = scale(v_entropy)) %>% ungroup() %>%
@@ -385,27 +323,11 @@ if (do_7to12){
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
   df <- df %>% select(iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,last_outcome,rt_csv,rt_csv_sc,id,run,trial)
-  df$id <- as.character(df$id)
+  df$id <- as.numeric(df$id)
   Q <- full_join(vmPFC,df,by=c('id','run','trial'))
-  Q <- Q %>% rename(vmPFC_decon = decon_mean)
-  rm(md)
+  rm(vmPFC)
   gc()
-  hc$id <- as.character(hc$id)
-  Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
-                                      trial > 40 & trial <= 80 ~ 2,
-                                      trial > 80 & trial <=120 ~ 3, 
-                                      trial > 120 & trial <=160 ~ 4,
-                                      trial > 160 & trial <=200 ~ 5,
-                                      trial > 200 & trial <=240 ~ 6))
-  Q <- Q %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
-                                           trial > 40 & trial <= 80 ~ trial-40,
-                                           trial > 80 & trial <=120 ~ trial-80, 
-                                           trial > 120 & trial <=160 ~ trial-120,
-                                           trial > 160 & trial <=200 ~ trial-160,
-                                           trial > 200 & trial <=240 ~ trial-200))
-  Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
-                    run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
-                    run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  hc$id <- as.numeric(hc$id)
   Q <- inner_join(Q,hc,by=c('id','run','trial','evt_time'))
   rm(hc)
   gc()
@@ -424,38 +346,9 @@ if (do_7to12){
   Q$vmPFC_lag1[Q$evt_time < -Q$iti_prev] = NA
   Q$vmPFC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$vmPFC_lag2[Q$evt_time < -Q$iti_prev] = NA
-  Q <- Q %>% mutate(network = case_when(
-    atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
-    atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
-    atlas_value==55 | atlas_value==160 | atlas_value==56 | atlas_value==159 ~ 'LIM'
-  )) %>% mutate(symmetry_group=case_when(
-    atlas_value==67 | atlas_value==171 ~ 6,
-    atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 1,
-    atlas_value==89 | atlas_value==194 ~ 7,
-    atlas_value==88 | atlas_value==192 ~ 5,
-    atlas_value==84 | atlas_value==191 ~ 4,
-    atlas_value==86 | atlas_value==161 ~ 2,
-    atlas_value==55 | atlas_value==160 ~ 8,
-    atlas_value==56 | atlas_value==159 ~ 3
-  ))
   Q <- Q %>% arrange(id,run,trial,evt_time)
   Q <- Q %>% filter(evt_time > -5 & evt_time < 5)
   
-  demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
-  demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
-  demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
-  demo$gender <- relevel(as.factor(demo$gender),ref='M')
-  demo$age <- scale(demo$age)
-  demo$wtar <- scale(demo$wtar)
-  demo$education_yrs <- scale(demo$education_yrs)
-  
-  Q <- merge(demo,Q,by='id')
-  #Q <- Q %>% filter(total_earnings_split=='richer')
-  Q$group <- relevel(factor(Q$group),ref='HC')
-  #Q <- Q %>% filter(group!='ATT')
-  Q <- Q %>% filter(group=='HC')
-  #Q <- Q %>% filter(!is.na(rewFunc))
-  #Q <- Q %>% filter(trial > 10)
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -502,7 +395,7 @@ if (do_7to12){
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','bin')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 1:length(decode_formula)){
+  for (i in 3:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
@@ -510,8 +403,8 @@ if (do_7to12){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-anatomy-12slice-7to12-',i,'.Rdata'))
-  }  
+    save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-network-clock-anatomy-12slice-7to12-',i,'.Rdata'))
+  }
   rm(Q)
   gc()  
 }
