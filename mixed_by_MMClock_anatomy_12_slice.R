@@ -8,12 +8,16 @@ ncores = 26;
 
 
 if (do_1to6){
-  
-  load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
-  vmPFC <- md %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
+  rm(Q)
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
+  vmPFC <- clock_comb
+  rm(clock_comb)
+  vmPFC <- vmPFC %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                       vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
+  
+  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+  vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
-  rm(md)
   gc()
   # load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   # hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
@@ -25,18 +29,11 @@ if (do_1to6){
   #                                     trial > 160 & trial <=200 ~ 5,
   #                                     trial > 200 & trial <=240 ~ 6))
   # hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2  hc <- hc %>% rename(decon_mean=decon_mean1)
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   #hc <- read_csv('/Volumes/Users/Bea/StriatumHippThalamus/clock_aligned_striatum_hipp_thalamus.csv.gz')
   #hc <- hc %>% mutate(run1 = as.integer(str_sub(run,4,4))) %>% select(!run) %>% rename(run=run1)
   #hc <- hc %>% filter(atlas_value %in% c(223,224,225,226,227,228,229,230))
   #hc #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_fb.Rdata')
   #hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
-  hc <- hc %>% mutate(block = case_when(trial <= 40 ~ 1, 
-                                        trial > 40 & trial <= 80 ~ 2,
-                                        trial > 80 & trial <=120 ~ 3, 
-                                        trial > 120 & trial <=160 ~ 4,
-                                        trial > 160 & trial <=200 ~ 5,
-                                        trial > 200 & trial <=240 ~ 6))
   # hc <- hc %>% mutate(HC_region = case_when(atlas_value==223 ~ 'PH',
   #                                           atlas_value==224 ~ 'PH',
   #                                           atlas_value==225 ~ 'AH',
@@ -51,14 +48,14 @@ if (do_1to6){
   #                                           trial > 120 & trial <= 160  ~ trial - 120,
   #                                           trial > 160 & trial <=200 ~ trial - 160,
   #                                           trial > 200 & trial <=240 ~ trial - 200))
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% select(!atlas_value0)
   #hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   #hc <- hc %>% rename(decon_mean=decon1)
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   hc <- hc %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(HC_lag1 = lag(HCwithin,1),
                                                                                    HC_lag2 = lag(HCwithin,2),
-                                                                                   HC_lag3 = lag(HCwithin,3),
-                                                                                   HC_lag4 = lag(HCwithin,4)) %>% ungroup()
+                                                                                   HC_lag3 = lag(HCwithin,3)) %>% ungroup()
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
   hc <- hc %>% filter(atlas_value %in% c(1,2,3,4,5,6))
   gc()
