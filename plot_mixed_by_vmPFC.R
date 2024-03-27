@@ -4,7 +4,12 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
   
   if (strcmp(CTRflag,'noCTR')){
     noCTR = TRUE
+    onlyCTR = FALSE
   } else if (strcmp(CTRflag,'onlyCTR')){
+    onlyCTR = TRUE
+    noCTR = FALSE
+  } else {
+    noCTR = FALSE
     onlyCTR = FALSE
   }
   

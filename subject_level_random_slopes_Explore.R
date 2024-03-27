@@ -15,7 +15,7 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = FALSE
+do_rand_slopes = TRUE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
 trial_mod_model = TRUE

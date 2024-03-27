@@ -1,8 +1,8 @@
 library(pracma)
 library(tidyverse)
 
-do_1to6 = TRUE
-do_7to12= FALSE
+do_1to6 = FALSE
+do_7to12= TRUE
 ncores = 26;
 
 
@@ -15,7 +15,7 @@ if (do_1to6){
   vmPFC <- vmPFC %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                       vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
   
-  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network,vmPFC_lag1,vmPFC_lag2)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   gc()
@@ -57,9 +57,9 @@ if (do_1to6){
                                                                                    HC_lag2 = lag(HCwithin,2),
                                                                                    HC_lag3 = lag(HCwithin,3)) %>% ungroup()
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
-  hc <- hc %>% filter(atlas_value %in% c(1,2,3,4,5,6))
+  hc <- hc %>% filter(bin_num %in% c(1,2,3,4,5,6))
   gc()
-  hc <- hc %>% rename(bin = atlas_value)
+  hc <- hc %>% rename(bin = bin_num)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory="~/clock_analysis",dataset='mmclock_fmri')
   df <- df %>%
@@ -194,7 +194,7 @@ if (do_1to6){
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','bin')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 3:length(decode_formula)){
+  for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
@@ -203,6 +203,19 @@ if (do_1to6){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
     save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-network-clock-anatomy-12slice-1to6-',i,'.Rdata'))
+  }
+  qT <- c(-0.8,0.46)
+  splits = c('evt_time','symmetry_group','bin')
+  source("~/fmri.pipeline/R/mixed_by.R")
+  for (i in 1:length(decode_formula)){
+    setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+    df0 <- decode_formula[[i]]
+    print(df0)
+    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                    padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                    tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
+    curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+    save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-symmetry-clock-anatomy-12slice-1to6-',i,'.Rdata'))
   }
   rm(Q)
   gc()  
@@ -216,7 +229,7 @@ if (do_7to12){
   vmPFC <- vmPFC %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                          vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
   
-  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network,vmPFC_lag1,vmPFC_lag2)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   gc()
@@ -258,9 +271,9 @@ if (do_7to12){
                                                                                    HC_lag2 = lag(HCwithin,2),
                                                                                    HC_lag3 = lag(HCwithin,3)) %>% ungroup()
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
-  hc <- hc %>% filter(atlas_value %in% c(7,8,9,10,11,12))
+  hc <- hc %>% filter(bin_num %in% c(7,8,9,10,11,12))
   gc()
-  hc <- hc %>% rename(bin = atlas_value)
+  hc <- hc %>% rename(bin = bin_num)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory="~/clock_analysis",dataset='mmclock_fmri')
   df <- df %>%
@@ -395,7 +408,7 @@ if (do_7to12){
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','bin')
   source("~/fmri.pipeline/R/mixed_by.R")
-  for (i in 3:length(decode_formula)){
+  for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
@@ -405,7 +418,20 @@ if (do_7to12){
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
     save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-network-clock-anatomy-12slice-7to12-',i,'.Rdata'))
   }
-  rm(Q)
-  gc()  
+  # qT <- c(-0.8,0.46)
+  # splits = c('evt_time','symmetry_group','bin')
+  # source("~/fmri.pipeline/R/mixed_by.R")
+  # for (i in 1:length(decode_formula)){
+  #   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  #   df0 <- decode_formula[[i]]
+  #   print(df0)
+  #   ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+  #                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+  #                   tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
+  #   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  #   save(ddf,file=paste0(curr_date,'-MMClock-vPFC-HC-symmetry-clock-anatomy-12slice-7to12-',i,'.Rdata'))
+  # }
+  # rm(Q)
+  # gc()  
 }
 

@@ -27,14 +27,12 @@ if (do_HC2vPFC_clock){
   vmPFC <- clock_comb
   vmPFC <- vmPFC %>% group_by(id,run,run_trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                              vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
-  vmPFC <- vmPFC %>% filter(evt_time > -6 & evt_time < 6)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network,vmPFC_lag1,vmPFC_lag2)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
-  hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
   hc <- hc %>% group_by(id,run,trial,HC_region) %>% arrange(evt_time) %>% mutate(HC_lag1 = dplyr::lag(HCwithin,1,order_by=evt_time),
                                                                                      HC_lag2 = dplyr::lag(HCwithin,2,order_by=evt_time)) %>% ungroup()
   hc <- hc %>% select(id,run,trial,evt_time,HCwithin,HCbetween,HC_lag1,HC_lag2,HC_region)
@@ -142,20 +140,18 @@ if (do_HC2vPFC_clock){
   #decode_formula[[1]] = formula(~v_max_wi*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
   #decode_formula[[2]] = formula(~HC_lag1 + age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
-  decode_formula[[1]] = formula(~HC_lag1 + vmPFC_lag1 + HCwithin + HCbetween + (1 | id/run))    
-  decode_formula[[2]] = formula(~HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + v_entropy_wi * HCwithin + v_max_wi*HCwithin + HCbetween + (1 | id/run))    
-  decode_formula[[3]] = formula(~HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + v_entropy_wi * HCwithin + v_max_wi*HCwithin +  HCbetween + (1 | id/run)) 
-  decode_formula[[4]] = formula(~HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[5]] = formula(~HC_lag1 + vmPFC_lag1 + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[6]] = formula(~HC_lag1 + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[7]] = formula(~HC_lag1 + vmPFC_lag1 + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[8]] = formula(~HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[9]] = formula(~HC_lag1 + vmPFC_lag1 + (1 | id/run)) 
+  decode_formula[[1]] = formula(~ HC_lag1 + vmPFC_lag1 + HCwithin + HCbetween + (1 | id/run))    
+  decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))    
+  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))
+  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 | id/run))
+  decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + age + female + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
+  decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
+  decode_formula[[7]] = formula(~ HC_lag1 + HCbetween + (1 | id/run)) 
   
   #decode_formula[[4]] = formula(~HC_lag1 + HC_lag2 + age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
   qT <- c(-0.7,0.43)
   
-  Q <- Q %>% filter(evt_time > -3 & evt_time < 4)
+  Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
   splits = c('evt_time','network','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
@@ -167,7 +163,7 @@ if (do_HC2vPFC_clock){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-lagged-models2-vmPFC-HC-network-clock-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-lagged-models-vmPFC-HC-network-clock-',i,'.Rdata'))
   }
 }
 

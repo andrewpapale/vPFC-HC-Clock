@@ -537,8 +537,8 @@ if (do_vPFC_HC){
   Q$group <- relevel(factor(Q$group),ref='HC')
   #Q <- Q %>% filter(group!='ATT')
   Q <- Q %>% filter(group=='HC')
-  Q <- Q %>% filter(!is.na(rewFunc))
-  Q <- Q %>% filter(trial > 10)
+  #Q <- Q %>% filter(!is.na(rewFunc))
+  #Q <- Q %>% filter(trial > 10)
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -553,9 +553,9 @@ if (do_vPFC_HC){
 
   decode_formula[[1]] = formula(~ HC_lag1 + vmPFC_lag1 + HCwithin + HCbetween + (1 | id/run))    
   decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))    
-  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run)) 
-  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag2 + run_trial0_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + age*HCwithin + gender*HCwithin + run_trial0_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCwithin*iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
+  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))
+  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 | id/run))
+  decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + age + gender + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
   decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
   decode_formula[[7]] = formula(~ HC_lag1 + HCbetween + (1 | id/run)) 
   #decode_formula[[1]] = formula(~HC_lag2 + vmPFC_lag2 + HCwithin + HCbetween + (1 | id/run))    
