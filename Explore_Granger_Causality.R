@@ -14,7 +14,8 @@ if (do_vPFC_HC){
   load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
   
   md <- md %>% group_by(id,run,trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
-                                                                                   vmPFC_lag2 = dplyr::lag(decon_mean,2, order_by=evt_time)) %>% ungroup()
+                                                                                   vmPFC_lag2 = dplyr::lag(decon_mean,2, order_by=evt_time),
+                                                                                   vmPFC_lag3 = dplyr::lag(decon_mean,3, order_by=evt_time)) %>% ungroup()
   # load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
   # hc <- hc %>% select(id,run,trial,run_trial,decon_mean,evt_time,side,HC_region,atlas_value)
   # hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
@@ -56,7 +57,8 @@ if (do_vPFC_HC){
   hc <- hc %>% rename(decon_mean=decon1)
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
   hc <- hc %>% group_by(id,run,trial,HC_region) %>% arrange(evt_time) %>% mutate(HC_lag1 = dplyr::lag(HCwithin,1,order_by=evt_time),
-                                                                                 HC_lag2 = lag(HCwithin,2, order_by=evt_time)) %>% ungroup()
+                                                                                 HC_lag2 = lag(HCwithin,2, order_by=evt_time),
+                                                                                 HC_lag3 = lag(HCwithin,3, order_by=evt_time)) %>% ungroup()
   hc <- hc %>% filter(evt_time > -6 & evt_time < 6)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
@@ -160,8 +162,12 @@ if (do_vPFC_HC){
   Q$HC_lag1[Q$evt_time < -Q$iti_prev] = NA
   Q$vmPFC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$vmPFC_lag2[Q$evt_time < -Q$iti_prev] = NA
+  Q$vmPFC_lag3[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  Q$vmPFC_lag3[Q$evt_time < -Q$iti_prev] = NA
   Q$HC_lag2[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
   Q$HC_lag2[Q$evt_time < -Q$iti_prev] = NA
+  Q$HC_lag3[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  Q$HC_lag3[Q$evt_time < -Q$iti_prev] = NA
   Q <- Q %>% mutate(network = case_when(
     atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
     atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
