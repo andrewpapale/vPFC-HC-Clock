@@ -11,7 +11,7 @@ library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -30,17 +30,17 @@ if (do_HC2vPFC_clock){
   vmPFC <- clock_comb
   vmPFC <- vmPFC %>% group_by(id,run,run_trial,atlas_value) %>% arrange(evt_time) %>% mutate(vmPFC_lag1 = dplyr::lag(decon_mean,1,order_by=evt_time),
                                                                                              vmPFC_lag2 = dplyr::lag(decon_mean,2,order_by=evt_time),
-                                                                                             vmPFC_lag3 = dplyr::lag(decon_mean,2,order_by=evt_time)) %>% ungroup()
+                                                                                             vmPFC_lag3 = dplyr::lag(decon_mean,3,order_by=evt_time)) %>% ungroup()
   rm(clock_comb)
-  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network,vmPFC_lag1,vmPFC_lag2)
+  vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network,vmPFC_lag1,vmPFC_lag2,vmPFC_lag3)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
   hc <- hc %>% group_by(id,run,trial,HC_region) %>% arrange(evt_time) %>% mutate(HC_lag1 = dplyr::lag(HCwithin,1,order_by=evt_time),
                                                                                  HC_lag2 = dplyr::lag(HCwithin,2,order_by=evt_time),
-                                                                                 HC_lag3 = dplyr::lag(HCwithin,2,order_by=evt_time)) %>% ungroup()
-  hc <- hc %>% select(id,run,trial,evt_time,HCwithin,HCbetween,HC_lag1,HC_lag2,HC_region)
+                                                                                 HC_lag3 = dplyr::lag(HCwithin,3,order_by=evt_time)) %>% ungroup()
+  hc <- hc %>% select(id,run,trial,evt_time,HCwithin,HCbetween,HC_lag1,HC_lag2,HC_lag3,HC_region)
   Q <- merge(vmPFC,hc,by=c("id","run","trial","evt_time"))
   source('~/vmPFC/get_trial_data_vmPFC.R')
   df <- get_trial_data_vmPFC(repo_directory=repo_directory,dataset='mmclock_fmri')
@@ -214,6 +214,7 @@ if (do_HC2vPFC_clock){
   }
   
 }
+
 
 
 
