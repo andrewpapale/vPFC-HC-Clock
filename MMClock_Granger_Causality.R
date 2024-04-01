@@ -154,7 +154,13 @@ if (do_HC2vPFC_clock){
   decode_formula[[3]] = formula(~ HCwithin + vmPFC_lag3 + (1 | id/run))
   decode_formula[[4]] = formula(~ HCwithin + vmPFC_lag1*v_entropy_wi + (1 | id/run))    
   decode_formula[[5]] = formula(~ HCwithin + vmPFC_lag2*v_entropy_wi + (1 | id/run))    
-  decode_formula[[6]] = formula(~ HCwithin + vmPFC_lag3*v_entropy_wi + (1 | id/run))  
+  decode_formula[[6]] = formula(~ HCwithin + vmPFC_lag3*v_entropy_wi + (1 | id/run))
+  decode_formula[[7]] = formula(~ vmPFC_lag1 + (1|id/run))
+  decode_formula[[8]] = formula(~ vmPFC_lag2 + (1|id/run))
+  decode_formula[[9]] = formula(~ vmPFC_lag3 + (1|id/run))
+  decode_formula[[10]] = formula(~ vmPFC_lag1*v_entropy_wi + (1|id/run))
+  decode_formula[[11]] = formula(~ vmPFC_lag2*v_entropy_wi + (1|id/run))
+  decode_formula[[12]] = formula(~ vmPFC_lag3*v_entropy_wi + (1|id/run))
   #decode_formula[[4]] = formula(~HC_lag1 + HC_lag2 + age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
   qT <- c(-0.7,0.43)
   
@@ -165,7 +171,8 @@ if (do_HC2vPFC_clock){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
-    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits, 
+                    calculate = c("parameter_estimates_reml","residuals","fit_statistics"),
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
@@ -182,6 +189,12 @@ if (do_HC2vPFC_clock){
   decode_formula[[4]] = formula(~ vmPFC_decon + HC_lag1*v_entropy_wi + (1 | id/run))    
   decode_formula[[5]] = formula(~ vmPFC_decon + HC_lag2*v_entropy_wi + (1 | id/run))    
   decode_formula[[6]] = formula(~ vmPFC_decon + HC_lag3*v_entropy_wi + (1 | id/run))
+  decode_formula[[7]] = formula(~ HC_lag1 + (1 | id/run))
+  decode_formula[[8]] = formula(~ HC_lag2 + (1 | id/run))
+  decode_formula[[9]] = formula(~ HC_lag3 + (1 | id/run))
+  decode_formula[[10]] = formula(~ HC_lag1*v_entropy_wi + (1 | id/run))
+  decode_formula[[11]] = formula(~ HC_lag2*v_entropy_wi + (1 | id/run))
+  decode_formula[[12]] = formula(~ HC_lag3*v_entropy_wi + (1 | id/run))
   qT <- c(-0.7,0.43)
   
   Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
@@ -191,7 +204,8 @@ if (do_HC2vPFC_clock){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
-    ddf <- mixed_by(Q, outcomes = "HCwithin", rhs_model_formulae = df0 , split_on = splits,
+    ddf <- mixed_by(Q, outcomes = "HCwithin", rhs_model_formulae = df0 , split_on = splits, 
+                    calculate = c("parameter_estimates_reml","residuals","fit_statistics"),
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
