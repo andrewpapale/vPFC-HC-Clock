@@ -177,7 +177,7 @@ if (do_HC2vPFC_clock){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'Granger-Causality-pred-vmPFC-network-clock-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-MMClock-Granger-Causality-pred-vmPFC-network-clock-',i,'.Rdata'))
   }
   
   
@@ -210,7 +210,7 @@ if (do_HC2vPFC_clock){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'Granger-Causality-pred-HC-network-clock-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-MMClock-Granger-Causality-pred-HC-network-clock-',i,'.Rdata'))
   }
   
 }

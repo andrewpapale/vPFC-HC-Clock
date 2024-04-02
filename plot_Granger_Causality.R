@@ -1,12 +1,16 @@
 #plot_Granger_Causality <- function(Xuni,Xbi,Yuni,Ybi,toalign,toprocess,totest){
 
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-vmPFC-network-clock-10.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-vmPFC-network-clock-7.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-Explore-Granger-Causality-pred-vmPFC-network-clock-7.Rdata')
 Xuni <- ddf;
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-vmPFC-network-clock-4.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-vmPFC-network-clock-1.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-Explore-Granger-Causality-pred-vmPFC-network-clock-1.Rdata')
 Xbi <- ddf;
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-HC-network-clock-7.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-Explore-Granger-Causality-pred-HC-network-clock-7.Rdata')
 Yuni <- ddf;
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-MMClock-Granger-Causality-pred-HC-network-clock-1.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-04-01-Explore-Granger-Causality-pred-HC-network-clock-1.Rdata')
 Ybi <- ddf;
   
 Xuni <- Xuni$residuals %>% 
