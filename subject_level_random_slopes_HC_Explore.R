@@ -10,7 +10,7 @@ library(tidyverse)
 repo_directory <- "~/clock_analysis"
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = FALSE
+do_rand_slopes = TRUE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
 trial_mod = TRUE
@@ -221,7 +221,7 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-',i,'.Rdata'))
   }
 }
 
@@ -398,9 +398,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-',i,'.Rdata')) 
         }
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
@@ -422,9 +422,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-simple-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-simple-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-simple-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-simple-',i,'.Rdata')) 
         }  
       } else if (trial_mod){
         ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
@@ -459,9 +459,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial_mod-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial_mod-trial1-10included-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial_mod-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial_mod-trial1-10included-',i,'.Rdata')) 
         }  
       }
     }

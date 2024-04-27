@@ -1,18 +1,19 @@
 # 2023-02-17 AndyP
+# 2024-04-26 AndyP updated with first 10 trials
 # HC-Explore-MEDuSA
+library(tidyverse)
 
-hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/clock_aligned_HC_R.csv.gz')
-hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/clock_aligned_HC_L.csv.gz')
+hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_clock.csv.gz')
+hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_clock.csv.gz')
 
-source('/Volumes/Users/Andrew/MEDuSA_data_Explore/get_trial_data_explore.R')
-df <- get_trial_data_explore(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',censor_early_trials=TRUE,trials_to_censor=10)
-df <- df %>% rename(run=run_number)
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
 
 hc_r <- hc_r %>% mutate(side='r')
 hc_l <- hc_l %>% mutate(side='l')
 
-hc_l_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_l_cobra_2.3mm.nii.gz',reorient=FALSE)
-hc_r_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_r_cobra_2.3mm.nii.gz',reorient=FALSE)
+hc_l_m <- oro.nifti::readNIfTI('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_left_3.125mm.nii.gz',reorient=FALSE)
+hc_r_m <- oro.nifti::readNIfTI('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_right_3.125mm.nii.gz',reorient=FALSE)
 mi_l <- which(hc_l_m > 0, arr.ind=TRUE)
 mi_r <- which(hc_r_m > 0, arr.ind=TRUE)
 bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)
@@ -58,11 +59,12 @@ hc_r <- hc_r %>% mutate(atlas_value=case_when(
 
 hc <- rbind(hc_r,hc_l)
 rm(hc_r,hc_l)
-
+gc()
 hc <- hc %>% mutate(run1 = case_when(run=='run1'~1,run=='run2'~2)) %>% select(!run) %>% rename(run=run1)
 
 df <- df %>% select(id,run,trial,run_trial)
 
+hc$id <- as.character(hc$id)
 hc <- inner_join(hc,df,by=c('id','run','trial'))
 
 hc <- hc %>% select(!decon_median & !decon_sd)
@@ -76,18 +78,17 @@ save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_
 ### Feedback ###
 ################
 
-hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/rt_aligned_HC_R.csv.gz')
-hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/rt_aligned_HC_L.csv.gz')
+hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_fb.csv.gz')
+hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_fb.csv.gz')
 
-source('/Volumes/Users/Andrew/MEDuSA_data_Explore/get_trial_data_explore.R')
-df <- get_trial_data_explore(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',censor_early_trials=TRUE,trials_to_censor=10)
-df <- df %>% rename(run=run_number)
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
 
 hc_r <- hc_r %>% mutate(side='r')
 hc_l <- hc_l %>% mutate(side='l')
 
-hc_l_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_l_cobra_2.3mm.nii.gz',reorient=FALSE)
-hc_r_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_r_cobra_2.3mm.nii.gz',reorient=FALSE)
+hc_l_m <- oro.nifti::readNIfTI('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_left_3.125mm.nii.gz',reorient=FALSE)
+hc_r_m <- oro.nifti::readNIfTI('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_right_3.125mm.nii.gz',reorient=FALSE)
 mi_l <- which(hc_l_m > 0, arr.ind=TRUE)
 mi_r <- which(hc_r_m > 0, arr.ind=TRUE)
 bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)
@@ -138,6 +139,7 @@ hc <- hc %>% mutate(run1 = case_when(run=='run1'~1,run=='run2'~2)) %>% select(!r
 
 df <- df %>% select(id,run,trial,run_trial)
 
+hc$id <- as.character(hc$id)
 hc <- inner_join(hc,df,by=c('id','run','trial'))
 
 hc <- hc %>% select(!decon_median & !decon_sd)

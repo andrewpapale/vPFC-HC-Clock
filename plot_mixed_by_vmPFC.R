@@ -88,7 +88,26 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
 qdf <- ddf
 ddf <- ddf$coef_df_reml
 #if (strcmp(toprocess,"network")){
-ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term)
+if (!all(is.na(ddf$p_level_fdr))){
+  ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term, 
+                         p_level_fdr = as.factor(case_when(
+                           # p_fdr > .1 ~ '0',
+                           # p_fdr < .1 & p_fdr > .05 ~ '1',
+                           p_fdr > .05 ~ '1',
+                           p_fdr < .05 & p_fdr > .01 ~ '2',
+                           p_fdr < .01 & p_fdr > .001 ~ '3',
+                           p_fdr <.001 ~ '4')))
+} else {
+  ddf <- ddf  %>% mutate(p_fdr = p.value, 
+                         p_level_fdr = as.factor(case_when(
+                           # p_fdr > .1 ~ '0',
+                           # p_fdr < .1 & p_fdr > .05 ~ '1',
+                           p_fdr > .05 ~ '1',
+                           p_fdr < .05 & p_fdr > .01 ~ '2',
+                           p_fdr < .01 & p_fdr > .001 ~ '3',
+                           p_fdr <.001 ~ '4')))
+  warning('p fdr were all nan so deriving p values from p.level')
+}
 ddf <- ddf %>% mutate(p_level_fdr = as.factor(case_when(
   # p_fdr > .1 ~ '0',
   # p_fdr < .1 & p_fdr > .05 ~ '1',

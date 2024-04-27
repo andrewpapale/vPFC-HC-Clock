@@ -2,13 +2,13 @@
 library(stringr)
 
 ncores = 26
-do_vPFC = FALSE
-do_network = FALSE
+do_vPFC = TRUE
+do_network = TRUE
 do_symmetry = FALSE
 do_HC = TRUE
 do_vPFC_HC = TRUE
 do_vPFC_HC_fb = FALSE
-do_HC_anatomy = FALSE
+do_HC_anatomy = TRUE
 if (do_vPFC){
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
@@ -134,7 +134,7 @@ Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
                   run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 Q <- Q %>% filter(group=='HC')
 Q <- Q %>% filter(!is.na(rewFunc))
-Q <- Q %>% filter(trial > 10)
+#Q <- Q %>% filter(trial > 10)
 
 rm(decode_formula)
 decode_formula <- NULL
@@ -177,7 +177,7 @@ if (do_network){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-',i,'.Rdata'))
   }
 }
 if (do_symmetry){
@@ -191,7 +191,7 @@ if (do_symmetry){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-symmetry-clock-HConly-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-symmetry-clock-HConly-trial1-10included-',i,'.Rdata'))
   }
 }
 }
@@ -356,7 +356,7 @@ if (do_HC){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-',i,'.Rdata'))
   }
 }
 
@@ -475,7 +475,7 @@ if (do_vPFC_HC){
   df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
-  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
+  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change,outcome,ev_sc,v_chosen_sc,last_outcome,outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
   df$id <- as.character(df$id)
   Q <- full_join(md,df,by=c('id','run','trial'))
   Q <- Q %>% rename(vmPFC_decon = decon_mean) 
@@ -529,7 +529,7 @@ if (do_vPFC_HC){
   Q <- Q %>% filter(group!='ATT')
   Q <- Q %>% filter(group=='HC')
   Q <- Q %>% filter(!is.na(rewFunc))
-  Q <- Q %>% filter(trial > 10)
+  #Q <- Q %>% filter(trial > 10)
   Q <- Q %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                            trial > 40 & trial <= 80 ~ trial-40,
                                            trial > 80 & trial <=120 ~ trial-80, 
@@ -550,6 +550,9 @@ if (do_vPFC_HC){
   decode_formula[[3]] = formula(~age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
   decode_formula[[4]] = formula(~v_max_wi*HCwithin + HCbetween + (1|id/run))
   decode_formula[[5]] = formula(~v_entropy_wi*HCwithin + HCbetween + (1|id/run))
+  decode_formula[[6]] = formula(~v_max_wi*HCwithin + outcome + HCbetween + (1|id/run))
+  decode_formula[[7]] = formula(~v_entropy_wi*HCwithin + outcome + HCbetween + (1|id/run))
+  decode_formula[[8]] = formula(~v_entropy_wi*HCwithin + v_entropy_wi_change + HCbetween + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_c  (1|id/run))
   # decode_formula[[4]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc +   (1|id/run))
@@ -593,7 +596,7 @@ if (do_vPFC_HC){
                       #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
                       # )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial1-10included-',i,'.Rdata'))
   }
   
   
@@ -1012,7 +1015,7 @@ if (do_HC_anatomy){
   Q <- Q %>% filter(group!='ATT')
   Q <- Q %>% filter(group=='HC')
   Q <- Q %>% filter(!is.na(rewFunc))
-  Q <- Q %>% filter(trial > 10)
+  #Q <- Q %>% filter(trial > 10)
   
   rm(decode_formula)
   decode_formula <- NULL
@@ -1073,7 +1076,7 @@ if (do_HC_anatomy){
     #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
     # )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-anatomy-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-anatomy-trial1-10included-',i,'.Rdata'))
   }
   
   
