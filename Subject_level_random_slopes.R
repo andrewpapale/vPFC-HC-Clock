@@ -13,14 +13,15 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = FALSE
+do_rand_slopes = TRUE
 simple_model = FALSE
 do_rt_pred_fmri = FALSE
-plot_rt_pred_fmri = FALSE
+plot_rt_pred_fmri = TRUE
 do_rt_pred_meg = TRUE
 plot_rt_pred_meg = FALSE
 do_entropy_plot = FALSE
 do_value_plot = FALSE
+remove_1to10 = TRUE
 #### clock ####
 
 if (do_rand_slopes){
@@ -109,7 +110,7 @@ if (do_rand_slopes){
       run_trial > 15 & run_trial < 30 ~ 'Middle',
       run_trial >=30 ~ 'Late',
     )))
-    df <- df %>% select(id,run,run_trial,trial_bin,outcome,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,iti_lag_sc,rt_lag_sc,ev_sc,expl_longer,expl_shorter)
+    df <- df %>% select(id,run,trial,run_trial,trial_bin,outcome,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,last_outcome,v_max_wi,trial_neg_inv_sc,rt_csv_sc,v_entropy_wi_change,score_sc,rt_bin,iti_sc,iti_lag_sc,rt_lag_sc,ev_sc,expl_longer,expl_shorter)
     Q <- merge(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
     Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
     Q$expl_shorter <- relevel(as.factor(Q$expl_shorter),ref='0')
@@ -124,6 +125,10 @@ if (do_rand_slopes){
     Q$age <- scale(Q$age)
     
     Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
+    
+    if (remove_1to10){
+      Q <- Q %>% filter(trial > 10)
+    }
     
     rm(decode_formula)
     decode_formula <- formula(~ (1|id))
@@ -221,7 +226,7 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-remove1-10-',i,'.Rdata'))
   }
 }
 
@@ -375,9 +380,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-int-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-int-remove1-10-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-slo-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-slo-remove1-10-',i,'.Rdata')) 
         } 
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,

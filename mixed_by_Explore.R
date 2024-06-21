@@ -4,11 +4,11 @@ library(stringr)
 ncores = 26
 do_vPFC = TRUE
 do_network = TRUE
-do_symmetry = FALSE
-do_HC = TRUE
-do_vPFC_HC = TRUE
+do_symmetry = TRUE
+do_HC = FALSE
+do_vPFC_HC = FALSE
 do_vPFC_HC_fb = FALSE
-do_HC_anatomy = TRUE
+do_HC_anatomy = FALSE
 if (do_vPFC){
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
