@@ -333,7 +333,7 @@ if (!strcmp(totest,'online')){
           geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           scale_color_manual(values = pal1) + 
           scale_y_continuous(n.breaks=3) + 
-          scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
@@ -356,7 +356,7 @@ if (!strcmp(totest,'online')){
           geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
           scale_color_manual(values = pal1) + 
           scale_y_continuous(n.breaks=3) + 
-          scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
@@ -435,20 +435,22 @@ if (!strcmp(totest,'online')){
       dev.off()
     } else if (strcmp(toprocess,"symmetry_group")){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
-      pdf(fname, width = 12, height = 3.5)
+      pdf(fname, width = 18, height = 3.5)
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
         geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
         geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill1)) +
         geom_errorbar(size = 1) + ylab('Response [AU]') + 
-        scale_x_continuous(breaks=c(-3,0,3),labels=c('-3','0','3')) +
+        scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
         scale_y_continuous(n.breaks=3) + 
         theme(legend.title = element_blank(),
               axis.title.y = element_text(margin=margin(r=6),size=22),
               axis.title.x = element_text(margin=margin(t=6),size=22),
               legend.text = element_text(size=22),
               axis.text.x = element_text(size=22),
-              axis.text.y = element_text(size=22)
+              axis.text.y = element_text(size=22),
+              panel.spacing = unit(1.5,"lines")
+              
         ) + 
         scale_color_manual(values = sym_fill_rearranged,guide="none") + 
         xlab(epoch_label) +

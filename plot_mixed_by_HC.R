@@ -86,6 +86,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
           geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
           geom_line(size = 1) + 
           ylab('Response [AU]') +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
           #scale_color_gradientn(colors = pal, guide = 'none') + 
           scale_color_manual(values = pal) + 
           #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
@@ -121,6 +122,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
           geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
           geom_line(position=position_dodge(width=0.33),size = 1) + 
           xlab(epoch_label) + ylab('Response [AU]') +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
           #scale_color_gradientn(colors = pal, guide = 'none') + 
           scale_color_manual(values = pal) +  
           xlab(epoch_label) + ylab('Response [AU]') +

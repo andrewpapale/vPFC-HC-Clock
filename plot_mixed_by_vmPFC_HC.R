@@ -212,6 +212,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                 geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
                 xlab(epoch_label) + ylab('') +
                 scale_color_manual(values = pal) + 
+                scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
                 #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
                 theme_bw(base_size=13) + ylab('Response [AU]') + 
                 facet_wrap(~HC_region) + 
@@ -232,6 +233,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                 geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
                 xlab(epoch_label) + ylab('') +
                 scale_color_manual(values = pal) + 
+                scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
                 #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
                 theme_bw(base_size=13) +  
                 facet_wrap(~HC_region) + ylab('Response [AU]') +
@@ -253,6 +255,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
               geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
               xlab(epoch_label) + ylab('') +
               scale_color_manual(values = pal) + 
+              scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
               #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
               theme_bw(base_size=13) +
               facet_wrap(~HC_region) + ylab('Response [AU]') +
