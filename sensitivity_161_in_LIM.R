@@ -419,8 +419,8 @@ if (do_anat){
   #decode_formula[[1]] = formula(~v_max_wi + (1|id/run))
   #decode_formula[[1]] = formula(~v_max_wi*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   decode_formula <- NULL
-  decode_formula[[1]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id/run))
+  decode_formula[[1]] <- formula(~ HCwithin + HCbetween + (1|id/run))
+  #decode_formula[[2]] <- formula(~ age + female + HCwithin*trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id/run))
   
   qT <- c(-0.7,0.43)
   

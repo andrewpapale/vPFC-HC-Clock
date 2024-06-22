@@ -328,9 +328,9 @@ if (!strcmp(totest,'online')){
       if (all(edf$`p, FDR-corrected`=='p < .001')){
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
           geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
-          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
           geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
+          geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
           scale_color_manual(values = pal1) + 
           scale_y_continuous(n.breaks=3) + 
           scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
@@ -338,9 +338,6 @@ if (!strcmp(totest,'online')){
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
           theme(legend.title = element_blank(),
-                panel.grid.major = element_line(colour = "grey45"), 
-                panel.grid.minor = element_line(colour = "grey45"), 
-                panel.background = element_rect(fill = 'grey40'),
                 axis.title.y = element_text(margin=margin(r=6),size=22),
                 axis.title.x = element_text(margin=margin(t=6),size=22),
                 legend.text = element_text(size=22),
@@ -349,10 +346,10 @@ if (!strcmp(totest,'online')){
           )
       } else {
         gg<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
-          geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
-          geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
+          geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1)+ xlab(epoch_label) + ylab('Response [AU]') +
+          geom_hline(yintercept = 0, lty = 'dashed',color = '#A9A9A9', size=1) + 
           geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
-          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
           geom_line(position=position_dodge(width=0.33),size = 1) + theme(legend.position = "none") +
           scale_color_manual(values = pal1) + 
           scale_y_continuous(n.breaks=3) + 
@@ -361,9 +358,6 @@ if (!strcmp(totest,'online')){
           theme_bw(base_size=13) +
           #facet_wrap(~HC_region) +
           theme(legend.title = element_blank(),
-                panel.grid.major = element_line(colour = "grey45"), 
-                panel.grid.minor = element_line(colour = "grey45"), 
-                panel.background = element_rect(fill = 'grey40'),
                 axis.title.y = element_text(margin=margin(r=6),size=22),
                 axis.title.x = element_text(margin=margin(t=6),size=22),
                 legend.text = element_text(size=22),
@@ -437,10 +431,11 @@ if (!strcmp(totest,'online')){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
       pdf(fname, width = 18, height = 3.5)
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
-        geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
-        geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
+        geom_vline(xintercept = 0, lty = "dashed", color = "#A9A9A9", size = 1) + facet_grid(~symmetry_group1) + 
+        geom_hline(yintercept = 0, lty = 'dashed',color = '#A9A9A9', size=1) + 
         geom_point(aes(size=`p, FDR-corrected`,color=sym_fill1)) +
-        geom_errorbar(size = 1) + ylab('Response [AU]') + 
+        geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
+        ylab('Response [AU]') + 
         scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
         scale_y_continuous(n.breaks=3) + 
         theme(legend.title = element_blank(),
