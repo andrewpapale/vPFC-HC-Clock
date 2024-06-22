@@ -52,7 +52,7 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
     pal = wes_palette("Zissou1", 12, type = "continuous")
   } else if (strcmp(toprocess,'region')){
     pal = palette()
-    pal[2] <- '#D3D3E9'
+    pal[2] <- '#C9D9F9'
     pal[1] <- '#818589'
   }
   library(wesanderson)

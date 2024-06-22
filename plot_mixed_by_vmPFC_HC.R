@@ -30,7 +30,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   epoch_label = paste("Time relative to",toalign_str, "[s]")
   pal_hc = wes_palette("Royal2", 5, type = "discrete")
   pal_hc1 <- palette()
-  pal_hc1[2] <- '#D3D3E9'
+  pal_hc1[2] <- '#C9D9F9'
   pal_hc1[1] <- '#818589'
   fills <- palette()
   fills[1] <- pal[2]
@@ -153,7 +153,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
   }
   
   pal1 = palette()
-  pal1[2] <- '#D3D3E9'
+  pal1[2] <- '#C9D9F9'
   pal1[1] <- '#818589'
   
   if (!strcmp(totest,'anatomy')){
@@ -220,7 +220,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                       axis.title.x = element_text(margin=margin(t=6),size=22),
                       legend.text = element_text(size=22),
                       axis.text.x = element_text(size=22),
-                      axis.text.y = element_text(size=22)
+                      axis.text.y = element_text(size=22),
+                      panel.spacing = unit(1.5,"lines")
                 )
             }else {
               gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
@@ -239,7 +240,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                       axis.title.x = element_text(margin=margin(t=6),size=22),
                       legend.text = element_text(size=22),
                       axis.text.x = element_text(size=22),
-                      axis.text.y = element_text(size=22)
+                      axis.text.y = element_text(size=22),
+                      panel.spacing = unit(1.5,"lines")
                 )
             }
           } else {
@@ -259,7 +261,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                     axis.title.x = element_text(margin=margin(t=6),size=22),
                     legend.text = element_text(size=22),
                     axis.text.x = element_text(size=22),
-                    axis.text.y = element_text(size=22)
+                    axis.text.y = element_text(size=22),
+                    panel.spacing = unit(1.5,"lines")
               )
           }
           gg2 <- ggplot_gtable(ggplot_build(gg1))
