@@ -1,0 +1,15 @@
+% 2024-06-26 AndyP
+% RT-RT correlation matrix
+
+uS = unique(X.id);
+nS = length(uS);
+rt_bin = linspace(1,5,20);
+for iS=1:nS
+    
+    k = zeros(size(X,1),1);
+    k(X.id==uS(iS) & X.rewFunc=='IEV') = 1; % current subject index to keep
+    RT = X.rt_csv(k==1);
+    
+    [~,~,~,h0] = histcn(RT,rt_bin);
+    
+    

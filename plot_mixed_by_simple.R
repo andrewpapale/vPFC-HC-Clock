@@ -1,6 +1,6 @@
 plot_mixed_by_simple <- function(ddf){
   
-  epoch_label <- 'time peri clock'
+  epoch_label <- 'time peri feedback (s)'
   
   message("\nPlotting streams decoding")
   library(wesanderson)
@@ -28,7 +28,7 @@ plot_mixed_by_simple <- function(ddf){
     # fe <- terms[1] # test only
     edf <- ddf %>% filter(term == paste(fe) & ddf$effect=='fixed')
     termstr <- str_replace_all(fe, "[^[:alnum:]]", "_")
-    fname = paste0(termstr,'-',atlas_value,".pdf")
+    fname = paste0(termstr,'-',".pdf")
     pdf(fname, width = 9, height = 3.5)
     # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
     #   geom_line(size = 1) + geom_point() +
