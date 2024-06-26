@@ -47,8 +47,8 @@ df$rewFunc <- relevel(as.factor(df$rewFunc),order='DEV','IEV','CEV','CEVR')
 
 pdf('RT_by_rewFunc.pdf',height=8,width=26)
 ggplot(df,aes(x=run_trial, y=rt_csv, color=rewFunc, group=rewFunc)) +
-  geom_smooth(span=1,method='loess',size=10) +
-  stat_summary(aes(y=rt_csv,group=rewFunc),fun.y = mean, geom="line",linetype='dashed',size=10) +
+  geom_smooth(span=1,method='loess',linewidth=3) +
+  stat_summary(aes(y=rt_csv,group=rewFunc),fun.y = mean, geom="line",linetype='dashed',size=3) +
   scale_color_manual(values = pal) +
   theme_bw(base_size=13) +  
   ylab('Response Time (s)') +
