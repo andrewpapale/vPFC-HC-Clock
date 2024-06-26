@@ -12,12 +12,62 @@ repo_directory <- '~/clock_analysis/'
 pal = palette()
 pal[1] <- '#009B72'
 pal[2] <- '#D65B26'
-# pal[3] <- '#6F6AB0'
-# pal[4] <- '#E50886'
-pal[3] <- '#AA399B'
+pal[3] <- '#6F6AB0'
+pal[4] <- '#E50886'
+#pal[3] <- '#AA399B'
 
-source('~/vPFC-HC-Clock/get_trial_data_vmPFC.R')
-df <- get_trial_data_vmPFC(repo_directory = repo_directory,dataset='mmclock_fmri')
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+df1 <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri') %>% mutate(dataset = 'Experiment 1')
+df2 <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_meg') %>% mutate(dataset = 'Experiment 1 - Replication')
+df3 <- get_trial_data(repo_directory=repo_directory,dataset='explore') %>% mutate(dataset = 'Experiment 2')
+
+df3 <- df3 %>% mutate(block = case_when(trial <= 40 ~ 1, 
+                                      trial > 40 & trial <= 80 ~ 2,
+                                      trial > 80 & trial <=120 ~ 3, 
+                                      trial > 120 & trial <=160 ~ 4,
+                                      trial > 160 & trial <=200 ~ 5,
+                                      trial > 200 & trial <=240 ~ 6))
+df3 <- df3 %>% mutate(run_trial = case_when(trial <= 40 ~ trial, 
+                                          trial > 40 & trial <= 80 ~ trial-40,
+                                          trial > 80 & trial <=120 ~ trial-80, 
+                                          trial > 120 & trial <=160 ~ trial-120,
+                                          trial > 160 & trial <=200 ~ trial-160,
+                                          trial > 200 & trial <=240 ~ trial-200))
+df3 <- df3 %>% mutate(run_trial_c = run_trial-floor(run_trial/40.5),
+                    run_trial_neg_inv = -(1 / run_trial_c) * 100,
+                    run_trial_neg_inv_sc = as.vector(scale(run_trial_neg_inv)))
+
+common_cols = intersect(colnames(df1),colnames(df2))
+df <- rbind(subset(df1,select = common_cols),subset(df2,select = common_cols))
+
+common_cols = intersect(colnames(df),colnames(df3))
+df <- rbind(subset(df,select = common_cols),subset(df3,select = common_cols))
+
+df$rewFunc <- relevel(as.factor(df$rewFunc),order='DEV','IEV','CEV','CEVR')
+
+pdf('RT_by_rewFunc.pdf',height=8,width=26)
+ggplot(df,aes(x=run_trial, y=rt_csv, color=rewFunc, group=rewFunc)) +
+  geom_smooth(span=1,method='loess',size=10) +
+  stat_summary(aes(y=rt_csv,group=rewFunc),fun.y = mean, geom="line",linetype='dashed',size=10) +
+  scale_color_manual(values = pal) +
+  theme_bw(base_size=13) +  
+  ylab('Response Time (s)') +
+  xlab('Trial') +
+  facet_wrap(~dataset, scales = 'free_x') +
+  guides(colour = guide_legend(override.aes = list(size=10,width=5,fill=NA))) +
+  theme(legend.title = element_blank(),
+        legend.background = element_rect(color='white'),
+        axis.title.y = element_text(margin=margin(r=6),size=26),
+        axis.title.x = element_text(margin=margin(t=6),size=26),
+        legend.text = element_text(size=26),
+        axis.text.x = element_text(size=26),
+        axis.text.y = element_text(size=26),
+        strip.text = element_text(size = 26)
+  )
+dev.off()
+
+
+
 df <- df %>% group_by(id,run) %>% mutate(v_max_lag = lag(v_max)) %>% ungroup()
 df <- df %>% group_by(id,run) %>% mutate(v_chosen_lag = lag(v_chosen)) %>% ungroup()
 df <- df %>% group_by(id,run) %>% mutate(vD = v_max_lag - v_chosen_lag) %>% ungroup()

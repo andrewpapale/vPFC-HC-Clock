@@ -109,6 +109,12 @@ demo$education_yrs_sc <- scale(demo$education_yrs)
 
 df <- merge(df,demo,by='id')
 
+lmer_control$optimizer <- 'bobyqa'
+lmer_control$optCtrl = list(maxfun=2E5)
+m1 <- lmerTest::lmer(rt_csv_sc ~ gender*rt_lag_sc + age_sc * rt_lag_sc + v_entropy_wi * rt_lag_sc * group_bin +  v_max_wi * rt_lag_sc * group_bin + trial_neg_inv_sc * rt_lag_sc *group_bin + group_bin * last_outcome * rt_lag_sc + (1 + rt_lag_sc | id),data=df, REML=TRUE,control=lmer_control)
+
+df <- df %>% filter(Group=='Controls')
+
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df1 <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
 
@@ -178,11 +184,28 @@ demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
 df1 <- inner_join(df1,demo,by=c('id'))
 df1$female <- relevel(as.factor(df1$female),ref='0')
+df1 <- df1 %>% mutate(gender = case_when(female==1 ~ 'F',
+                                       female==0 ~ 'M'))
+df1$gender <- relevel(as.factor(df1$gender),ref='M')
 df1$age_sc <- scale(df1$age)
 
 
 common_cols = intersect(colnames(df),colnames(df1))
 ddf <- rbind(subset(df,select = common_cols),subset(df1,select = common_cols))
 
-m1 <- lmerTest::lmer(rt_csv_sc ~ rt_lag_sc*dataset + v_entropy_wi*dataset + v_max_wi*dataset + (1|id),ddf)
-summary(m1)
+
+ddf <- ddf %>% filter(rewFunc == 'IEV' | rewFunc=='DEV')
+
+ddf$dataset <- relevel(as.factor(ddf$dataset),ref='MMClock')
+
+ddf$age_sc_merged <- scale(ddf$age)
+
+df <- df %>% mutate(group_bin = case_when(registration_lethality=='ll' ~ 'LL', registration_lethality=='hl' ~ 'HL', is.na(registration_lethality) ~ 'NON'))
+df$group_bin = relevel(as.factor(df$group_bin),ref='NON')
+
+# LL and HL affected by task complexity or information load (entropy term).  For LL this depends on interacting RTlag:group:Vmax
+m1 <- lmerTest::lmer(rt_csv_sc ~ age_sc*rt_lag_sc + v_entropy_wi*rt_lag_sc*group_bin + v_max_wi*rt_lag_sc*group_bin  + trial_neg_inv_sc*rt_lag_sc + group_bin*last_outcome*rt_lag_sc + (1+rt_lag_sc | id),data=df)
+
+m2 <- lmerTest::lmer(rt_csv_sc ~ gender + age_sc + v_entropy_wi * rt_lag_sc * group_bin *last_outcome +  v_max_wi + trial_neg_inv_sc + (1 + rt_lag_sc | id),data=df, REML=TRUE,control=lmer_control)
+
+
