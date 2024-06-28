@@ -1,6 +1,6 @@
 plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter,hc_LorR,CTRflag,flipy){
   library(grid)
-  
+  library(pracma)
   
   if (strcmp(CTRflag,'noCTR')){
     noCTR = TRUE
