@@ -45,7 +45,7 @@ df <- rbind(subset(df,select = common_cols),subset(df3,select = common_cols))
 
 df$rewFunc <- relevel(as.factor(df$rewFunc),order='DEV','IEV','CEV','CEVR')
 
-pdf('RT_by_rewFunc.pdf',height=8,width=26)
+pdf('RT_by_rewFunc.pdf',height=8,width=28)
 ggplot(df,aes(x=run_trial, y=rt_csv, color=rewFunc, group=rewFunc)) +
   geom_smooth(span=1,method='loess',linewidth=3) +
   stat_summary(aes(y=rt_csv,group=rewFunc),fun.y = mean, geom="line",linetype='dashed',size=1) +
