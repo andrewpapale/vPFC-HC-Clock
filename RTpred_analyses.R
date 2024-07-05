@@ -66,11 +66,7 @@ df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
   rt_csv_sc > 0 & rt_csv_sc <= 1 ~ '0.5',
   rt_csv_sc > 1 ~ '1'
 )))
-df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
-  run_trial <= 13 ~ 'Early',
-  run_trial > 13 & run_trial < 26 ~ 'Middle',
-  run_trial >=26 ~ 'Late',
-)))
+
 
 df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
                                                      total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
@@ -95,11 +91,15 @@ df <- df %>% mutate(run_trial_c = run_trial-floor(run_trial/40.5),
 df <- df %>% mutate(dataset = 'Explore')
 
 df$rt_bin <- relevel(as.factor(df$rt_bin),ref='-0.5')
+df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+  run_trial <= 10 ~ 'Early',
+  run_trial > 10 & run_trial < 20 ~ 'Middle',
+  run_trial >=20 & run_trial < 30 ~ 'Middle',
+  run_trial > 30 & run_trial < 40 ~ 'Late'
+)))
 df$trial_bin <- relevel(as.factor(df$trial_bin),ref='Middle')
 df$expl_longer <- relevel(as.factor(df$expl_longer),ref='0')
 df$expl_shorter <- relevel(as.factor(df$expl_shorter),ref='0')
-df$rt_bin <- relevel(as.factor(df$rt_bin),ref='-0.5')
-df$trial_bin <- relevel(as.factor(df$trial_bin),ref='Middle')
 
 demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
 demo$gender <- relevel(as.factor(demo$gender),ref='M')
@@ -108,6 +108,9 @@ demo$wtar_sc <- scale(demo$wtar)
 demo$education_yrs_sc <- scale(demo$education_yrs)
 
 df <- merge(df,demo,by='id')
+
+df <- df %>% mutate(group_bin = case_when(registration_lethality=='ll' ~ 'ATT', registration_lethality=='hl' ~ 'ATT', is.na(registration_lethality) ~ 'NON'))
+df$group_bin = relevel(as.factor(df$group_bin),ref='NON')
 
 lmer_control$optimizer <- 'bobyqa'
 lmer_control$optCtrl = list(maxfun=2E5)
