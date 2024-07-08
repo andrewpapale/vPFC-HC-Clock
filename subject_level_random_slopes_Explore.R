@@ -299,7 +299,7 @@ if (do_rt_pred_fmri){
       decode_formula[[1]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1|id/run))
       decode_formula[[2]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc |id/run))
     } else if (trial_mod_model){
-      decode_formula[[1]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
+      decode_formula[[1]] <- formula(~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope + (1 | id/run))
       #decode_formula[[2]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     }
     splits = c('evt_time','network')
@@ -373,11 +373,11 @@ if (do_rt_pred_fmri){
                         RT = list(outcome='rt_csv', model_name='model1', 
                                   specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
                         Vmax = list(outcome='rt_csv', model_name='model1', 
-                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        RTxO = list(outcome='rt_csv',model_name='model1',
-                                    specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1',
-                                       specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                                    specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
+                        # RTxO = list(outcome='rt_csv',model_name='model1',
+                        #             specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
+                        # TrxVmax = list(outcome='rt_csv',model_name='model1',
+                        #                specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                         
                       ),
                       emtrends_spec = list(
@@ -386,22 +386,22 @@ if (do_rt_pred_fmri){
                         Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                     specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
                         RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
-                                    specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                        TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
-                                       specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
-                        TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'run_trial0_neg_inv_sc',
-                                        specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                        TrxVmax2 = list(outcome='rt_csv',model_name='model1', var = 'subj_level_rand_slope',
-                                        specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                                    specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))#,
+                        # TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
+                        #                specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+                        # TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'run_trial0_neg_inv_sc',
+                        #                 specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                        # TrxVmax2 = list(outcome='rt_csv',model_name='model1', var = 'subj_level_rand_slope',
+                        #                 specs=formula(~rt_vmax_lag_sc:run_trial0_neg_inv_sc:subj_level_rand_slope), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),run_trial0_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                       )
       )
       
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-',i,'.Rdata'))
       } else {
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-trial_mod-trial1-10included-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-trial_mod-trial1-10included-notimesplit-',i,'.Rdata'))
       }
     }
   }
