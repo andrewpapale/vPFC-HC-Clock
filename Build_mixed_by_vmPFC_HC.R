@@ -8,17 +8,18 @@ library(tidyverse)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
-#do_vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
-do_vPFC_clock = TRUE
+do_vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
+do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = TRUE
-#do_HC2vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
+do_HC_clock = FALSE
+do_HC2vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
 do_HC2vPFC_clock = TRUE
-#do_anat_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
-do_anat_clock = TRUE
+do_anat_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
+do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
-remove_1to10 = TRUE
+remove_1to10 = FALSE
+do_vif = TRUE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -380,9 +381,38 @@ if (do_vPFC_clock){
         ) 
       }        
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-        save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-remove1-10-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-',i,'.Rdata'))
     }
+    if (do_vif){
+      nE = unique(Q2$evt_time)
+      nHC = unique(Q2$HC_region)
+      nN = unique(Q2$network)
+      vdf <- NULL
+      network <- NULL
+      HC_region <- NULL
+      evt_time <- NULL
+      for (iE in 1:length(nE)){
+        #for (iHC in 1:length(nHC)){
+          for (iN in 1:length(nN)){
+            temp <- Q %>% filter(evt_time == nE[iE])
+            #temp <- temp %>% filter(HC_region == nHC[iHC])
+            temp <- temp %>% filter(network == nN[iN])
+            m1 <- lmerTest::lmer(data=temp, vmPFC_decon ~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+            v0 <- car::vif(m1)
+            vdf <- rbind(vdf,v0)
+            network <- rbind(network,nN[iN])
+            #HC_region <- rbind(HC_region,nHC[iHC])
+            evt_time <- rbind(evt_time,nE[iE])
+          }
+        #}
+      }
+      vdf1 <- data.frame(vdf,network=network,evt_time=evt_time)
+    }
+    
   }
+  
+  
+  
 }
 #################################
 #####   HC - feedback      ######
@@ -1304,9 +1334,37 @@ if (do_HC2vPFC_clock){
       if (i==4){
         save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
       } else {
-        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-remove1-10-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-',i,'.Rdata'))
       }
     }
+    
+    if (do_vif){
+      nE = unique(Q2$evt_time)
+      nHC = unique(Q2$HC_region)
+      nN = unique(Q2$network)
+      vdf <- NULL
+      network <- NULL
+      HC_region <- NULL
+      evt_time <- NULL
+      for (iE in 1:length(nE)){
+        for (iHC in 1:length(nHC)){
+        for (iN in 1:length(nN)){
+          temp <- Q %>% filter(evt_time == nE[iE])
+          temp <- temp %>% filter(HC_region == nHC[iHC])
+          temp <- temp %>% filter(network == nN[iN])
+          m1 <- lmerTest::lmer(data=temp, vmPFC_decon ~ age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))
+          v0 <- car::vif(m1)
+          vdf <- rbind(vdf,v0)
+          network <- rbind(network,nN[iN])
+          HC_region <- rbind(HC_region,nHC[iHC])
+          evt_time <- rbind(evt_time,nE[iE])
+        }
+        }
+      }
+      vdf1 <- data.frame(vdf,network=network,HC_region=HC_region,evt_time=evt_time)
+    }
+    
+    
   }
   
   if (do_symmetry){

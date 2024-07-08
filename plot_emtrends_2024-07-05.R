@@ -7,14 +7,20 @@ library(ggplot2)
 # 2024-06-27 AndyP
 # Plotting emmeans and emtrends for B2B
 
-std_of_subject_level_rand_slope = 2
+std_of_subject_level_rand_slope = 1
 
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-1.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-1.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-1.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-1.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-06-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-1.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -49,8 +55,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                              p_fdr < .01 & p_fdr > .001 ~ '3',
                              p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                              subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                              subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -65,19 +71,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                    p_fdr < .01 & p_fdr > .001 ~ '3',
                                    p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                    subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                    subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,last_outcome,entropy) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,last_outcome,entropy) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 
@@ -161,8 +167,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -177,19 +183,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,entropy) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,entropy) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 
@@ -252,11 +258,17 @@ dev.off()
 ###################
 
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-2.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-2.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-2.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-2.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-2.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-2.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-2.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-2.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-06-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-2.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -291,8 +303,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -307,19 +319,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,last_outcome,Vmax) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,last_outcome,Vmax) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 
@@ -403,8 +415,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -419,19 +431,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(Vmax = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                      subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,Vmax) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,Vmax) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 
@@ -487,11 +499,17 @@ dev.off()
 
 
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-3.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-3.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-3.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-3.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-3.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-3.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-3.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-3.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
-load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-3.Rdata')
+#load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-3.Rdata')
+#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-06-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-3.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-3.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -526,8 +544,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -542,19 +560,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,last_outcome,HC) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,last_outcome,HC) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 
@@ -638,8 +656,8 @@ PH_merged <- PH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-PH_merged <- PH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+PH_merged <- PH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 AH_merged <- AH_merged %>% filter((subj_level_rand_slope==-std_of_subject_level_rand_slope | subj_level_rand_slope==std_of_subject_level_rand_slope))
@@ -654,19 +672,19 @@ AH_merged <- AH_merged  %>% mutate(p_fdr = padj_fdr_term,
                                      p_fdr < .01 & p_fdr > .001 ~ '3',
                                      p_fdr <.001 ~ '4')))
 
-AH_merged <- AH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-2 STD',
-                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+2 STD'))
+AH_merged <- AH_merged %>% mutate(HC = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
+                                                   subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
 
 
 
 AH_summary <- AH_merged %>% 
   group_by(dataset,network,HC) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 PH_summary <- PH_merged %>% 
   group_by(dataset,network,HC) %>% 
-  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = sd(rt_lag_sc.trend,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
+  summarize(mean_trend = mean(rt_lag_sc.trend,na.rm=TRUE), mean_sd = mean(std.error,na.rm=TRUE), sum_p_ls_001 = sum(p_level_fdr =='4')) %>% 
   ungroup() 
 
 

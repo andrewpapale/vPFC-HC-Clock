@@ -15,7 +15,7 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = TRUE
+do_rand_slopes = FALSE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
 trial_mod_model = TRUE
@@ -258,7 +258,12 @@ if (do_rt_pred_fmri){
     df <- df %>% select(iti_ideal,condition_trial_neg_inv_sc,rt_vmax_lag_sc, rt_lag_sc,iti_prev,iti_sc,v_entropy_wi_change,iti_prev_sc,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
     df$id <- as.integer(df$id)
     df <- df %>% group_by(id,run) %>% mutate(v_max_wi_lag = lag(v_max_wi)) %>% ungroup()
-    Q <- inner_join(qdf,df,by=c('id'))
+    df <- df %>% filter(id %in% qdf$id)
+    qdf <- qdf %>% select(id,estimate,evt_time,network)
+    Q <- inner_join(qdf,df,by='id',relationship = "many-to-many") %>% 
+      arrange(id,run,network,run_trial,evt_time) %>% 
+      relocate(run, .after = 'id') %>% 
+      relocate(run_trial, .after = 'run')
     
     Q <- Q %>% arrange(id,run,trial,evt_time)
     Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
@@ -295,7 +300,7 @@ if (do_rt_pred_fmri){
       decode_formula[[2]] <- formula(~condition_trial_neg_inv_sc + rt_lag_sc*subj_level_rand_slope + last_outcome*subj_level_rand_slope + rt_vmax_lag_sc*subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc |id/run))
     } else if (trial_mod_model){
       decode_formula[[1]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 | id/run))
-      decode_formula[[2]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+      #decode_formula[[2]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     }
     splits = c('evt_time','network')
     source('~/fmri.pipeline/R/mixed_by.R')
@@ -304,6 +309,7 @@ if (do_rt_pred_fmri){
       if (!simple_model && !trial_mod_model){
         ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        calculate = c("parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics", "residuals", "fitted"),
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
                           RT = list(outcome='rt_csv', model_name='model1', 
@@ -335,6 +341,7 @@ if (do_rt_pred_fmri){
       } else if (simple_model){
         ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                        calculate = c("parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics", "residuals", "fitted"),
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
                           RT = list(outcome='rt_csv', model_name='model1', 
@@ -360,6 +367,7 @@ if (do_rt_pred_fmri){
     } else if (trial_mod_model){
       ddq <- mixed_by(Q, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                      calculate = c("parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics", "residuals", "fitted"),
                       tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                       emmeans_spec = list(
                         RT = list(outcome='rt_csv', model_name='model1', 
