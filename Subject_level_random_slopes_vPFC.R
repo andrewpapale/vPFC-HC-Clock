@@ -270,7 +270,8 @@ if (do_rt_pred_fmri){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change' & group=='id')
       } 
     }
-    #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)
@@ -471,7 +472,8 @@ if (do_rt_pred_meg){
         qdf <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='v_entropy_wi_change' & group=='id')
       } 
     }
-    #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)

@@ -60,14 +60,14 @@ pal[2] = pal3[1]
 pal[3] = pal3[3]
 
 pdf('RT-Pred-Entropy-PFC-emtrends.pdf',height=8,width=10)
-ggplot(PFC_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+ggplot(PFC_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = entropy)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
         axis.title.x = element_text(margin=margin(t=6),size=22),
@@ -127,7 +127,7 @@ ggplot(PFC_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=me
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -258,14 +258,14 @@ pal[2] = pal3[1]
 pal[3] = pal3[3]
 
 pdf('RT-Pred-Vmax-PFC-emtrends.pdf',height=8,width=10)
-ggplot(PFC_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
+ggplot(PFC_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = Vmax)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
         axis.title.x = element_text(margin=margin(t=6),size=22),
@@ -325,7 +325,7 @@ ggplot(PFC_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=me
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -403,6 +403,8 @@ dev.off()
 ###################
 ### vPFC-HC #######
 ###################
+
+
 
 
 std_of_subject_level_rand_slope = 1
@@ -494,14 +496,14 @@ pal[2] = pal3[1]
 pal[3] = pal3[3]
 
 pdf('RT-Pred-Entropy-AH-emtrends.pdf',height=8,width=10)
-ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = entropy)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -514,14 +516,14 @@ ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,yma
 dev.off()
 
 pdf('RT-Pred-Entropy-PH-emtrends.pdf',height=8,width=10)
-ggplot(PH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = entropy)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -611,7 +613,7 @@ ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
@@ -630,7 +632,7 @@ ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),
@@ -851,14 +853,14 @@ pal[2] = pal3[1]
 pal[3] = pal3[3]
 
 pdf('RT-Pred-Vmax-AH-emtrends.pdf',height=8,width=10)
-ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
+ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = Vmax)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -871,14 +873,14 @@ ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,yma
 dev.off()
 
 pdf('RT-Pred-Vmax-PH-emtrends.pdf',height=8,width=10)
-ggplot(PH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
+ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=Vmax)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = Vmax)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -968,7 +970,7 @@ ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
@@ -987,7 +989,7 @@ ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),
@@ -1202,14 +1204,14 @@ pal[2] = pal3[1]
 pal[3] = pal3[3]
 
 pdf('RT-Pred-HC-AH-emtrends.pdf',height=8,width=10)
-ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=HC)) + 
+ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=HC)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = HC)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -1222,14 +1224,14 @@ ggplot(AH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,yma
 dev.off()
 
 pdf('RT-Pred-HC-PH-emtrends.pdf',height=8,width=10)
-ggplot(PH_summary, aes(x=last_outcome,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=HC)) + 
+ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=HC)) + 
   geom_point(size=5, position=position_dodge(width=0.5), aes(shape = HC)) + 
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
-  facet_grid(network~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
+  facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
-  xlab('Previous Outcome') +
+  xlab('Network') +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),
         axis.title.y = element_text(margin=margin(r=6),size=22),
@@ -1319,7 +1321,7 @@ ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Anterior Hippocampus') +
   theme(legend.title = element_blank(),
@@ -1338,7 +1340,7 @@ ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mea
   geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
   facet_grid(~dataset,labeller = label_wrap_gen(width=16)) + scale_color_manual(values = pal) + 
   scale_shape_manual(values = c(1,16)) +
-  ylab('<- less - Exploration - more ->') + scale_y_reverse(breaks = c(0, 0.4, 0.8)) +
+  ylab('<- less - Exploration - more ->') + scale_y_reverse() +
   theme_bw(base_size=13) +
   ggtitle('Posterior Hippocampus') +
   theme(legend.title = element_blank(),

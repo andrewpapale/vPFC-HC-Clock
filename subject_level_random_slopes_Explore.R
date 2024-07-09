@@ -189,6 +189,7 @@ if (do_rt_pred_fmri){
     qdf$id <- as.integer(qdf$id)
     qdf <- qdf %>% select(!outcome)
     qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate = estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     #qdf %>% group_by(evt_time) %>% mutate(estimate = quest::winsor(estimate,z.min=2,z.max=2,to.na=TRUE)) %>% ungroup()
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')

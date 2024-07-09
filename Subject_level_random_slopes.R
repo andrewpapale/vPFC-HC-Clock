@@ -258,6 +258,7 @@ if (do_rt_pred_fmri){
       } 
     }
     qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)
@@ -495,6 +496,7 @@ if (do_rt_pred_meg) {
       } 
     }
     qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)

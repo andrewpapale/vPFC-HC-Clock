@@ -253,6 +253,7 @@ if (do_rt_pred_fmri){
       }
     }
     qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
+    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)
@@ -342,7 +343,6 @@ if (do_rt_pred_fmri){
                         run_trial0_neg_inv = -1000 / run_trial0_c,
                         run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv))
     )
-    
     #~ (trial_neg_inv + rt_lag + v_max_wi_lag + v_entropy_wi + fmri_beta + last_outcome)^2 +
     #  rt_lag:last_outcome:fmri_beta +
     #  rt_vmax_lag*trial_neg_inv*fmri_beta +
