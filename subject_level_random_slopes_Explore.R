@@ -260,14 +260,14 @@ if (do_rt_pred_fmri){
     df$id <- as.integer(df$id)
     df <- df %>% group_by(id,run) %>% mutate(v_max_wi_lag = lag(v_max_wi)) %>% ungroup()
     df <- df %>% filter(id %in% qdf$id)
-    qdf <- qdf %>% select(id,estimate,evt_time,network)
+    #qdf <- qdf %>% select(id,estimate,evt_time,network)
     Q <- inner_join(qdf,df,by='id',relationship = "many-to-many") %>% 
-      arrange(id,run,network,run_trial,evt_time) %>% 
+      arrange(id,run,network,run_trial) %>% 
       relocate(run, .after = 'id') %>% 
       relocate(run_trial, .after = 'run')
     
-    Q <- Q %>% arrange(id,run,trial,evt_time)
-    Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
+    Q <- Q %>% arrange(id,run,trial)
+    #Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
     
     
     Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
