@@ -256,7 +256,7 @@ if (do_rt_pred_fmri){
     qdf <- qdf %>% rename(id=level)
     qdf <- qdf %>% group_by(id,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf$id <- as.character(qdf$id)
-    qdf <- qdf %>% select(!outcome)
+    #qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
     df <- df %>%

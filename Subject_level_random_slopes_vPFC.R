@@ -274,7 +274,7 @@ if (do_rt_pred_fmri){
     qdf <- qdf %>% rename(id=level)
     qdf <- qdf %>% group_by(id,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf$id <- as.integer(qdf$id)
-    qdf <- qdf %>% select(!outcome)
+    #qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
     df <- df %>% select(rewFunc,rt_vmax_lag,rt_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
@@ -476,7 +476,7 @@ if (do_rt_pred_meg){
     qdf <- qdf %>% rename(id=level)
     qdf <- qdf %>% group_by(id,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf$id <- as.integer(qdf$id)
-    qdf <- qdf %>% select(!outcome)
+    #qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_meg')
     df <- df %>% select(rewFunc,rt_vmax_lag,rt_lag,ev,score_csv,v_max,last_outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
