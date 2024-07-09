@@ -259,7 +259,7 @@ if (do_rt_pred_fmri){
     }
     #qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
-    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+    qdf <- qdf %>% group_by(id,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf$id <- as.character(qdf$id)
     qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
@@ -498,7 +498,7 @@ if (do_rt_pred_meg) {
     #qdf <- qdf %>% group_by(network,HC_region) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
     qdf$id <- as.character(qdf$id)
-    qdf <- qdf %>% group_by(id,run,trial,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+    qdf <- qdf %>% group_by(id,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
     df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_meg')
