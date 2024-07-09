@@ -10,11 +10,11 @@ library(ggplot2)
 std_of_subject_level_rand_slope = 1
 
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-1.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-1.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-1.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -208,11 +208,11 @@ dev.off()
 ###################
 
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-2.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-2.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-2.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -412,15 +412,15 @@ std_of_subject_level_rand_slope = 1
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-1.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-1.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-1.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-06-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-1.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-1.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
@@ -769,15 +769,15 @@ dev.off()
 # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2023-08-23-vmPFC-HC-network-ranslopes-clock-pred-int-2.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-2.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-2.Rdata')
 emt_mmclock_fmri <- ddq$emtrends_list
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-02-20-vmPFC-HC-network-ranslopes-clock-replication-pred-int-2.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-2.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-2.Rdata')
 emt_mmclock_meg <- ddq$emtrends_list
 #load('/Volumes/Users/Andrew/v14-vPFC-HC-Figures-and-Models/MLM-Models-v14/2024-04-27-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-2.Rdata')
 #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-06-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-2.Rdata')
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-2.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-09-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-2.Rdata')
 emt_explore <- ddq$emtrends_list
 
 
