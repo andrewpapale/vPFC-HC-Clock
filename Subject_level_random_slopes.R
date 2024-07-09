@@ -350,26 +350,26 @@ if (do_rt_pred_fmri){
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model){
-        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+        ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                          RTxO = list(outcome='rt_csv',model_name='model1',
+                          RTxO = list(outcome='rt_csv_sc',model_name='model1',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))#,        
                           # TrxVmax = list(outcome='rt_csv',model_name='model1',
                           #                specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                           
                           ),
                         emtrends_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
+                          RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))#,
                           # TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
                           #                specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
@@ -417,19 +417,19 @@ if (do_rt_pred_fmri){
         
         
       } else if (simple_model){
-        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+        ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))
                         ),
                         emtrends_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                         )
         )
@@ -581,26 +581,26 @@ if (do_rt_pred_meg) {
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model){
-        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+        ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                          RTxO = list(outcome='rt_csv',model_name='model1',
+                          RTxO = list(outcome='rt_csv_sc',model_name='model1',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))#,        
                           # TrxVmax = list(outcome='rt_csv',model_name='model1',
                           #                specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                           
                         ),
                         emtrends_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
+                          RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))#,
                           # TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
                           #                specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
@@ -618,19 +618,19 @@ if (do_rt_pred_meg) {
           save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-slo-notimesplit-',i,'.Rdata')) 
         } 
       } else if (simple_model){
-        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+        ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                         emmeans_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2)))
                         ),
                         emtrends_spec = list(
-                          RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+                          RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
-                          Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
+                          Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                         )
         )
