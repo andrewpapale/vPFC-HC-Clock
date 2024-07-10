@@ -131,8 +131,8 @@ if (do_rand_slopes){
     decode_formula <- formula(~ (1|id))
     #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_sc |id/run))
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + v_entropy_wi_change*HCwithin   + rt_csv_sc  + iti_sc + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id/run))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | id) + (1 | run))
-    decode_formula[[2]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi  |id) + (1 | run))
+    decode_formula[[1]] = formula(~ age + female + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | id) + (1 | run))
+    decode_formula[[2]] = formula(~ age + female + trial_neg_inv_sc + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi  |id) + (1 | run))
     #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | rewFunc) + (1|id/rewFunc))
     #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
     
@@ -216,8 +216,8 @@ if (do_rand_slopes){
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi_lag*HCwithin  + v_entropy_wi_change_lag*HCwithin + rt_csv_sc  + iti_lag_sc + last_outcome*HCwithin + HCwithin + HCbetween + (1 + HCwithin*v_max_wi_lag  |id/run))
     #decode_formula[[3]] = formula(~ age + female + v_entropy_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_entropy_wi | rewFunc) + (1|id/rewFunc))
     #decode_formula[[4]] = formula(~ age + female + v_max_wi + trial_neg_inv_sc + outcome + last_outcome + rt_csv_sc + iti_sc + iti_prev_sc + (1 + v_max_wi | rewFunc) + (1 |  id/rewFunc))
-    decode_formula[[1]] = formula(~ age + female + v_entropy_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_entropy_wi |id) + (1|run))
-    decode_formula[[2]] = formula(~ age + female + v_max_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_max_wi |id) + (1|run))
+    decode_formula[[1]] = formula(~ age + female + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_entropy_wi |id) + (1|run))
+    decode_formula[[2]] = formula(~ age + female + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_max_wi |id) + (1|run))
     #decode_formula[[3]] = formula(~ age + female + v_max_wi + v_entropy_wi + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_entropy_wi + v_max_wi |id) + (1|run))
     #decode_formula[[3]] = formula(~ age + female + v_max_wi + v_entropy_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1 + v_max_wi + v_entropy_wi  |id) + (1 | run))
     
@@ -236,7 +236,7 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata'))
   }
 }
 
@@ -244,7 +244,7 @@ if (do_rand_slopes){
 if (do_rt_pred_fmri){
   for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -273,6 +273,7 @@ if (do_rt_pred_fmri){
     #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
     qdf <- qdf %>% group_by(id,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     qdf$id <- as.integer(qdf$id)
     #qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
@@ -396,9 +397,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-',i,'.Rdata'))
         } else if (j==2){
-          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-slo-notimesplit-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-slo-notimesplit-nofixedeffect-',i,'.Rdata'))
         }
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
@@ -425,7 +426,7 @@ if (do_rt_pred_fmri){
           save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-pred-rt_csv_sc-slo-simple-',i,'.Rdata'))
         }
       } else if (mod_trial_model){
-        ddq <- mixed_by(Q2, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+        ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                         tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE)
         )
@@ -446,7 +447,7 @@ if (do_rt_pred_fmri){
 if (do_rt_pred_meg){
   for (i in 1:2){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -475,6 +476,7 @@ if (do_rt_pred_meg){
     #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate & !rhs) %>% rename(estimate=estimate1)
     qdf <- qdf %>% rename(id=level)
     qdf <- qdf %>% group_by(id,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+    qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     qdf$id <- as.integer(qdf$id)
     #qdf <- qdf %>% select(!outcome)
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
@@ -598,9 +600,9 @@ if (do_rt_pred_meg){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-',i,'.Rdata'))
         } else if (j==2){
-          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-slo-notimesplit-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-slo-notimesplit-nofixedeffect-',i,'.Rdata'))
         }
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
