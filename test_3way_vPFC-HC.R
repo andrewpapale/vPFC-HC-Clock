@@ -8,8 +8,8 @@ library(tidyverse)
 
 
 
-do_HC2vPFC_clock = TRUE
-do_vPFC_HC = FALSE
+do_HC2vPFC_clock = FALSE
+do_vPFC_HC = TRUE
 
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -132,21 +132,18 @@ if (do_HC2vPFC_clock){
   
   qT <- c(-0.7,0.43)
   
-  if (do_network){
-    
-    splits = c('evt_time','network','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1:length(decode_formula)){
-      setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-      df0 <- decode_formula[[i]]
-      print(df0)
-      ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
-                      padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
-      )
-      curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-3way-',i,'.Rdata'))
-    }
+  
+  splits = c('evt_time','network','HC_region')
+  source("~/fmri.pipeline/R/mixed_by.R")
+  for (i in 1:length(decode_formula)){
+    setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+    df0 <- decode_formula[[i]]
+    print(df0)
+    ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                    padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                    tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
+    curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-3way-',i,'.Rdata'))
   }
 }
 
