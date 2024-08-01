@@ -6,7 +6,7 @@ library(ggplot2)
 
 # 2024-06-27 AndyP
 # Plotting emmeans and emtrends for B2B
-do_vPFC_entropy = FALSE
+do_vPFC_entropy = TRUE
 do_vPFC_vmax = FALSE
 do_vPFC_HC_entropy = TRUE
 do_vPFC_HC_vmax = FALSE
@@ -1540,16 +1540,27 @@ ddf1_AH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & 
 ddf1_AH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='AH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
 ddf1_PH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
 ddf1_PH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
+ddf1_AH_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN' & HC_region=='AH') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
 emt_mmclock_fmri <- ddq$emtrends_list
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-1.Rdata')
 ddf2_AH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='AH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
 ddf2_AH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='AH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
 ddf2_PH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
 ddf2_PH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
+ddf2_AH_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN' & HC_region=='AH') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
 emt_mmclock_meg <- ddq$emtrends_list
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-HC-network-Explore-ranslopes-clock-pred-int-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
 ddf3_AH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='AH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
 ddf3_AH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='AH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
 ddf3_PH_3way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope:last_outcomeReward')
 ddf3_PH_2way <- ddq$coef_df_reml %>% filter((network=='DMN' | network=='LIM') & HC_region=='PH') %>% filter(term=='rt_lag_sc:subj_level_rand_slope')
+ddf3_AH_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN' & HC_region=='AH') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
 emt_explore <- ddq$emtrends_list
+
+
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
+ddf1_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-1.Rdata')
+ddf2_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
+ddf3_RTvmax <- ddq$coef_df_reml %>% filter(network=='DMN') %>% filter(term=='subj_level_rand_slope:rt_vmax_lag_sc')
