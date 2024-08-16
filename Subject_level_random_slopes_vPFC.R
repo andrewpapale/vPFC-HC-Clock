@@ -374,7 +374,7 @@ if (do_rt_pred_fmri){
                           Vmax = list(outcome='rt_csv_sc', model_name='model1', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                           TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
-                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+                                         specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           RTxO = list(outcome='rt_csv_sc',model_name='model1',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2)))        
                           
@@ -385,11 +385,11 @@ if (do_rt_pred_fmri){
                           Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
                                       specs=formula(~rt_vmax_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2))),
                           TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
-                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+                                         specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
-                                           specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(subj_level_rand_slope = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                           TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'subj_level_rand_slope',
-                                           specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+                                          specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:subj_level_rand_slope), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                           RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
                                       specs=formula(~rt_lag_sc:last_outcome:subj_level_rand_slope), at=list(subj_level_rand_slope=c(-2,-1,0,1,2)))
                           
@@ -579,10 +579,11 @@ if (do_rt_pred_meg){
     print(i)
     for (j in 1:length(decode_formula)){
       print(j)
+      # "parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics", "fitted", and "residuals"
       if (!simple_model && !mod_trial_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                         padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                        tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),calculate = c("parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics", "fitted","residuals"),
                         emmeans_spec = list(
                           RT = list(outcome='rt_csv_sc', model_name='model1', 
                                     specs=formula(~rt_lag_sc:subj_level_rand_slope), at = list(subj_level_rand_slope=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
@@ -613,16 +614,42 @@ if (do_rt_pred_meg){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         
-        browser()
         if (j==1){
           zq <- Q2 %>% filter(network=='DMN')
           m_dmn <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          rfc <- 0
+          while (any(grepl("failed to converge", m_dmn@optinfo$conv$lme4$messages))) {
+            # print(md@optinfo$conv$lme4$conv)
+            ss <- getME(md, c("theta", "fixef"))
+            lmod <- lmer_control
+            lmod$optimizer <- "bobyqa" # produces convergence more reliably
+            m_dmn <- update(m_dmn, start = ss, control = lmod)
+            rfc <- rfc + 1 # increment refit counter
+          }
           am_dmn <- anova(m_dmn)
           zq <- Q2 %>% filter(network=='CTR')
           m_ctr <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          rfc <- 0
+          while (any(grepl("failed to converge", m_ctr@optinfo$conv$lme4$messages))) {
+            # print(md@optinfo$conv$lme4$conv)
+            ss <- getME(md, c("theta", "fixef"))
+            lmod <- lmer_control
+            lmod$optimizer <- "bobyqa" # produces convergence more reliably
+            m_ctr <- update(m_ctr, start = ss, control = lmod)
+            rfc <- rfc + 1 # increment refit counter
+          }
           am_ctr <- anova(m_ctr)
           zq <- Q2 %>% filter(network=='LIM')
           m_lim <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          rfc <- 0
+          while (any(grepl("failed to converge", m_lim@optinfo$conv$lme4$messages))) {
+            # print(md@optinfo$conv$lme4$conv)
+            ss <- getME(md, c("theta", "fixef"))
+            lmod <- lmer_control
+            lmod$optimizer <- "bobyqa" # produces convergence more reliably
+            m_lim <- update(m_lim, start = ss, control = lmod)
+            rfc <- rfc + 1 # increment refit counter
+          }
           am_lim <- anova(m_lim)
           save(am_dmn,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn-anova-',i,'.Rdata'))
           save(am_ctr,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr-anova-',i,'.Rdata'))

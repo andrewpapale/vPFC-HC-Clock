@@ -17,9 +17,9 @@ std_of_subject_level_rand_slope = 1
 if (do_vPFC_entropy){
   # model iterations 1=HC_within:v_entropy, 2=HC_within:v_max_wi, 3=HC_within (not currently reported)
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-1.Rdata')
-  load('2024-08-01-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-13-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
   emt_mmclock_fmri <- ddq$emtrends_list
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-02-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-13-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
   emt_mmclock_meg <- ddq$emtrends_list
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-01-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
