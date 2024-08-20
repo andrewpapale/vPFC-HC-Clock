@@ -288,7 +288,7 @@ if (do_Explore){
   
   decode_formula <- NULL
   decode_formula[[1]] <- formula(~ vmPFC_within + vmPFC_between + (1|id/run))
-  decode_formula[[2]] <- formula(~ age + female + vmPFC_within + vmPFC_between + (1 + vmPFC_within | id/run))
+  decode_formula[[2]] <- formula(~ age + gender + vmPFC_within + vmPFC_between + (1 + vmPFC_within | id/run))
   qT <- c(-0.7,0.43)
   
   splits = c('evt_time','network','HC_region')
