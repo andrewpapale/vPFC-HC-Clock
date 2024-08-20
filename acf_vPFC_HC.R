@@ -5,8 +5,9 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(ggplot2)
 
-do_MMClock <- TRUE
+do_MMClock <- FALSE
 do_Explore <- TRUE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -19,7 +20,7 @@ if (do_MMClock){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
   vmPFC <- clock_comb
-  #vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -110,10 +111,428 @@ if (do_MMClock){
     select(id,run,trial,evt_time,vmPFC_within,network) %>% 
     pivot_wider(values_from=vmPFC_within,names_from=evt_time)
   acfPFC <- vmPFC1 %>% 
-         group_by(network) %>%
+         group_by(network) %>% select(!run & !trial & !id) %>%
          nest() %>% 
          mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
-         mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,])))) %>%
-         unnest(data)
+         mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+         unnest(data) %>% ungroup()
   
+  acfPFC <- acfPFC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
+    mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),3),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),3))
+  acfPFC <- acfPFC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
+  acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
+  acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
+  test <- acfPFC %>% filter(evt_time==0 & lags2==0)
+  test <- test1 %>% mutate(HC_region='NA')
+  test <- test1 %>% mutate(dataset='vPFC')
+  
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% rename(HC_decon = decon_mean)
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(HC_decon,na.rm=TRUE)) %>% ungroup() # 12 -> 2
+  hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
+  
+  #vmPFC <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+  hc <- hc %>% select(!decon1)
+  
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
+  df <- df %>% 
+    group_by(id,run) %>%
+    mutate(v_chosen_sc = scale(v_chosen),
+           abs_pe_max_sc = scale(abs(pe_max)),
+           iti_lag_sc = scale(iti_prev),
+           score_sc = scale(score_csv),
+           score_lag_sc = scale(lag(score_csv)),
+           iti_sc = scale(iti_ideal),
+           pe_max_sc = scale(pe_max),
+           pe_max_lag_sc = scale(lag(pe_max)),
+           abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
+           rt_vmax_sc = scale(rt_vmax),
+           ev_sc = scale(ev),
+           ev_lag_sc = scale(lag(ev)),
+           v_entropy_sc = scale(v_entropy),
+           v_entropy_lag_sc = scale(lag(v_entropy)),
+           v_max_lag_sc = scale(lag(v_max)),
+           v_entropy_wi_change_lag = lag(v_entropy_wi_change),
+           abs_rt_vmax_change = abs(rt_vmax_change),
+           rt_vmax_change_bin = case_when(
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
+           ),
+           rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
+             kld4 ==0 ~ NA_real_,
+             kld4 >0 ~ log10(kld4)
+           )) %>% mutate(log10kld4_lag = case_when(
+             kld4_lag==0 ~NA_real_,
+             kld4_lag>0 ~ log10(kld4_lag)
+           ))
+  df <- df %>% group_by(id,run) %>% mutate(expl_longer =(case_when(
+    rt_csv - rt_lag > 1 ~ 'Longer',
+    rt_csv - rt_lag < -1 ~ '0',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(expl_shorter =(case_when(
+    rt_csv - rt_lag > 1 ~ '0',
+    rt_csv - rt_lag < -1 ~ 'Shorter',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
+    rt_csv_sc <= -1 ~ '-1',
+    rt_csv_sc > -1 & rt_csv_sc <= 0 ~ '-0.5',
+    rt_csv_sc > 0 & rt_csv_sc <= 1 ~ '0.5',
+    rt_csv_sc > 1 ~ '1'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+    run_trial <= 15 ~ 'Early',
+    run_trial > 15 & run_trial < 30 ~ 'Middle',
+    run_trial >=30 ~ 'Late',
+  )))
+  
+  df <- df %>% select(id,run,trial,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_lag_sc,rt_csv_sc,rewFunc,iti_lag_sc)
+  
+  hc <- inner_join(hc,df,by=c('id','run','run_trial'))
+  hc$HCwithin[hc$evt_time > hc$rt_csv + hc$iti_ideal] = NA;
+  #vmPFC$HC_decon[vmPFC$evt_time < -(vmPFC$iti_prev)] = NA;
+  #vmPFC$decon_mean[vmPFC$evt_time > vmPFC$rt_csv + vmPFC$iti_ideal] = NA;
+  hc$HCwithin[hc$evt_time < -(hc$iti_prev)] = NA;  
+  
+  # test age & sex
+  demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+  demo <- demo %>% rename(id=lunaid)
+  demo <- demo %>% select(!adult & !scandate)
+  hc <- inner_join(hc,demo,by=c('id'))
+  hc$female <- relevel(as.factor(hc$female),ref='0')
+  hc$age <- scale(hc$age)
+  
+  #vmPFC <- vmPFC %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
+  #vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
+  hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
+    select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
+    pivot_wider(values_from=HCwithin,names_from=evt_time)
+  acfHC <- hc1 %>% 
+    group_by(HC_region) %>% select(!run & !trial & !id) %>%
+    nest() %>% 
+    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+    unnest(data) %>% ungroup()
+  
+  acfHC <- acfHC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
+    mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),2),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),2))
+  acfHC <- acfHC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
+  acfHC <- acfHC %>% rename(acf=value,evt_time=name)
+  acfHC$evt_time <- as.numeric(acfHC$evt_time)
+  test1 <- acfHC %>% filter(evt_time==0 & lags2==0)
+  test1 <- test1 %>% mutate(network='NA')
+  test1 <- test1 %>% mutate(dataset='HC')
+  
+  dq <- rbind(test,test1)
+}
+
+
+if (do_Explore){
+  rm(Q)
+  load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
+  vmPFC <- md %>% filter(evt_time > -5 & evt_time < 5)
+  rm(md)
+  vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
+  vmPFC <- vmPFC %>% mutate(network = case_when(
+    atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
+    atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
+    atlas_value==55 | atlas_value==160 | atlas_value==56 | atlas_value==159 ~ 'LIM'
+  )) %>% mutate(symmetry_group=case_when(
+    atlas_value==67 | atlas_value==171 ~ 6,
+    atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 1,
+    atlas_value==89 | atlas_value==194 ~ 7,
+    atlas_value==88 | atlas_value==192 ~ 5,
+    atlas_value==84 | atlas_value==191 ~ 4,
+    atlas_value==86 | atlas_value==161 ~ 2,
+    atlas_value==55 | atlas_value==160 ~ 8,
+    atlas_value==56 | atlas_value==159 ~ 3
+  ))
+  vmPFC <- vmPFC %>% group_by(id,run,trial,evt_time,network) %>% summarize(decon1 = mean(vmPFC_decon,na.rm=TRUE)) %>% ungroup()
+  vmPFC <- vmPFC %>% group_by(id,run) %>% mutate(vmPFC_within = scale(decon1), vmPFC_between = mean(decon1,na.rm=TRUE)) %>% ungroup()
+
+  
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
+  df <- df %>%
+    group_by(id,run_number) %>%
+    arrange(id, run_number, trial) %>%
+    mutate(condition_trial = run_trial-floor(run_trial/40.5)*40,
+           condition_trial_neg_inv = -1000 / condition_trial,
+           condition_trial_neg_inv_sc = as.vector(scale(condition_trial_neg_inv)),
+    ) %>% ungroup()
+  df <- df %>%
+    group_by(id) %>% 
+    mutate(v_entropy_sc_r = scale(v_entropy)) %>% ungroup() %>%
+    group_by(id, run) %>% 
+    mutate(v_chosen_sc = scale(v_chosen),
+           abs_pe_max_sc = scale(abs(pe_max)),
+           score_sc = scale(score_csv),
+           iti_sc = scale(iti_ideal),
+           iti_lag_sc = lag(iti_sc),
+           v_chosen_sc = scale(v_chosen),
+           pe_max_sc = scale(pe_max),
+           pe_max_lag_sc = scale(lag(pe_max)),
+           abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
+           rt_vmax_sc = scale(rt_vmax),
+           ev_sc = scale(ev),
+           v_entropy_sc = scale(v_entropy),
+           v_max_lag_sc = scale(lag(v_max)),
+           v_entropy_wi_change_lag = lag(v_entropy_wi_change),
+           abs_rt_vmax_change = abs(rt_vmax_change),
+           rt_vmax_change_bin = case_when(
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
+           ),
+           v_entropy_wi_change_bin = case_when(
+             v_entropy_wi_change < -0.5 ~ 'Decrease',
+             v_entropy_wi_change > 0.5  ~ 'Increase',
+             v_entropy_wi_change >= -0.5 & v_entropy_wi_change <= 0.5 ~ 'No Change'
+           ),
+           rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
+             kld4 ==0 ~ NA_real_,
+             kld4 >0 ~ log10(kld4)
+           )) %>% mutate(log10kld4_lag = case_when(
+             kld4_lag==0 ~NA_real_,
+             kld4_lag>0 ~ log10(kld4_lag)
+           ))
+  df <- df %>% group_by(id,run) %>% mutate(expl_longer =(case_when(
+    rt_csv - rt_lag > 1 ~ 'Longer',
+    rt_csv - rt_lag < -1 ~ '0',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(expl_shorter =(case_when(
+    rt_csv - rt_lag > 1 ~ '0',
+    rt_csv - rt_lag < -1 ~ 'Shorter',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
+    rt_csv_sc <= -1 ~ '-1',
+    rt_csv_sc > -1 & rt_csv_sc <= 0 ~ '-0.5',
+    rt_csv_sc > 0 & rt_csv_sc <= 1 ~ '0.5',
+    rt_csv_sc > 1 ~ '1'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+    run_trial <= 13 ~ 'Early',
+    run_trial > 13 & run_trial < 26 ~ 'Middle',
+    run_trial >=26 ~ 'Late',
+  )))
+  df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
+                                                       total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
+  
+  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
+  df$id <- as.character(df$id)
+  vmPFC <- full_join(vmPFC,df,by=c('id','run','trial'))
+  vmPFC <- vmPFC %>% mutate(block = case_when(trial <= 40 ~ 1, 
+                                      trial > 40 & trial <= 80 ~ 2,
+                                      trial > 80 & trial <=120 ~ 3, 
+                                      trial > 120 & trial <=160 ~ 4,
+                                      trial > 160 & trial <=200 ~ 5,
+                                      trial > 200 & trial <=240 ~ 6))
+  vmPFC <- vmPFC %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                           trial > 40 & trial <= 80 ~ trial-40,
+                                           trial > 80 & trial <=120 ~ trial-80, 
+                                           trial > 120 & trial <=160 ~ trial-120,
+                                           trial > 160 & trial <=200 ~ trial-160,
+                                           trial > 200 & trial <=240 ~ trial-200))
+  vmPFC <- vmPFC %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
+                    run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                    run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  #Q <- inner_join(Q,hc,by=c('id','run','trial','evt_time'))
+  #rm(hc)
+  #Q$HC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  vmPFC$vmPFC_within[vmPFC$evt_time > vmPFC$rt_csv + vmPFC$iti_ideal] = NA
+  #Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  #Q$HC_decon[Q$evt_time < -Q$iti_prev] = NA
+  vmPFC$vmPFC_within[vmPFC$evt_time < -vmPFC$iti_prev] = NA
+  vmPFC <- vmPFC %>% arrange(id,run,trial,evt_time)
+  vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 4)
+  
+  
+  vmPFC$rt_bin <- relevel(as.factor(vmPFC$rt_bin),ref='-0.5')
+  vmPFC$trial_bin <- relevel(as.factor(vmPFC$trial_bin),ref='Middle')
+  
+  demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
+  demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
+  demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
+  demo$gender <- relevel(as.factor(demo$gender),ref='M')
+  demo$age <- scale(demo$age)
+  demo$wtar <- scale(demo$wtar)
+  demo$education_yrs <- scale(demo$education_yrs)
+  
+  vmPFC <- merge(demo,vmPFC,by='id')
+  #Q <- Q %>% filter(total_earnings_split=='richer')
+  vmPFC$group <- relevel(factor(vmPFC$group),ref='HC')
+  vmPFC <- vmPFC %>% filter(group!='ATT')
+  vmPFC <- vmPFC %>% filter(group=='HC')
+  vmPFC <- vmPFC %>% filter(!is.na(rewFunc))
+  #Q <- Q %>% filter(trial > 10)
+  
+  #Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
+  vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
+  vmPFC1 <- vmPFC %>% group_by(id,run,trial,network) %>% 
+    select(id,run,trial,evt_time,vmPFC_within,network) %>% 
+    pivot_wider(values_from=vmPFC_within,names_from=evt_time)
+  acfPFC <- vmPFC1 %>% 
+    group_by(network) %>% select(!run & !trial & !id) %>%
+    nest() %>% 
+    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+    unnest(data) %>% ungroup()
+  
+  acfPFC <- acfPFC %>% rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
+    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),3),
+           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),3)
+    )
+  acfPFC <- acfPFC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
+  acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
+  acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
+  test <- acfPFC %>% filter(evt_time==0 & lags2==0)
+  test <- test1 %>% mutate(HC_region='NA')
+  test <- test1 %>% mutate(dataset='vPFC')
+  
+  
+  
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
+  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% rename(HC_decon = decon_mean)
+  hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(HC_decon,na.rm=TRUE)) %>% ungroup() # 12 -> 2
+  hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
+  df <- df %>%
+    group_by(id,run_number) %>%
+    arrange(id, run_number, trial) %>%
+    mutate(condition_trial = run_trial-floor(run_trial/40.5)*40,
+           condition_trial_neg_inv = -1000 / condition_trial,
+           condition_trial_neg_inv_sc = as.vector(scale(condition_trial_neg_inv)),
+    ) %>% ungroup()
+  df <- df %>%
+    group_by(id) %>% 
+    mutate(v_entropy_sc_r = scale(v_entropy)) %>% ungroup() %>%
+    group_by(id, run) %>% 
+    mutate(v_chosen_sc = scale(v_chosen),
+           abs_pe_max_sc = scale(abs(pe_max)),
+           score_sc = scale(score_csv),
+           iti_sc = scale(iti_ideal),
+           iti_lag_sc = lag(iti_sc),
+           v_chosen_sc = scale(v_chosen),
+           pe_max_sc = scale(pe_max),
+           pe_max_lag_sc = scale(lag(pe_max)),
+           abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
+           rt_vmax_sc = scale(rt_vmax),
+           ev_sc = scale(ev),
+           v_entropy_sc = scale(v_entropy),
+           v_max_lag_sc = scale(lag(v_max)),
+           v_entropy_wi_change_lag = lag(v_entropy_wi_change),
+           abs_rt_vmax_change = abs(rt_vmax_change),
+           rt_vmax_change_bin = case_when(
+             abs_rt_vmax_change < 4/24 ~ 'No Change',
+             abs_rt_vmax_change >= 4/24 ~ 'Change'
+           ),
+           v_entropy_wi_change_bin = case_when(
+             v_entropy_wi_change < -0.5 ~ 'Decrease',
+             v_entropy_wi_change > 0.5  ~ 'Increase',
+             v_entropy_wi_change >= -0.5 & v_entropy_wi_change <= 0.5 ~ 'No Change'
+           ),
+           rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
+             kld4 ==0 ~ NA_real_,
+             kld4 >0 ~ log10(kld4)
+           )) %>% mutate(log10kld4_lag = case_when(
+             kld4_lag==0 ~NA_real_,
+             kld4_lag>0 ~ log10(kld4_lag)
+           ))
+  df <- df %>% group_by(id,run) %>% mutate(expl_longer =(case_when(
+    rt_csv - rt_lag > 1 ~ 'Longer',
+    rt_csv - rt_lag < -1 ~ '0',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(expl_shorter =(case_when(
+    rt_csv - rt_lag > 1 ~ '0',
+    rt_csv - rt_lag < -1 ~ 'Shorter',
+    rt_csv - rt_lag < 1 & rt_csv - rt_lag > -1 ~ '0'
+  )))
+  df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
+    rt_csv_sc <= -1 ~ '-1',
+    rt_csv_sc > -1 & rt_csv_sc <= 0 ~ '-0.5',
+    rt_csv_sc > 0 & rt_csv_sc <= 1 ~ '0.5',
+    rt_csv_sc > 1 ~ '1'
+  )))
+  df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+    run_trial <= 13 ~ 'Early',
+    run_trial > 13 & run_trial < 26 ~ 'Middle',
+    run_trial >=26 ~ 'Late',
+  )))
+  df <- df %>% mutate(total_earnings_split = case_when(total_earnings >= median(df$total_earnings,na.rm=TRUE)~'richer',
+                                                       total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
+  
+  df <- df %>% select(total_earnings_split,condition_trial_neg_inv_sc,iti_ideal,rt_lag_sc,iti_lag_sc,iti_prev,iti_sc,v_entropy_wi_change_lag,outcome,ev_sc,v_chosen_sc,last_outcome,rt_csv,rt_bin,rt_vmax_change_sc,trial_bin,rt_csv_sc,run_trial,id,run,v_entropy_wi,v_max_wi,trial_neg_inv_sc,trial,rewFunc)
+  df$id <- as.character(df$id)
+  hc <- full_join(hc,df,by=c('id','run','trial'))
+  hc <- hc %>% mutate(block = case_when(trial <= 40 ~ 1, 
+                                              trial > 40 & trial <= 80 ~ 2,
+                                              trial > 80 & trial <=120 ~ 3, 
+                                              trial > 120 & trial <=160 ~ 4,
+                                              trial > 160 & trial <=200 ~ 5,
+                                              trial > 200 & trial <=240 ~ 6))
+  hc <- hc %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                                   trial > 40 & trial <= 80 ~ trial-40,
+                                                   trial > 80 & trial <=120 ~ trial-80, 
+                                                   trial > 120 & trial <=160 ~ trial-120,
+                                                   trial > 160 & trial <=200 ~ trial-160,
+                                                   trial > 200 & trial <=240 ~ trial-200))
+  hc <- hc %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
+                            run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                            run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  hc$HCwithin[hc$evt_time > hc$rt_csv + hc$iti_ideal] = NA
+  #Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA
+  #Q$HC_decon[Q$evt_time < -Q$iti_prev] = NA
+  hc$HCwithin[hc$evt_time < -hc$iti_prev] = NA
+  hc <- hc %>% arrange(id,run,trial,evt_time)
+  hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
+  
+  
+  hc$rt_bin <- relevel(as.factor(hc$rt_bin),ref='-0.5')
+  hc$trial_bin <- relevel(as.factor(hc$trial_bin),ref='Middle')
+  
+  demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
+  demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)
+  demo <- demo %>% rename(id=registration_redcapid,group=registration_group)
+  demo$gender <- relevel(as.factor(demo$gender),ref='M')
+  demo$age <- scale(demo$age)
+  demo$wtar <- scale(demo$wtar)
+  demo$education_yrs <- scale(demo$education_yrs)
+  
+  hc <- merge(demo,hc,by='id')
+  #Q <- Q %>% filter(total_earnings_split=='richer')
+  hc$group <- relevel(factor(hc$group),ref='HC')
+  hc <- hc %>% filter(group!='ATT')
+  hc <- hc %>% filter(group=='HC')
+  hc <- hc %>% filter(!is.na(rewFunc))
+  #Q <- Q %>% filter(trial > 10)
+  
+  hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
+    select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
+    pivot_wider(values_from=HCwithin,names_from=evt_time)
+  acfHC <- hc1 %>% 
+    group_by(HC_region) %>% select(!run & !trial & !id) %>%
+    nest() %>% 
+    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+    unnest(data) %>% ungroup()
+  
+  acfHC <- acfHC %>%rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
+    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),3),
+           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),3)
+    )  
+  acfHC <- acfHC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
+  acfHC <- acfHC %>% rename(acf=value,evt_time=name)
+  acfHC$evt_time <- as.numeric(acfHC$evt_time)
+  test1 <- acfHC %>% filter(evt_time==0 & lags2==0)
+  test1 <- test1 %>% mutate(network='NA')
+  test1 <- test1 %>% mutate(dataset='HC')
+  
+  dq <- rbind(test,test1)
 }
