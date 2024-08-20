@@ -122,9 +122,9 @@ if (do_MMClock){
   acfPFC <- acfPFC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
   acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
   acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
-  test <- acfPFC %>% filter(evt_time==0 & lags2==0)
-  test <- test1 %>% mutate(HC_region='NA')
-  test <- test1 %>% mutate(dataset='vPFC')
+  test <- acfPFC %>% filter(evt_time==0 & lags1==0)
+  test <- test %>% mutate(HC_region='NA')
+  test <- test %>% mutate(dataset='vPFC')
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
@@ -222,7 +222,7 @@ if (do_MMClock){
   acfHC <- acfHC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
   acfHC <- acfHC %>% rename(acf=value,evt_time=name)
   acfHC$evt_time <- as.numeric(acfHC$evt_time)
-  test1 <- acfHC %>% filter(evt_time==0 & lags2==0)
+  test1 <- acfHC %>% filter(evt_time==0 & lags1==0)
   test1 <- test1 %>% mutate(network='NA')
   test1 <- test1 %>% mutate(dataset='HC')
   
@@ -389,9 +389,9 @@ if (do_Explore){
   acfPFC <- acfPFC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
   acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
   acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
-  test <- acfPFC %>% filter(evt_time==0 & lags2==0)
-  test <- test1 %>% mutate(HC_region='NA')
-  test <- test1 %>% mutate(dataset='vPFC')
+  test <- acfPFC %>% filter(evt_time==0 & lags1==0)
+  test <- test %>% mutate(HC_region='NA')
+  test <- test %>% mutate(dataset='vPFC')
   
   
   
@@ -524,13 +524,13 @@ if (do_Explore){
     unnest(data) %>% ungroup()
   
   acfHC <- acfHC %>%rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
-    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),3),
-           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),3)
-    )  
+    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),2),
+           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),2)
+    )
   acfHC <- acfHC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
   acfHC <- acfHC %>% rename(acf=value,evt_time=name)
   acfHC$evt_time <- as.numeric(acfHC$evt_time)
-  test1 <- acfHC %>% filter(evt_time==0 & lags2==0)
+  test1 <- acfHC %>% filter(evt_time==0 & lags1==0)
   test1 <- test1 %>% mutate(network='NA')
   test1 <- test1 %>% mutate(dataset='HC')
   
