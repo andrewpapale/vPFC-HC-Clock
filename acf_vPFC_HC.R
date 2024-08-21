@@ -7,7 +7,7 @@ library(wesanderson)
 library(tidyverse)
 library(ggplot2)
 
-do_MMClock <- FALSE
+do_MMClock <- TRUE
 do_Explore <- TRUE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
@@ -120,11 +120,11 @@ if (do_MMClock){
   acfPFC <- acfPFC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
     mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),3),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),3))
   acfPFC <- acfPFC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
-  acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
-  acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
-  test <- acfPFC %>% filter(evt_time==0 & lags1==0)
-  test <- test %>% mutate(HC_region='NA')
-  test <- test %>% mutate(dataset='vPFC')
+  acfPFC_Mmc <- acfPFC %>% rename(acf=value,evt_time=name)
+  acfPFC_Mmc$evt_time <- as.numeric(acfPFC_Mmc$evt_time)
+  vPFC_Mmc0 <- acfPFC_Mmc %>% filter(evt_time==0 & lags1==0)
+  vPFC_Mmc0 <- vPFC_Mmc0 %>% mutate(HC_region='NA')
+  vPFC_Mmc0 <- vPFC_Mmc0 %>% mutate(dataset='vPFC')
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
@@ -220,13 +220,13 @@ if (do_MMClock){
   acfHC <- acfHC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
     mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),2),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),2))
   acfHC <- acfHC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
-  acfHC <- acfHC %>% rename(acf=value,evt_time=name)
-  acfHC$evt_time <- as.numeric(acfHC$evt_time)
-  test1 <- acfHC %>% filter(evt_time==0 & lags1==0)
-  test1 <- test1 %>% mutate(network='NA')
-  test1 <- test1 %>% mutate(dataset='HC')
+  acfHC_Mmc <- acfHC %>% rename(acf=value,evt_time=name)
+  acfHC_Mmc$evt_time <- as.numeric(acfHC_Mmc$evt_time)
+  HC_Mmc0 <- acfHC_Mmc %>% filter(evt_time==0 & lags1==0)
+  HC_Mmc0 <- HC_Mmc0 %>% mutate(network='NA')
+  HC_Mmc0 <- HC_Mmc0 %>% mutate(dataset='HC')
   
-  dq <- rbind(test,test1)
+  dq <- rbind(vPFC_Mmc0,HC_Mmc0)
 }
 
 
@@ -388,10 +388,10 @@ if (do_Explore){
     )
   acfPFC <- acfPFC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
   acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
-  acfPFC$evt_time <- as.numeric(acfPFC$evt_time)
-  test <- acfPFC %>% filter(evt_time==0 & lags1==0)
-  test <- test %>% mutate(HC_region='NA')
-  test <- test %>% mutate(dataset='vPFC')
+  acfPFC_Exp$evt_time <- as.numeric(acfPFC_Exp$evt_time)
+  vPFC_Exp0 <- acfPFC_Exp %>% filter(evt_time==0 & lags1==0)
+  vPFC_Exp0 <- vPFC_Exp0 %>% mutate(HC_region='NA')
+  vPFC_Exp0 <- vPFC_Exp0 %>% mutate(dataset='vPFC')
   
   
   
@@ -528,11 +528,11 @@ if (do_Explore){
            lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),2)
     )
   acfHC <- acfHC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
-  acfHC <- acfHC %>% rename(acf=value,evt_time=name)
-  acfHC$evt_time <- as.numeric(acfHC$evt_time)
-  test1 <- acfHC %>% filter(evt_time==0 & lags1==0)
-  test1 <- test1 %>% mutate(network='NA')
-  test1 <- test1 %>% mutate(dataset='HC')
+  acfHC_Exp <- acfHC %>% rename(acf=value,evt_time=name)
+  acfHC_Exp$evt_time <- as.numeric(acfHC_Exp$evt_time)
+  HC_Exp0 <- acfHC_Exp %>% filter(evt_time==0 & lags1==0)
+  HC_Exp0 <- HC_Exp0 %>% mutate(network='NA')
+  HC_Exp0 <- HC_Exp0 %>% mutate(dataset='HC')
   
-  dq <- rbind(test,test1)
+  dq <- rbind(vPFC_Exp0,HC_Exp0)
 }
