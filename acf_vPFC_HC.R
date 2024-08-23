@@ -20,7 +20,7 @@ if (do_MMClock){
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
   vmPFC <- clock_comb
-  vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- vmPFC %>% filter(evt_time > -7 & evt_time < 10)
   rm(clock_comb)
   vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -92,8 +92,8 @@ if (do_MMClock){
   df <- df %>% select(id,run,trial,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_lag_sc,rt_csv_sc,rewFunc,iti_lag_sc)
   
   vmPFC <- inner_join(vmPFC,df,by=c('id','run','run_trial'))
-  vmPFC$vmPFC_decon[vmPFC$evt_time > vmPFC$rt_csv + vmPFC$iti_ideal] = NA;
-  vmPFC$vmPFC_decon[vmPFC$evt_time < -(vmPFC$iti_prev)] = NA;
+  vmPFC$vmPFC_within[vmPFC$evt_time > vmPFC$rt_csv + vmPFC$iti_ideal] = NA;
+  vmPFC$vmPFC_within[vmPFC$evt_time < -(vmPFC$iti_prev)] = NA;
   #vmPFC$decon_mean[vmPFC$evt_time > vmPFC$rt_csv + vmPFC$iti_ideal] = NA;
   #vmPFC$decon_mean[vmPFC$evt_time < -(vmPFC$iti_prev)] = NA;  
   
@@ -106,28 +106,67 @@ if (do_MMClock){
   vmPFC$age <- scale(vmPFC$age)
   
   #vmPFC <- vmPFC %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
-  vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
-  vmPFC1 <- vmPFC %>% group_by(id,run,trial,network) %>% 
-    select(id,run,trial,evt_time,vmPFC_within,network) %>% 
-    pivot_wider(values_from=vmPFC_within,names_from=evt_time)
-  acfPFC <- vmPFC1 %>% 
-         group_by(network) %>% select(!run & !trial & !id) %>%
-         nest() %>% 
-         mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
-         mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
-         unnest(data) %>% ungroup()
+  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% 
+    mutate(vmPFC_lag1 = lag(vmPFC_within,1), 
+           vmPFC_lag2 = lag(vmPFC_within,2), 
+           vmPFC_lag3 = lag(vmPFC_within,3),
+           vmPFC_lag4 = lag(vmPFC_within,4),
+           vmPFC_lag5 = lag(vmPFC_within,5),
+           vmPFC_lag6 = lag(vmPFC_within,6),
+           vmPFC_lead1 = lead(vmPFC_within,1),
+           vmPFC_lead2 = lead(vmPFC_within,2),
+           vmPFC_lead3 = lead(vmPFC_within,3),
+           vmPFC_lead4 = lead(vmPFC_within,4),
+           vmPFC_lead5 = lead(vmPFC_within,5),
+           vmPFC_lead6 = lead(vmPFC_within,6),
+           vmPFC_lead7 = lead(vmPFC_within,7),
+           vmPFC_lead8 = lead(vmPFC_within,8),
+           vmPFC_lead9 = lead(vmPFC_within,9)
+    ) %>% ungroup() %>% filter(evt_time==0)
   
-  acfPFC <- acfPFC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
-    mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),3),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),3))
-  acfPFC <- acfPFC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
-  acfPFC_Mmc <- acfPFC %>% rename(acf=value,evt_time=name)
-  acfPFC_Mmc$evt_time <- as.numeric(acfPFC_Mmc$evt_time)
-  vPFC_Mmc0 <- acfPFC_Mmc %>% filter(evt_time==0 & lags1==0)
-  vPFC_Mmc0 <- vPFC_Mmc0 %>% mutate(HC_region='NA')
-  vPFC_Mmc0 <- vPFC_Mmc0 %>% mutate(dataset='vPFC')
+  vmPFC <- vmPFC %>% group_by(network) %>% summarize(cor_lag0 = cor(vmPFC_within,vmPFC_within,use='complete.obs',method='pearson'),
+                                                     cor_lag1 = cor(vmPFC_within,vmPFC_lag1,use='complete.obs',method='pearson'),
+                                                     cor_lag2 = cor(vmPFC_within,vmPFC_lag2,use='complete.obs',method='pearson'),
+                                                     cor_lag3 = cor(vmPFC_within,vmPFC_lag3,use='complete.obs',method='pearson'),
+                                                     cor_lag4 = cor(vmPFC_within,vmPFC_lag4,use='complete.obs',method='pearson'),
+                                                     cor_lag5 = cor(vmPFC_within,vmPFC_lag5,use='complete.obs',method='pearson'),
+                                                     cor_lag6 = cor(vmPFC_within,vmPFC_lag6,use='complete.obs',method='pearson'),
+                                                     cor_lead1 = cor(vmPFC_within,vmPFC_lead1,use='complete.obs',method='pearson'),
+                                                     cor_lead2 = cor(vmPFC_within,vmPFC_lead2,use='complete.obs',method='pearson'),
+                                                     cor_lead3 = cor(vmPFC_within,vmPFC_lead3,use='complete.obs',method='pearson'),
+                                                     cor_lead4 = cor(vmPFC_within,vmPFC_lead4,use='complete.obs',method='pearson'),
+                                                     cor_lead5 = cor(vmPFC_within,vmPFC_lead5,use='complete.obs',method='pearson'),
+                                                     cor_lead6 = cor(vmPFC_within,vmPFC_lead6,use='complete.obs',method='pearson'),
+                                                     cor_lead7 = cor(vmPFC_within,vmPFC_lead7,use='complete.obs',method='pearson'),
+                                                     cor_lead8 = cor(vmPFC_within,vmPFC_lead8,use='complete.obs',method='pearson'),
+                                                     cor_lead9 = cor(vmPFC_within,vmPFC_lead9,use='complete.obs',method='pearson')
+  ) %>% ungroup()
+  
+  # vmPFC1 <- vmPFC %>% group_by(id,run,trial,network) %>% 
+  #   select(id,run,trial,evt_time,vmPFC_within,network) %>% 
+  #   pivot_wider(values_from=vmPFC_within,names_from=evt_time)
+  # acfPFC <- vmPFC1 %>% 
+  #        group_by(network) %>% select(!run & !trial & !id) %>%
+  #        nest() %>% 
+  #        mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+  #        mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+  #        unnest(data) %>% ungroup()
+  # 
+  # acfPFC <- acfPFC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
+  #   mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),3),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),3))
+  # acfPFC <- acfPFC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
+  # acfPFC_Mmc <- acfPFC %>% rename(acf=value,evt_time=name)
+  # acfPFC_Mmc$evt_time <- as.numeric(acfPFC_Mmc$evt_time)
+  # vPFC_Mmc0 <- acfPFC_Mmc %>% filter(evt_time==0 & ((lags1==0 & lags2==0) | 
+  #                                                     (lags1==1 & lags2==-1) | (lags1==1 & lags2==1) | 
+  #                                                     (lags1==2 & lags2==-2) | (lags1==2 & lags2==2) |
+  #                                                     (lags1==3 & lags2==-3) | (lags1==3 & lags2==3) |
+  #                                                     (lags1==4 & lags2==-4) | (lags1==4 & lags2==4)))
+  vPFC_Mmc <- vmPFC %>% mutate(HC_region='NA')
+  vPFC_Mmc <- vmPFC %>% mutate(dataset='vPFC')
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
-  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% filter(evt_time > -7 & evt_time < 10)
   hc <- hc %>% rename(HC_decon = decon_mean)
   hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(HC_decon,na.rm=TRUE)) %>% ungroup() # 12 -> 2
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
@@ -205,35 +244,73 @@ if (do_MMClock){
   hc$female <- relevel(as.factor(hc$female),ref='0')
   hc$age <- scale(hc$age)
   
-  #vmPFC <- vmPFC %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
-  #vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
-  hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
-    select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
-    pivot_wider(values_from=HCwithin,names_from=evt_time)
-  acfHC <- hc1 %>% 
-    group_by(HC_region) %>% select(!run & !trial & !id) %>%
-    nest() %>% 
-    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
-    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
-    unnest(data) %>% ungroup()
+  #  hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
+  #   select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
+  #   pivot_wider(values_from=HCwithin,names_from=evt_time)
+  # acfHC <- hc1 %>% 
+  #   group_by(HC_region) %>% select(!run & !trial & !id) %>%
+  #   nest() %>% 
+  #   mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+  #   mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+  #   unnest(data) %>% ungroup()
+  # 
+  # acfHC <- acfHC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
+  #   mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),2),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),2))
+  # acfHC <- acfHC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
+  # acfHC_Mmc <- acfHC %>% rename(acf=value,evt_time=name)
+  # acfHC_Mmc$evt_time <- as.numeric(acfHC_Mmc$evt_time)
+  # HC_Mmc0 <- acfHC_Mmc %>% filter(evt_time==0 & ((lags1==0 & lags2==0) | 
+  #                                   (lags1==1 & lags2==-1) | (lags1==1 & lags2==1) | 
+  #                                   (lags1==2 & lags2==-2) | (lags1==2 & lags2==2) |
+  #                                   (lags1==3 & lags2==-3) | (lags1==3 & lags2==3) |
+  #                                   (lags1==4 & lags2==-4) | (lags1==4 & lags2==4)))
   
-  acfHC <- acfHC %>% rename('-4'=V1,'-3'=V2,'-2'=V3,'-1'=V4,'0'=V5,'1'=V6,'2'=V7,'3'=V8,'4'=V9) %>% 
-    mutate(lags1 = rep(c(t(rep(0,9)),t(rep(1,9)),t(rep(2,9)),t(rep(3,9)),t(rep(4,9)),t(rep(5,9))),2),lags2 = rep(c(t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9)),t(seq(-4,4,length.out=9))),2))
-  acfHC <- acfHC %>% pivot_longer(cols=c("-4","-3","-2","-1","0","1","2","3","4"))
-  acfHC_Mmc <- acfHC %>% rename(acf=value,evt_time=name)
-  acfHC_Mmc$evt_time <- as.numeric(acfHC_Mmc$evt_time)
-  HC_Mmc0 <- acfHC_Mmc %>% filter(evt_time==0 & lags1==0)
-  HC_Mmc0 <- HC_Mmc0 %>% mutate(network='NA')
-  HC_Mmc0 <- HC_Mmc0 %>% mutate(dataset='HC')
+  hc <- hc %>% group_by(id,run,trial,HC_region) %>% 
+    mutate(hc_lag1 = lag(HCwithin,1), 
+           hc_lag2 = lag(HCwithin,2), 
+           hc_lag3 = lag(HCwithin,3),
+           hc_lag4 = lag(HCwithin,4),
+           hc_lag5 = lag(HCwithin,5),
+           hc_lag6 = lag(HCwithin,6),
+           hc_lead1 = lead(HC_within,1),
+           hc_lead2 = lead(HCwithin,2),
+           hc_lead3 = lead(HCwithin,3),
+           hc_lead4 = lead(HCwithin,4),
+           hc_lead5 = lead(HCwithin,5),
+           hc_lead6 = lead(HCwithin,6),
+           hc_lead7 = lead(HCwithin,7),
+           hc_lead8 = lead(HCwithin,8),
+           hc_lead9 = lead(HCwithin,9)
+    ) %>% ungroup() %>% filter(evt_time==0)
   
-  dq <- rbind(vPFC_Mmc0,HC_Mmc0)
+  hc <- hc %>% group_by(network) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
+                                                     cor_lag1 = cor(HCwithin,hc_lag1,use='complete.obs',method='pearson'),
+                                                     cor_lag2 = cor(HCwithin,hc_lag2,use='complete.obs',method='pearson'),
+                                                     cor_lag3 = cor(HCwithin,hc_lag3,use='complete.obs',method='pearson'),
+                                                     cor_lag4 = cor(HCwithin,hc_lag4,use='complete.obs',method='pearson'),
+                                                     cor_lag5 = cor(HCwithin,hc_lag5,use='complete.obs',method='pearson'),
+                                                     cor_lag6 = cor(HCwithin,hc_lag6,use='complete.obs',method='pearson'),
+                                                     cor_lead1 = cor(HCwithin,hc_lead1,use='complete.obs',method='pearson'),
+                                                     cor_lead2 = cor(HCwithin,hc_lead2,use='complete.obs',method='pearson'),
+                                                     cor_lead3 = cor(HCwithin,hc_lead3,use='complete.obs',method='pearson'),
+                                                     cor_lead4 = cor(HCwithin,hc_lead4,use='complete.obs',method='pearson'),
+                                                     cor_lead5 = cor(HCwithin,hc_lead5,use='complete.obs',method='pearson'),
+                                                     cor_lead6 = cor(HCwithin,hc_lead6,use='complete.obs',method='pearson'),
+                                                     cor_lead7 = cor(HCwithin,hc_lead7,use='complete.obs',method='pearson'),
+                                                     cor_lead8 = cor(HCwithin,hc_lead8,use='complete.obs',method='pearson'),
+                                                     cor_lead9 = cor(HCwithin,hc_lead9,use='complete.obs',method='pearson')
+  ) %>% ungroup()
+  HC_Mmc0 <- hc %>% mutate(network='NA')
+  HC_Mmc0 <- hc %>% mutate(dataset='HC')
+  
+  dq_Mmc <- rbind(vPFC_Mmc,HC_Mmc)
 }
 
 
 if (do_Explore){
-  rm(Q)
+  rm(vmPFC)
   load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')
-  vmPFC <- md %>% filter(evt_time > -5 & evt_time < 5)
+  vmPFC <- md %>% filter(evt_time > -7 & evt_time < 10)
   rm(md)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   vmPFC <- vmPFC %>% mutate(network = case_when(
@@ -370,29 +447,91 @@ if (do_Explore){
   vmPFC <- vmPFC %>% filter(!is.na(rewFunc))
   #Q <- Q %>% filter(trial > 10)
   
-  #Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
-  vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
-  vmPFC1 <- vmPFC %>% group_by(id,run,trial,network) %>% 
-    select(id,run,trial,evt_time,vmPFC_within,network) %>% 
-    pivot_wider(values_from=vmPFC_within,names_from=evt_time)
-  acfPFC <- vmPFC1 %>% 
-    group_by(network) %>% select(!run & !trial & !id) %>%
-    nest() %>% 
-    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
-    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
-    unnest(data) %>% ungroup()
+  # #Q <- Q %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
+  # vmPFC <- vmPFC %>% group_by(network) %>% mutate(vmPFC_between1 = scale(vmPFC_between)) %>% select(!vmPFC_between) %>% rename(vmPFC_between = vmPFC_between1)
+  # vmPFC1 <- vmPFC %>% group_by(id,run,trial,network) %>% 
+  #   select(id,run,trial,evt_time,vmPFC_within,network) %>% 
+  #   pivot_wider(values_from=vmPFC_within,names_from=evt_time)
+  # acfPFC <- vmPFC1 %>% 
+  #   group_by(network) %>% select(!run & !trial & !id) %>%
+  #   nest() %>% 
+  #   mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+  #   mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+  #   unnest(data) %>% ungroup()
+  # 
+  # acfPFC <- acfPFC %>% rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
+  #   mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),3),
+  #          lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),3)
+  #   )
+  # acfPFC <- acfPFC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
+  # acfPFC_Exp <- acfPFC %>% rename(acf=value,evt_time=name)
+  # acfPFC_Exp$evt_time <- as.numeric(acfPFC_Exp$evt_time)
+  # vPFC_Exp0 <- acfPFC_Exp %>% filter(evt_time==0 & ((lags1==0 & lags2==0) | 
+  #                                                     (lags1==1 & lags2==-0.6) | (lags1==1 & lags2==0.6) | 
+  #                                                     (lags1==2 & lags2==-1.2) | (lags1==2 & lags2==1.2) |
+  #                                                     (lags1==3 & lags2==-1.8) | (lags1==3 & lags2==1.8) |
+  #                                                     (lags1==4 & lags2==-2.4) | (lags1==4 & lags2==2.4) |
+  #                                                     (lags1==5 & lags2==-3) | (lags1==5 & lags2==3) |
+  #                                                     (lags1==6 & lags2==-3.6) | (lags1==6 & lags2==3.6))
+  # )
   
-  acfPFC <- acfPFC %>% rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
-    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),3),
-           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),3)
-    )
-  acfPFC <- acfPFC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
-  acfPFC <- acfPFC %>% rename(acf=value,evt_time=name)
-  acfPFC_Exp$evt_time <- as.numeric(acfPFC_Exp$evt_time)
-  vPFC_Exp0 <- acfPFC_Exp %>% filter(evt_time==0 & lags1==0)
-  vPFC_Exp0 <- vPFC_Exp0 %>% mutate(HC_region='NA')
-  vPFC_Exp0 <- vPFC_Exp0 %>% mutate(dataset='vPFC')
+  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% 
+    mutate(vmPFC_lag1 = lag(vmPFC_within,1), 
+           vmPFC_lag2 = lag(vmPFC_within,2), 
+           vmPFC_lag3 = lag(vmPFC_within,3),
+           vmPFC_lag4 = lag(vmPFC_within,4),
+           vmPFC_lag5 = lag(vmPFC_within,5),
+           vmPFC_lag6 = lag(vmPFC_within,6),
+           vmPFC_lag7 = lag(vmPFC_within,7),
+           vmPFC_lag8 = lag(vmPFC_within,8),
+           vmPFC_lag9 = lag(vmPFC_within,9),
+           vmPFC_lag10 = lag(vmPFC_within,10),
+           vmPFC_lead1 = lead(vmPFC_within,1),
+           vmPFC_lead2 = lead(vmPFC_within,2),
+           vmPFC_lead3 = lead(vmPFC_within,3),
+           vmPFC_lead4 = lead(vmPFC_within,4),
+           vmPFC_lead5 = lead(vmPFC_within,5),
+           vmPFC_lead6 = lead(vmPFC_within,6),
+           vmPFC_lead7 = lead(vmPFC_within,7),
+           vmPFC_lead8 = lead(vmPFC_within,8),
+           vmPFC_lead9 = lead(vmPFC_within,9),
+           vmPFC_lead10 = lead(vmPFC_within,10),
+           vmPFC_lead11 = lead(vmPFC_within,11),
+           vmPFC_lead12 = lead(vmPFC_within,12),
+           vmPFC_lead13 = lead(vmPFC_within,13),
+           vmPFC_lead14 = lead(vmPFC_within,14),
+           vmPFC_lead15 = lead(vmPFC_within,15)
+           
+    ) %>% ungroup() %>% filter(evt_time==0)
   
+  vmPFC <- vmPFC %>% group_by(network) %>% summarize(cor_lag0 = cor(vmPFC_within,vmPFC_within,use='complete.obs',method='pearson'),
+                                                     cor_lag1 = cor(vmPFC_within,vmPFC_lag1,use='complete.obs',method='pearson'),
+                                                     cor_lag2 = cor(vmPFC_within,vmPFC_lag2,use='complete.obs',method='pearson'),
+                                                     cor_lag3 = cor(vmPFC_within,vmPFC_lag3,use='complete.obs',method='pearson'),
+                                                     cor_lag4 = cor(vmPFC_within,vmPFC_lag4,use='complete.obs',method='pearson'),
+                                                     cor_lag5 = cor(vmPFC_within,vmPFC_lag5,use='complete.obs',method='pearson'),
+                                                     cor_lag6 = cor(vmPFC_within,vmPFC_lag6,use='complete.obs',method='pearson'),
+                                                     cor_lag7 = cor(vmPFC_within,vmPFC_lag7,use='complete.obs',method='pearson'),
+                                                     cor_lag8 = cor(vmPFC_within,vmPFC_lag8,use='complete.obs',method='pearson'),
+                                                     cor_lag9 = cor(vmPFC_within,vmPFC_lag9,use='complete.obs',method='pearson'),
+                                                     cor_lead1 = cor(vmPFC_within,vmPFC_lead1,use='complete.obs',method='pearson'),
+                                                     cor_lead2 = cor(vmPFC_within,vmPFC_lead2,use='complete.obs',method='pearson'),
+                                                     cor_lead3 = cor(vmPFC_within,vmPFC_lead3,use='complete.obs',method='pearson'),
+                                                     cor_lead4 = cor(vmPFC_within,vmPFC_lead4,use='complete.obs',method='pearson'),
+                                                     cor_lead5 = cor(vmPFC_within,vmPFC_lead5,use='complete.obs',method='pearson'),
+                                                     cor_lead6 = cor(vmPFC_within,vmPFC_lead6,use='complete.obs',method='pearson'),
+                                                     cor_lead7 = cor(vmPFC_within,vmPFC_lead7,use='complete.obs',method='pearson'),
+                                                     cor_lead8 = cor(vmPFC_within,vmPFC_lead8,use='complete.obs',method='pearson'),
+                                                     cor_lead9 = cor(vmPFC_within,vmPFC_lead9,use='complete.obs',method='pearson'),
+                                                     cor_lead10 = cor(vmPFC_within,vmPFC_lead10,use='complete.obs',method='pearson'),
+                                                     cor_lead11 = cor(vmPFC_within,vmPFC_lead11,use='complete.obs',method='pearson'),
+                                                     cor_lead12 = cor(vmPFC_within,vmPFC_lead12,use='complete.obs',method='pearson'),
+                                                     cor_lead13 = cor(vmPFC_within,vmPFC_lead13,use='complete.obs',method='pearson'),
+                                                     cor_lead14 = cor(vmPFC_within,vmPFC_lead14,use='complete.obs',method='pearson'),
+                                                     cor_lead15 = cor(vmPFC_within,vmPFC_lead15,use='complete.obs',method='pearson')
+  ) %>% ungroup()
+  vPFC_Exp <- vmPFC %>% mutate(HC_region='NA')
+  vPFC_Exp <- vmPFC %>% mutate(dataset='vPFC')
   
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
@@ -513,26 +652,88 @@ if (do_Explore){
   hc <- hc %>% filter(!is.na(rewFunc))
   #Q <- Q %>% filter(trial > 10)
   
-  hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
-    select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
-    pivot_wider(values_from=HCwithin,names_from=evt_time)
-  acfHC <- hc1 %>% 
-    group_by(HC_region) %>% select(!run & !trial & !id) %>%
-    nest() %>% 
-    mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
-    mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
-    unnest(data) %>% ungroup()
+  # hc1 <- hc %>% group_by(id,run,trial,HC_region) %>% 
+  #   select(id,run,trial,evt_time,HCwithin,HC_region) %>% 
+  #   pivot_wider(values_from=HCwithin,names_from=evt_time)
+  # acfHC <- hc1 %>% 
+  #   group_by(HC_region) %>% select(!run & !trial & !id) %>%
+  #   nest() %>% 
+  #   mutate(data = map(data, ~acf(., lag.max=5, type="correlation", plot=F,na.action=na.pass))) %>%
+  #   mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,],.x$acf[2,,],.x$acf[3,,],.x$acf[4,,],.x$acf[5,,],.x$acf[6,,])))) %>%
+  #   unnest(data) %>% ungroup()
+  # 
+  # acfHC <- acfHC %>%rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
+  #   mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),2),
+  #          lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),2)
+  #   )
+  # acfHC <- acfHC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
+  # acfHC_Exp <- acfHC %>% rename(acf=value,evt_time=name)
+  # acfHC_Exp$evt_time <- as.numeric(acfHC_Exp$evt_time)
+  # HC_Exp0 <- acfHC_Exp %>% filter(evt_time==0 & ((lags1==0 & lags2==0) | 
+  #                                                  (lags1==1 & lags2==-0.6) | (lags1==1 & lags2==0.6) | 
+  #                                                  (lags1==2 & lags2==-1.2) | (lags1==2 & lags2==1.2) |
+  #                                                  (lags1==3 & lags2==-1.8) | (lags1==3 & lags2==1.8) |
+  #                                                  (lags1==4 & lags2==-2.4) | (lags1==4 & lags2==2.4) |
+  #                                                  (lags1==5 & lags2==-3) | (lags1==5 & lags2==3) |
+  #                                                  (lags1==6 & lags2==-3.6) | (lags1==6 & lags2==3.6))
+  # )
+  hc <- hc %>% group_by(id,run,trial,HC_region) %>% 
+    mutate(hc_lag1 = lag(HCwithin,1), 
+           hc_lag2 = lag(HCwithin,2), 
+           hc_lag3 = lag(HCwithin,3),
+           hc_lag4 = lag(HCwithin,4),
+           hc_lag5 = lag(HCwithin,5),
+           hc_lag6 = lag(HCwithin,6),
+           hc_lag7 = lag(HCwithin,7),
+           hc_lag8 = lag(HCwithin,8),
+           hc_lag9 = lag(HCwithin,9),
+           hc_lag10 = lag(HCwithin,10),
+           hc_lead1 = lead(HCwithin,1),
+           hc_lead2 = lead(HCwithin,2),
+           hc_lead3 = lead(HCwithin,3),
+           hc_lead4 = lead(HCwithin,4),
+           hc_lead5 = lead(HCwithin,5),
+           hc_lead6 = lead(HCwithin,6),
+           hc_lead7 = lead(HCwithin,7),
+           hc_lead8 = lead(HCwithin,8),
+           hc_lead9 = lead(HCwithin,9),
+           hc_lead10 = lead(HCwithin,10),
+           hc_lead11 = lead(HCwithin,11),
+           hc_lead12 = lead(HCwithin,12),
+           hc_lead13 = lead(HCwithin,13),
+           hc_lead14 = lead(HCwithin,14),
+           hc_lead15 = lead(HCwithin,15)
+           
+    ) %>% ungroup() %>% filter(evt_time==0)
   
-  acfHC <- acfHC %>%rename('-3.6'=V1,'-3'=V2,'-2.4'=V3,'-1.8'=V4,'-1.2'=V5,'-0.6'=V6,'0'=V7,'0.6'=V8,'1.2'=V9,'1.8'=V10,'2.4'=V11,'3'=V12,'3.6'=V13) %>% 
-    mutate(lags1 = rep(c(t(rep(0,13)),t(rep(1,13)),t(rep(2,13)),t(rep(3,13)),t(rep(4,13)),t(rep(5,13))),2),
-           lags2 = rep(c(t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1)),t(round(seq(-3.6,3.6,length.out=13),1))),2)
-    )
-  acfHC <- acfHC %>% pivot_longer(cols=c("-3.6","-3","-2.4","-1.8","-1.2","-0.6","0","0.6","1.2","1.8","2.4","3","3.6"))
-  acfHC_Exp <- acfHC %>% rename(acf=value,evt_time=name)
-  acfHC_Exp$evt_time <- as.numeric(acfHC_Exp$evt_time)
-  HC_Exp0 <- acfHC_Exp %>% filter(evt_time==0 & lags1==0)
-  HC_Exp0 <- HC_Exp0 %>% mutate(network='NA')
-  HC_Exp0 <- HC_Exp0 %>% mutate(dataset='HC')
+  hc <- hc %>% group_by(network) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
+                                                     cor_lag1 = cor(HCwithin,hc_lag1,use='complete.obs',method='pearson'),
+                                                     cor_lag2 = cor(HCwithin,hc_lag2,use='complete.obs',method='pearson'),
+                                                     cor_lag3 = cor(HCwithin,hc_lag3,use='complete.obs',method='pearson'),
+                                                     cor_lag4 = cor(HCwithin,hc_lag4,use='complete.obs',method='pearson'),
+                                                     cor_lag5 = cor(HCwithin,hc_lag5,use='complete.obs',method='pearson'),
+                                                     cor_lag6 = cor(HCwithin,hc_lag6,use='complete.obs',method='pearson'),
+                                                     cor_lag7 = cor(HCwithin,hc_lag7,use='complete.obs',method='pearson'),
+                                                     cor_lag8 = cor(HCwithin,hc_lag8,use='complete.obs',method='pearson'),
+                                                     cor_lag9 = cor(HCwithin,hc_lag9,use='complete.obs',method='pearson'),
+                                                     cor_lead1 = cor(HCwithin,hc_lead1,use='complete.obs',method='pearson'),
+                                                     cor_lead2 = cor(HCwithin,hc_lead2,use='complete.obs',method='pearson'),
+                                                     cor_lead3 = cor(HCwithin,hc_lead3,use='complete.obs',method='pearson'),
+                                                     cor_lead4 = cor(HCwithin,hc_lead4,use='complete.obs',method='pearson'),
+                                                     cor_lead5 = cor(HCwithin,hc_lead5,use='complete.obs',method='pearson'),
+                                                     cor_lead6 = cor(HCwithin,hc_lead6,use='complete.obs',method='pearson'),
+                                                     cor_lead7 = cor(HCwithin,hc_lead7,use='complete.obs',method='pearson'),
+                                                     cor_lead8 = cor(HCwithin,hc_lead8,use='complete.obs',method='pearson'),
+                                                     cor_lead9 = cor(HCwithin,hc_lead9,use='complete.obs',method='pearson'),
+                                                     cor_lead10 = cor(HCwithin,hc_lead10,use='complete.obs',method='pearson'),
+                                                     cor_lead11 = cor(HCwithin,hc_lead11,use='complete.obs',method='pearson'),
+                                                     cor_lead12 = cor(HCwithin,hc_lead12,use='complete.obs',method='pearson'),
+                                                     cor_lead13 = cor(HCwithin,hc_lead13,use='complete.obs',method='pearson'),
+                                                     cor_lead14 = cor(HCwithin,hc_lead14,use='complete.obs',method='pearson'),
+                                                     cor_lead15 = cor(HCwithin,hc_lead15,use='complete.obs',method='pearson')
+  ) %>% ungroup()
+  HC_Exp <- hc %>% mutate(network='NA')
+  HC_Exp <- hc %>% mutate(dataset='HC')
   
-  dq <- rbind(vPFC_Exp0,HC_Exp0)
+  dq_Exp <- rbind(vPFC_Exp,HC_Exp)
 }
