@@ -782,4 +782,10 @@ dq_Exp1 <- dq_Exp %>% pivot_longer(cols=starts_with('cor')) %>%
                           name=='cor_lead9'~15
   ))
 
+dq_exp2 <- dq_Exp1 %>% group_by(dataset,lags) %>% summarize(acf = mean(value,na.rm=TRUE), sderracf= sd(value,na.rm=TRUE)/length(value)) %>% ungroup()
+dq_mmc2 <- dq_Mmc1 %>% group_by(dataset,lags) %>% summarize(acf = mean(value,na.rm=TRUE), sderracf= sd(value,na.rm=TRUE)/length(value)) %>% ungroup()
 
+
+
+ggplot(dq_mmc2, aes(x=lags,y=acf,ymin=acf-sderracf,ymax=acf+sderracf,color=dataset,group=dataset)) + geom_point() + geom_line() + geom_errorbar() + ggtitle('MMClock')
+ggplot(dq_exp2, aes(x=lags,y=acf,ymin=acf-sderracf,ymax=acf+sderracf,color=dataset,group=dataset)) + geom_point() + geom_line() + geom_errorbar() + ggtitle('Explore')
