@@ -529,7 +529,7 @@ if (do_Explore){
                                                      cor_lead14 = cor(vmPFC_within,vmPFC_lead14,use='complete.obs',method='pearson'),
                                                      cor_lead15 = cor(vmPFC_within,vmPFC_lead15,use='complete.obs',method='pearson')
   ) %>% ungroup()
-  vPFC_Exp <- vmPFC %>% mutate(HC_region='NA')
+  vmPFC <- vmPFC %>% mutate(HC_region='NA')
   vPFC_Exp <- vmPFC %>% mutate(dataset='vPFC')
   
   
@@ -735,3 +735,51 @@ if (do_Explore){
   
   dq_Exp <- rbind(vPFC_Exp,HC_Exp)
 }
+
+dq_Mmc1 <- dq_Mmc %>% pivot_longer(cols=starts_with('cor')) %>%
+  mutate(lags = case_when(name=='cor_lag0'~0,
+                          name=='cor_lag1'~-1,
+                          name=='cor_lag2'~-2,
+                          name=='cor_lag3'~-3,
+                          name=='cor_lag4'~-4,
+                          name=='cor_lag5'~-5,
+                          name=='cor_lag6'~-6,
+                          name=='cor_lead1'~1,
+                          name=='cor_lead2'~2,
+                          name=='cor_lead3'~3,
+                          name=='cor_lead4'~4,
+                          name=='cor_lead5'~5,
+                          name=='cor_lead6'~6,
+                          name=='cor_lead7'~7,
+                          name=='cor_lead8'~8,
+                          name=='cor_lead9'~9,
+                          ))
+dq_Exp1 <- dq_Exp %>% pivot_longer(cols=starts_with('cor')) %>%
+  mutate(lags = case_when(name=='cor_lag0'~0,
+                          name=='cor_lag1'~-1,
+                          name=='cor_lag2'~-2,
+                          name=='cor_lag3'~-3,
+                          name=='cor_lag4'~-4,
+                          name=='cor_lag5'~-5,
+                          name=='cor_lag6'~-6,
+                          name=='cor_lag6'~-7,
+                          name=='cor_lag6'~-8,
+                          name=='cor_lag6'~-9,
+                          name=='cor_lead1'~1,
+                          name=='cor_lead2'~2,
+                          name=='cor_lead3'~3,
+                          name=='cor_lead4'~4,
+                          name=='cor_lead5'~5,
+                          name=='cor_lead6'~6,
+                          name=='cor_lead7'~7,
+                          name=='cor_lead8'~8,
+                          name=='cor_lead9'~9,
+                          name=='cor_lead9'~10,
+                          name=='cor_lead9'~11,
+                          name=='cor_lead9'~12,
+                          name=='cor_lead9'~13,
+                          name=='cor_lead9'~14,
+                          name=='cor_lead9'~15
+  ))
+
+
