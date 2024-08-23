@@ -162,7 +162,7 @@ if (do_MMClock){
   #                                                     (lags1==2 & lags2==-2) | (lags1==2 & lags2==2) |
   #                                                     (lags1==3 & lags2==-3) | (lags1==3 & lags2==3) |
   #                                                     (lags1==4 & lags2==-4) | (lags1==4 & lags2==4)))
-  vPFC_Mmc <- vmPFC %>% mutate(HC_region='NA')
+  vmPFC <- vmPFC %>% mutate(HC_region='NA')
   vPFC_Mmc <- vmPFC %>% mutate(dataset='vPFC')
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
@@ -272,7 +272,7 @@ if (do_MMClock){
            hc_lag4 = lag(HCwithin,4),
            hc_lag5 = lag(HCwithin,5),
            hc_lag6 = lag(HCwithin,6),
-           hc_lead1 = lead(HC_within,1),
+           hc_lead1 = lead(HCwithin,1),
            hc_lead2 = lead(HCwithin,2),
            hc_lead3 = lead(HCwithin,3),
            hc_lead4 = lead(HCwithin,4),
@@ -283,7 +283,7 @@ if (do_MMClock){
            hc_lead9 = lead(HCwithin,9)
     ) %>% ungroup() %>% filter(evt_time==0)
   
-  hc <- hc %>% group_by(network) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
+  hc <- hc %>% group_by(HC_region) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
                                                      cor_lag1 = cor(HCwithin,hc_lag1,use='complete.obs',method='pearson'),
                                                      cor_lag2 = cor(HCwithin,hc_lag2,use='complete.obs',method='pearson'),
                                                      cor_lag3 = cor(HCwithin,hc_lag3,use='complete.obs',method='pearson'),
@@ -300,8 +300,8 @@ if (do_MMClock){
                                                      cor_lead8 = cor(HCwithin,hc_lead8,use='complete.obs',method='pearson'),
                                                      cor_lead9 = cor(HCwithin,hc_lead9,use='complete.obs',method='pearson')
   ) %>% ungroup()
-  HC_Mmc0 <- hc %>% mutate(network='NA')
-  HC_Mmc0 <- hc %>% mutate(dataset='HC')
+  hc <- hc %>% mutate(network='NA')
+  HC_Mmc <- hc %>% mutate(dataset='HC')
   
   dq_Mmc <- rbind(vPFC_Mmc,HC_Mmc)
 }
@@ -425,7 +425,6 @@ if (do_Explore){
   #Q$HC_decon[Q$evt_time < -Q$iti_prev] = NA
   vmPFC$vmPFC_within[vmPFC$evt_time < -vmPFC$iti_prev] = NA
   vmPFC <- vmPFC %>% arrange(id,run,trial,evt_time)
-  vmPFC <- vmPFC %>% filter(evt_time > -4 & evt_time < 4)
   
   
   vmPFC$rt_bin <- relevel(as.factor(vmPFC$rt_bin),ref='-0.5')
@@ -630,7 +629,6 @@ if (do_Explore){
   #Q$HC_decon[Q$evt_time < -Q$iti_prev] = NA
   hc$HCwithin[hc$evt_time < -hc$iti_prev] = NA
   hc <- hc %>% arrange(id,run,trial,evt_time)
-  hc <- hc %>% filter(evt_time > -4 & evt_time < 4)
   
   
   hc$rt_bin <- relevel(as.factor(hc$rt_bin),ref='-0.5')
@@ -706,7 +704,7 @@ if (do_Explore){
            
     ) %>% ungroup() %>% filter(evt_time==0)
   
-  hc <- hc %>% group_by(network) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
+  hc <- hc %>% group_by(HC_region) %>% summarize(cor_lag0 = cor(HCwithin,HCwithin,use='complete.obs',method='pearson'),
                                                      cor_lag1 = cor(HCwithin,hc_lag1,use='complete.obs',method='pearson'),
                                                      cor_lag2 = cor(HCwithin,hc_lag2,use='complete.obs',method='pearson'),
                                                      cor_lag3 = cor(HCwithin,hc_lag3,use='complete.obs',method='pearson'),
@@ -732,7 +730,7 @@ if (do_Explore){
                                                      cor_lead14 = cor(HCwithin,hc_lead14,use='complete.obs',method='pearson'),
                                                      cor_lead15 = cor(HCwithin,hc_lead15,use='complete.obs',method='pearson')
   ) %>% ungroup()
-  HC_Exp <- hc %>% mutate(network='NA')
+  hc <- hc %>% mutate(network='NA')
   HC_Exp <- hc %>% mutate(dataset='HC')
   
   dq_Exp <- rbind(vPFC_Exp,HC_Exp)
