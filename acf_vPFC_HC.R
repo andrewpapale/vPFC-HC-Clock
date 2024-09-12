@@ -106,7 +106,7 @@ if (do_MMClock){
   vmPFC$age <- scale(vmPFC$age)
   
   #vmPFC <- vmPFC %>% group_by(network,HC_region) %>% mutate(HCbetween1 = scale(HCbetween)) %>% select(!HCbetween) %>% rename(HCbetween=HCbetween1)
-  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% 
+  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% arrange(evt_time) %>%
     mutate(vmPFC_lag1 = lag(vmPFC_within,1), 
            vmPFC_lag2 = lag(vmPFC_within,2), 
            vmPFC_lag3 = lag(vmPFC_within,3),
@@ -265,7 +265,7 @@ if (do_MMClock){
   #                                   (lags1==3 & lags2==-3) | (lags1==3 & lags2==3) |
   #                                   (lags1==4 & lags2==-4) | (lags1==4 & lags2==4)))
   
-  hc <- hc %>% group_by(id,run,trial,HC_region) %>% 
+  hc <- hc %>% group_by(id,run,trial,HC_region) %>% arrange(evt_time) %>%
     mutate(hc_lag1 = lag(HCwithin,1), 
            hc_lag2 = lag(HCwithin,2), 
            hc_lag3 = lag(HCwithin,3),
@@ -474,7 +474,7 @@ if (do_Explore){
   #                                                     (lags1==6 & lags2==-3.6) | (lags1==6 & lags2==3.6))
   # )
   
-  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% 
+  vmPFC <- vmPFC %>% group_by(id,run,trial,network) %>% arrange(evt_time) %>%
     mutate(vmPFC_lag1 = lag(vmPFC_within,1), 
            vmPFC_lag2 = lag(vmPFC_within,2), 
            vmPFC_lag3 = lag(vmPFC_within,3),
@@ -534,7 +534,7 @@ if (do_Explore){
   
   
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
-  hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+  hc <- hc %>% filter(evt_time > -7 & evt_time < 10)
   hc <- hc %>% rename(HC_decon = decon_mean)
   hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>% summarize(decon1 = mean(HC_decon,na.rm=TRUE)) %>% ungroup() # 12 -> 2
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
@@ -675,7 +675,7 @@ if (do_Explore){
   #                                                  (lags1==5 & lags2==-3) | (lags1==5 & lags2==3) |
   #                                                  (lags1==6 & lags2==-3.6) | (lags1==6 & lags2==3.6))
   # )
-  hc <- hc %>% group_by(id,run,trial,HC_region) %>% 
+  hc <- hc %>% group_by(id,run,trial,HC_region) %>% arrange(evt_time) %>%
     mutate(hc_lag1 = lag(HCwithin,1), 
            hc_lag2 = lag(HCwithin,2), 
            hc_lag3 = lag(HCwithin,3),
@@ -789,3 +789,11 @@ dq_mmc2 <- dq_Mmc1 %>% group_by(dataset,lags) %>% summarize(acf = mean(value,na.
 
 ggplot(dq_mmc2, aes(x=lags,y=acf,ymin=acf-sderracf,ymax=acf+sderracf,color=dataset,group=dataset)) + geom_point() + geom_line() + geom_errorbar() + ggtitle('MMClock')
 ggplot(dq_exp2, aes(x=lags,y=acf,ymin=acf-sderracf,ymax=acf+sderracf,color=dataset,group=dataset)) + geom_point() + geom_line() + geom_errorbar() + ggtitle('Explore')
+
+
+dq_mmc2 <- dq_mmc2 %>% mutate(experiment = 'MMClock')
+dq_exp2 <- dq_exp2 %>% mutate(experiment = "Explore")
+
+dq <- rbind(dq_mmc2,dq_exp2)
+
+ggplot(dq, aes(x=lags,y=acf,ymin=acf-sderracf,ymax=acf+sderracf,color=dataset,group=dataset)) + geom_point() + geom_line() + geom_errorbar() + facet_wrap(~experiment)

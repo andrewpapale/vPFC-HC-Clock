@@ -4,11 +4,11 @@ library(stringr)
 ncores = 26
 do_vPFC = TRUE
 do_network = TRUE
-do_symmetry = TRUE
+do_symmetry = FALSE
 do_HC = FALSE
 do_vPFC_HC = FALSE
 do_vPFC_HC_fb = FALSE
-do_HC_anatomy = FALSE
+do_HC_anatomy = TRUE
 if (do_vPFC){
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
@@ -1026,7 +1026,7 @@ if (do_HC_anatomy){
   decode_formula <- NULL
   decode_formula[[1]] <- formula(~ HCwithin + HCbetween + (1|id/run))
   decode_formula[[2]] <- formula(~ HCwithin + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
-  decode_formula[[3]] <- formula(~ age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 | id/run))
+  decode_formula[[3]] <- formula(~ age*HCwithin + gender*HCwithin + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 | id/run))
   #decode_formula[[3]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
   #decode_formula[[4]] <- formula(~ HC_lag1 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1 + HCwithin | id))
   #decode_formula[[5]] <- formula(~ HC_lag2 + age + gender + HCwithin*run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + HCbetween + (1|id))
