@@ -2,13 +2,27 @@
 # vPFC -> HC & HC -> vPFC exploring age effects
 
 library(stringr)
+library(stringr)
+library(pracma)
+library(tidyverse)
+library(data.table)
+library(broom.mixed)
+library(doParallel)
+library(foreach)
+library(iterators)
+library(lme4)
+library(lmerTest)
 
-ncores = 26
-do_vPFC = TRUE
 do_network = TRUE
 do_symmetry = FALSE
 do_anat_clock = TRUE
-do_anat_feedback = TRUE
+do_anat_feedback = FALSE
+
+repo_directory <- "~/clock_analysis"
+HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
+vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
+ncores <- 26
+source("~/fmri.pipeline/R/mixed_by.R")
 
 ####################################
 ### vPFC - HC clock - anatomy ###
@@ -84,7 +98,7 @@ if (do_anat_clock){
     run_trial >=30 ~ 'Late',
   )))
   
-  df <- df %>% select(id,run,trial,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_lag_sc,rt_csv_sc,rewFunc,iti_lag_sc)
+  df <- df %>% select(id,run,trial,last_outcome,run_trial,trial_neg_inv_sc,iti_ideal,iti_prev,rt_csv,rt_csv_sc,iti_sc,rt_lag_sc,rt_csv_sc,rewFunc,iti_lag_sc)
   
   Q <- inner_join(Q,df,by=c('id','run','run_trial'))
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
@@ -107,6 +121,10 @@ if (do_anat_clock){
   decode_formula[[2]] <- formula(~ HCwithin*age + HCwithin*last_outcome + HCbetween + (1 | id/run))
   decode_formula[[3]] <- formula(~ HCwithin*age + HCwithin*female + HCwithin*trial_neg_inv_sc + HCwithin*rt_lag_sc + HCwithin*iti_lag_sc + HCwithin*last_outcome + HCbetween + (1 | id/run))
   decode_formula[[4]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc*age + HCwithin*rt_lag_sc*age + HCwithin*iti_lag_sc*age + HCwithin*last_outcome*age + HCbetween*age + (1 | id/run)) 
+  decode_formula[[5]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc + HCwithin*rt_lag_sc + HCwithin*iti_lag_sc + HCwithin*last_outcome + HCbetween + (1|id/run))
+  decode_formula[[6]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc*age + HCwithin*rt_lag_sc*age + HCwithin*iti_lag_sc*age + HCwithin*last_outcome*age + HCbetween + (1 | id/run)) 
+  decode_formula[[7]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc*age + HCwithin*rt_lag_sc*age + HCwithin*iti_lag_sc*age + HCwithin*last_outcome + HCbetween + (1 | id/run)) 
+  
   #decode_formula[[4]] <- formula(~ HCwithin*age + HCbetween + (1 + HCwithin |id/run))
   #decode_formula[[5]] <- formula(~ HCwithin*age + HCwithin*last_outcome + HCbetween + (1 + HCwithin | id/run))
   #decode_formula[[6]] <- formula(~ HCwithin*age + HCwithin*female + HCwithin*trial_neg_inv_sc + HCwithin*rt_lag_sc + HCwithin*iti_lag_sc + HCwithin*last_outcome + HCbetween + (1 + HCwithin | id/run))
@@ -116,7 +134,7 @@ if (do_anat_clock){
     
     splits = c('evt_time','network','HC_region')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1:length(decode_formula)){
+    for (i in 7:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
@@ -154,14 +172,15 @@ if (do_anat_clock){
   }
 }
 
+
 if (do_anat_feedback){
   rm(Q)
   message("Loading vmPFC medusa data from cache: ", vmPFC_cache_dir)
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_vmPFC_fb_Aug2023.csv.gz')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_fb_Aug2023.Rdata')
   vmPFC <- fb_comb
   vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
   rm(fb_comb)
-  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,region,symmetry_group,network)
+  vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_fb_Aug2023.Rdata')
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
@@ -251,8 +270,9 @@ if (do_anat_feedback){
   decode_formula <- NULL
   decode_formula[[1]] <- formula(~ HCwithin*age + HCbetween + (1|id/run))
   decode_formula[[2]] <- formula(~ HCwithin*age + HCwithin*outcome + HCbetween + (1 | id/run))
-  decode_formula[[3]] <- formula(~ HCwithin*age + HCwithin*female + HCwithin*trial_neg_inv_sc + HCwithin*rt_lag_sc + HCwithin*iti_sc + HCwithin*outcome + HCbetween + (1 | id/run))
-  decode_formula[[4]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc*age + HCwithin*rt_lag_sc*age + HCwithin*iti_sc*age + HCwithin*outcome*age + HCbetween*age + (1 | id/run)) 
+  decode_formula[[3]] <- formula(~ HCwithin*age + HCwithin*female + HCwithin*trial_neg_inv_sc + HCwithin*rt_csv_sc + HCwithin*iti_sc + HCwithin*outcome + HCbetween + (1 | id/run))
+  decode_formula[[4]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc*age + HCwithin*rt_csv_sc*age + HCwithin*iti_sc*age + HCwithin*outcome*age + HCbetween*age + (1 | id/run)) 
+  decode_formula[[5]] <- formula(~ HCwithin*female*age + HCwithin*trial_neg_inv_sc + HCwithin*rt_csv_sc + HCwithin*iti_sc + HCwithin*outcome + HCbetween + (1|id/run))
   #decode_formula[[4]] <- formula(~ HCwithin*age + HCbetween + (1 + HCwithin |id/run))
   #decode_formula[[5]] <- formula(~ HCwithin*age + HCwithin*outcome + HCbetween + (1 + HCwithin | id/run))
   #decode_formula[[6]] <- formula(~ HCwithin*age + HCwithin*female + HCwithin*trial_neg_inv_sc + HCwithin*rt_lag_sc + HCwithin*iti_lag_sc + HCwithin*outcome + HCbetween + (1 + HCwithin | id/run))
@@ -265,7 +285,7 @@ if (do_anat_feedback){
     
     splits = c('evt_time','network','HC_region')
     source("~/fmri.pipeline/R/mixed_by.R")
-    for (i in 1:length(decode_formula)){
+    for (i in 5:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
