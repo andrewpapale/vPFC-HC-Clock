@@ -61,22 +61,20 @@ Q2$trial_bin <- relevel(Q2$trial_bin, ref='Middle')
 demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
 demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
+demo$id <- as.character(demo$id)
 Qfmri <- inner_join(Q2,demo,by=c('id'))
 Qfmri$female <- relevel(as.factor(Qfmri$female),ref='0')
 Qfmri$age <- scale(Qfmri$age)
 
 
 df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_meg')
-df <- df %>% select(rt_vmax_lag,iti_prev,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
-                    v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,iti_ideal,
+df <- df %>% select(rt_vmax_lag,ev,iti_ideal,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
+                    v_max_wi, v_entropy_wi,kld4_lag,kld4,rt_change,total_earnings, rewFunc,rt_csv, pe_max,v_chosen,rewFunc,
                     rt_vmax_lag_sc,rt_vmax_change,outcome,pe_max,kld3_lag,rt_lag_sc,rt_next,v_entropy_wi_change,pe_max_lag) %>% 
   group_by(id, run) %>% 
-  mutate(iti_lag = lag(iti_ideal), rt_sec = rt_csv/1000) %>% 
   mutate(v_chosen_sc = scale(v_chosen),
          abs_pe_max_sc = scale(abs(pe_max)),
          score_sc = scale(score_csv),
-         iti_sc = scale(iti_ideal),
-         iti_prev_sc = scale(iti_prev),
          pe_max_sc = scale(pe_max),
          pe_max_lag_sc = scale(lag(pe_max)),
          abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
@@ -122,6 +120,7 @@ Q2$trial_bin <- relevel(Q2$trial_bin, ref='Middle')
 demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
 demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
+demo$id <- as.character(demo$id)
 Qmeg <- inner_join(Q2,demo,by=c('id'))
 Qmeg$female <- relevel(as.factor(Qmeg$female),ref='0')
 Qmeg$age <- scale(Qmeg$age)
