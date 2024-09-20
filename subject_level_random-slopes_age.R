@@ -131,8 +131,8 @@ Q3 <- rbind(Qmeg,Qfmri)
 
 
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+decode_formula[[1]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
+decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
 qRTV <- quantile(df$rt_vmax_lag,c(0.1,0.9),na.rm=TRUE)
 qH <- NULL
@@ -173,7 +173,7 @@ for (j in 1:length(decode_formula)){
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(age = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                     TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
                                     specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(age = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                    TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'subj_level_rand_slope',
+                    TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
                                     specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                   )
   )
