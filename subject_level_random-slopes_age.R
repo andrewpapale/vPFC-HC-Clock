@@ -2,7 +2,12 @@
 # subject_level_random_slopes_age
 
 
+do_just_age = FALSE
+do_rand_slope = TRUE
+do_rtpred_fmri = TRUE
+do_rtpred_meg = TRUE
 
+if (do_just_age){
 
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
@@ -180,10 +185,18 @@ for (j in 1:length(decode_formula)){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   if (j==1){
-    save(ddq,file=paste0(curr_date,'-Age-vPFC-HC-network-ranslopes-',toalign,'-replication-pred-int-',i,'.Rdata'))
+    save(ddq,file=paste0(curr_date,'Age-network-clock-fmri_meg-pred-rt-int-',i,'.Rdata'))
   } else {
-    save(ddq,file=paste0(curr_date,'-Age-vPFC-HC-network-ranslopes-',toalign,'-replication-pred-slo-',i,'.Rdata')) 
+    save(ddq,file=paste0(curr_date,'Age-network-clock-fmri_meg-pred-rt-slo-',i,'.Rdata')) 
   } 
   
 }
+}
+
+if (do_rtpred_fmri){
+}
+
+if (do_rtpred_meg){
+}
+
 
