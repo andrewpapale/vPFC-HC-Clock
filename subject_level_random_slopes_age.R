@@ -5,6 +5,7 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(fmri.pipeline)
 
 toalign = 'clock'
 do_just_age = FALSE
@@ -154,7 +155,6 @@ qRT <- quantile(df$rt_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 qRS <- quantile(Q$estimate, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
 splits = c('dataset')
-source('~/fmri.pipeline/R/mixed_by.R')
 print(i)
 for (j in 1:length(decode_formula)){
   
@@ -306,8 +306,8 @@ if (do_rand_slopes){
     
     rm(decode_formula)
     decode_formula <- formula(~ (1|id))
-    decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-    decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id) + (1|run))
+    decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + age*HCwithin |id) + (1|run))
+    decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + female*HCwithin |id) + (1|run))
     
   } else if (strcmp(toalign,'clock')){
     df <- df %>% select(ev,iti_ideal,iti_prev,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
@@ -383,21 +383,19 @@ if (do_rand_slopes){
     
     rm(decode_formula)
     decode_formula <- formula(~ (1|id))
-    #decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-    #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
-    #decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin  |id) + (1|run))
+    decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + age*HCwithin  |id) + (1|run))
+    decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + female*HCwithin  |id) + (1|run))
     
-    decode_formula[[1]] = formula(~ age + female + trial_neg_inv_sc + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-    decode_formula[[2]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
-    decode_formula[[3]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin  |id) + (1|run))
+    #decode_formula[[1]] = formula(~ age + female + trial_neg_inv_sc + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
+    #decode_formula[[2]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
+    #decode_formula[[3]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin  |id) + (1|run))
     
   }
   
   
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
-    setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
     print(df0)
     ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,return_models=TRUE,
@@ -405,7 +403,7 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Age-vPFC-HC-network-',toalign,'-ranslopes-',i,'.Rdata'))
   }
 }
 
