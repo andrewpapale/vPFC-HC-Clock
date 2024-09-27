@@ -6,7 +6,9 @@ library(pracma)
 library(wesanderson)
 library(tidyverse)
 library(fmri.pipeline)
-
+repo_directory <- "~/clock_analysis"
+HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
+vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 toalign = 'clock'
 do_just_age = FALSE
 do_rand_slopes = TRUE
