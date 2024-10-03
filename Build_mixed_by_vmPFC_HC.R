@@ -5,6 +5,7 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(fmri.pipeline)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
@@ -19,12 +20,12 @@ do_anat_clock = FALSE
 do_symmetry = FALSE
 do_network = TRUE
 remove_1to10 = FALSE
-do_vif = TRUE
+do_vif = FALSE
 repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
-source("~/fmri.pipeline/R/mixed_by.R")
+#source("~/fmri.pipeline/R/mixed_by.R")
 
 
 
@@ -131,7 +132,7 @@ if (do_vPFC_fb){
   qT <- c(-0.7,0.43)
   if (do_symmetry){
     splits = c('evt_time','symmetry_group')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -165,7 +166,7 @@ if (do_vPFC_fb){
   }
   if (do_network){
     splits = c('evt_time','network')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -290,7 +291,7 @@ if (do_vPFC_clock){
   qT <- c(-0.7,0.43)
   if (do_symmetry){
     splits = c('evt_time','symmetry_group')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -305,7 +306,7 @@ if (do_vPFC_clock){
   }
   if (do_network){
     splits = c('evt_time','network')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       print(decode_formula[[i]])
@@ -518,7 +519,7 @@ if (do_HC_fb){
   
   qT <- c(-0.7,0.43)
   splits = c('evt_time','bin_num')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -668,7 +669,7 @@ if (do_HC_clock){
   # decode_formula[[2]] = formula(~ age + female + v_entropy_sc + v_max_wi + last_outcome + rt_csv_sc + iti_sc + iti_lag_sc + (1 + v_max_wi |run) + (1|id))
   qT <- c(-0.7,0.43)
   splits = c('evt_time','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -817,7 +818,7 @@ if (do_anat_fb){
   if (do_network){
     
     splits = c('evt_time','network','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -842,7 +843,7 @@ if (do_anat_fb){
   if (do_symmetry){
     
     splits = c('evt_time','symmetry_group','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -967,7 +968,7 @@ if (do_anat_clock){
   if (do_network){
     
     splits = c('evt_time','network','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -990,7 +991,7 @@ if (do_anat_clock){
   if (do_symmetry){
     
     splits = c('evt_time','symmetry_group','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -1116,7 +1117,7 @@ if (do_HC2vPFC_fb){
   if (do_network){
     
     splits = c('evt_time','network','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -1133,7 +1134,7 @@ if (do_HC2vPFC_fb){
   if (do_symmetry){
     
     splits = c('evt_time','symmetry_group','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -1294,19 +1295,19 @@ if (do_HC2vPFC_clock){
   #decode_formula[[3]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
   #decode_formula[[4]] = formula(~age * HCwithin + female * HCwithin + abs_pe_max_lag_sc * HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
   
-  qT <- c(-0.7,0.43)
+  qT <- c(-2.62,-0.704,0.29, 0.430)
   
   if (do_network){
     
     splits = c('evt_time','network','HC_region')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
       print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       # emmeans_spec = list(
                       #   H = list(outcome='vmPFC_decon', model_name='model1', 
                       #            specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
@@ -1315,11 +1316,11 @@ if (do_HC2vPFC_clock){
                       #   Tr = list(outcome='vmPFC_decon',model_name='model1',
                       #             specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       # ),
-                      # emtrends_spec = list(
+                      emtrends_spec = list(
                       #   H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #               specs=formula(~v_entropy_sc:HCwithin), at=list(HCwithin=c(-1.5,1.5),v_entropy_sc=c(-1.5,1.5))),
-                      #   T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                      #               specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT)),
+                      T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                     specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT))
                       #   V_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #               specs=formula(~v_max_wi:HCwithin),at=list(v_max_wi=c(-1.5,1,5))),
                       #   O_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
@@ -1328,13 +1329,13 @@ if (do_HC2vPFC_clock){
                       #               specs=formula(~HCbetween:HCwithin),at=list(HCbetween=c(-1.5,1,5))),
                       #   RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #                specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5)))
-                      # )
+                      )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (i==4){
         save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
       } else {
-        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-with-Tr-emtrends-',i,'.Rdata'))
       }
     }
     
@@ -1544,7 +1545,7 @@ if (doTesting){
   qHC1[6] <- mean(qHC$HC_p05SD,na.rm=TRUE)
   
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -1592,7 +1593,7 @@ if (doTesting){
   decode_formula[[1]] <- formula(~ age + female + rt_bin + trial_bin*outcome + expl_shorter + expl_longer + (1|id))
   
   splits = c('evt_time','network')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
