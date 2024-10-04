@@ -1,5 +1,6 @@
 
 library(stringr)
+library(fmri.pipeline)
 
 ncores = 26
 do_vPFC = TRUE
@@ -168,7 +169,7 @@ decode_formula[[5]] = formula(~v_entropy_wi + (1|id))
 qT <- c(-0.8,0.46)
 if (do_network){
   splits = c('evt_time','network')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -182,7 +183,7 @@ if (do_network){
 }
 if (do_symmetry){
   splits = c('evt_time','symmetry_group')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -347,7 +348,7 @@ if (do_HC){
   decode_formula[[4]] = formula(~v_entropy_wi +  (1|id/run))
   qT <- c(-0.8,0.46)
   splits = c('evt_time','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -568,7 +569,7 @@ if (do_vPFC_HC){
   qT2 <- c(-2.62,-0.544,0.372, 0.477)
   qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -802,7 +803,7 @@ if (do_vPFC_HC_fb){
   
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -1051,7 +1052,7 @@ if (do_HC_anatomy){
   
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
