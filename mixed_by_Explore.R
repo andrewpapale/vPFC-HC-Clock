@@ -6,9 +6,9 @@ do_vPFC = TRUE
 do_network = TRUE
 do_symmetry = FALSE
 do_HC = FALSE
-do_vPFC_HC = FALSE
+do_vPFC_HC = TRUE
 do_vPFC_HC_fb = FALSE
-do_HC_anatomy = TRUE
+do_HC_anatomy = FALSE
 if (do_vPFC){
 
 load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
@@ -545,14 +545,14 @@ if (do_vPFC_HC){
   #decode_formula[[1]] = formula(~age*HCwithin + v_entropy_wi*HCwithin + (1|id/run))
   #decode_formula[[2]] = formula(~age*HCwithin + v_max_wi*HCwithin + (1|id/run))
   #decode_formula[[3]] = formula(~age*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[1]] = formula(~age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
-  decode_formula[[2]] = formula(~age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
-  decode_formula[[3]] = formula(~age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-  decode_formula[[4]] = formula(~v_max_wi*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[5]] = formula(~v_entropy_wi*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[6]] = formula(~v_max_wi*HCwithin + outcome + HCbetween + (1|id/run))
-  decode_formula[[7]] = formula(~v_entropy_wi*HCwithin + outcome + HCbetween + (1|id/run))
-  decode_formula[[8]] = formula(~v_entropy_wi*HCwithin + v_entropy_wi_change + HCbetween + (1|id/run))
+  decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
+  decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
+  decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+  decode_formula[[4]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + HCbetween + (1|id/run))
+  decode_formula[[5]] = formula(~trial_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
+  decode_formula[[6]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + outcome + HCbetween + (1|id/run))
+  decode_formula[[7]] = formula(~trial_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + outcome + HCbetween + (1|id/run))
+  decode_formula[[8]] = formula(~trial_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_entropy_wi_change + HCbetween + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_c  (1|id/run))
   # decode_formula[[4]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc +   (1|id/run))
@@ -565,7 +565,8 @@ if (do_vPFC_HC){
   # decode_formula[[1]] = formula(~ v_entropy_sc + (1|id))
   # decode_formula[[2]] = formula(~ v_max_wi + (1|id))
   
-  qT <- c(-0.8,0.46)
+  qT2 <- c(-2.62,-0.544,0.372, 0.477)
+  qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
   splits = c('evt_time','network','HC_region')
   source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
@@ -574,7 +575,7 @@ if (do_vPFC_HC){
     print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       # emmeans_spec = list(
                       #   A = list(outcome='vmPFC_decon',model_name='model1',
                       #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
@@ -585,18 +586,21 @@ if (do_vPFC_HC){
                       #   Y = list(outcome='vmPFC_decon',model_name='model1',
                       #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
                       # )#,
-                      # emtrends_spec = list(
+                      emtrends_spec = list(
                       #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
                       #              specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                      #   HxA = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                      #             specs = formula(~v_entropy_wi:age),at=list(age = c(-1,-0.5,0,0.5,1))),
+                        T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT1)),
+                        T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                    specs=formula(~run_trial0_neg_inv_sc:HCwithin),at=list(run_trial0_neg_inv_sc=qT2))
                       #   H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
                       #            specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
                       #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
                       #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                      # )
+                      )
+      )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial1-10included-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-',i,'.Rdata'))
   }
   
   
