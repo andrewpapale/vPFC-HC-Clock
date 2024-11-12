@@ -3,8 +3,11 @@
 # HC-Explore-MEDuSA
 library(tidyverse)
 
-hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_clock.csv.gz')
-hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_clock.csv.gz')
+#hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_clock.csv.gz')
+#hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_clock.csv.gz')
+
+hc_r <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2/clock_aligned_explore_hc_r.csv.gz')
+hc_l <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2/clock_aligned_explore_hc_l.csv.gz')
 
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
@@ -70,7 +73,7 @@ hc <- inner_join(hc,df,by=c('id','run','trial'))
 hc <- hc %>% select(!decon_median & !decon_sd)
 hc <- hc %>% mutate(HC_region = case_when(atlas_value < 5 ~ 'PH', atlas_value >=5 ~ 'AH'))
 
-save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock.Rdata')
+save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_clock_TRdiv2.Rdata')
 
 
 
@@ -78,8 +81,11 @@ save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_
 ### Feedback ###
 ################
 
-hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_fb.csv.gz')
-hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_fb.csv.gz')
+#hc_r <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/R/Explore_HC_r_fb.csv.gz')
+#hc_l <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/L/Explore_HC_l_fb.csv.gz')
+
+hc_r <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2/feedback_aligned_explore_hc_r.csv.gz')
+hc_l <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2/feedback_aligned_explore_hc_l.csv.gz')
 
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df <- get_trial_data(repo_directory='/Volumes/Users/Andrew/MEDuSA_data_Explore',dataset='explore')
@@ -145,5 +151,5 @@ hc <- inner_join(hc,df,by=c('id','run','trial'))
 hc <- hc %>% select(!decon_median & !decon_sd)
 hc <- hc %>% mutate(HC_region = case_when(atlas_value < 5 ~ 'PH', atlas_value >=5 ~ 'AH'))
 
-save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_fb.Rdata')
+save(hc,file='/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/Explore_HC_fb_TRdiv2.Rdata')
 
