@@ -401,8 +401,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
       } else if (strcmp(toprocess,"symmetry-by-HC")){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter,".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
-        gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=as.factor(HC_region), size=`p, FDR-corrected`)) +
+        gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=as.factor(HC_region))) +
           geom_line(size = 1) + geom_point() +
+          geom_point(aes(size=`p, FDR-corrected`)) +
           geom_errorbar() +
           geom_vline(xintercept = 0, lty = "dashed", color = "#808080", size = 1) + facet_grid(~symmetry_group1) + 
           scale_color_manual(values = pal_hc1,labels=c('Anterior Hippocampus','Posterior Hippocampus')) + xlab(epoch_label) +
@@ -496,7 +497,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           grid.draw(gg2)
         } 
       }
-      if (all(!is.na(edf$`p, FDR-corrected`))){
+      if (all(!is.na(edf$`p, FDR-corrected`)) & !strcmp(toprocess,'symmetry-by-HC')){
         if (all(edf$`p, FDR-corrected`=='p < .001')){
           if (fe=='HCwithin'){
             gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
@@ -518,6 +519,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                     axis.text.x = element_text(size=22),
                     axis.text.y = element_text(size=22)
               )
+            dev.off()
           }else {
             gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
               geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
@@ -540,6 +542,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
                     axis.text.y = element_text(size=22)
               )
           }
+          dev.off()
         } else {
           gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
             geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
@@ -571,9 +574,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
           k <- k+1
         }
         grid.draw(gg2)
+        dev.off()
       }
       
-      dev.off()
     }
   } else if (strcmp(totest,'anatomy')){
     
