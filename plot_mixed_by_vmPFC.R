@@ -429,7 +429,7 @@ if (!strcmp(totest,'online')){
       dev.off()
     } else if (strcmp(toprocess,"symmetry_group")){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
-      pdf(fname, width = 18, height = 3.5)
+      pdf(fname, width = 19.5, height = 4.5)
       gg1 <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, alpha=`p, FDR-corrected`)) +
         geom_vline(xintercept = 0, lty = "dashed", color = "#A9A9A9", size = 1) + facet_grid(~symmetry_group1) + 
         geom_hline(yintercept = 0, lty = 'dashed',color = '#A9A9A9', size=1) + 
@@ -439,12 +439,14 @@ if (!strcmp(totest,'online')){
         scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
         scale_y_continuous(n.breaks=3) + 
         theme(legend.title = element_blank(),
-              axis.title.y = element_text(margin=margin(r=6),size=22),
-              axis.title.x = element_text(margin=margin(t=6),size=22),
-              legend.text = element_text(size=22),
-              axis.text.x = element_text(size=22),
-              axis.text.y = element_text(size=22),
-              panel.spacing = unit(1.5,"lines")
+              panel.background = element_rect(fill='white'),
+              axis.title.y = element_text(margin=margin(r=6),size=28),
+              axis.title.x = element_text(margin=margin(t=6),size=28),
+              legend.text = element_text(size=28),
+              axis.text.x = element_text(size=28),
+              axis.text.y = element_text(size=28),
+              strip.text.x = element_text(size = 28, colour = 'black'),
+              panel.spacing = unit(1,"lines")
               
         ) + 
         scale_color_manual(values = sym_fill_rearranged,guide="none") + 
