@@ -319,8 +319,8 @@ if (do_vPFC_clock){
                                     specs=c("trial_neg_inv_sc"), at = list(trial_neg_inv_sc=qT))
                         ),
                         emtrends_spec = list(
-                          varXage = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_sc',
-                                specs=formula(~v_entropy_sc:age),at=list(v_entropy_sc=c(-1.5,1.5),age=c(-1.5,1.5)))
+                          varXage = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                                specs=formula(~v_entropy_wi:age),at=list(v_entropy_sc=c(-1.5,1.5),age=c(-1.5,1.5)))
                         )
         )
       } else if (i == 2) {
@@ -367,7 +367,7 @@ if (do_vPFC_clock){
                         ),
                         emtrends_spec = list(
                           varXage = list(outcome='vmPFC_decon',model_name='model1', var = 'last_outcome',
-                                         specs=formula(~last_outcome:age),at=list(last_outcome=c(-1.5,1.5),age=c(-1.5,1.5)))
+                                         specs=formula(~last_outcome:age),at=list(age=c(-1.5,1.5)))
                         )
         )
       } else if (i == 5) {
