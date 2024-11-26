@@ -11,8 +11,8 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 toalign = 'clock'
 ncores <- 26
-do_just_age = FALSE
-do_rand_slopes = TRUE
+do_just_age = TRUE
+do_rand_slopes = FALSE
 do_rt_pred_fmri = FALSE
 do_rt_pred_meg = FALSE
 
@@ -77,7 +77,7 @@ demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
 demo$id <- as.character(demo$id)
 Qfmri <- inner_join(Q2,demo,by=c('id'))
-Qfmri$female <- relevel(as.factor(Qfmri$female),ref='0')
+#Qfmri$female <- relevel(as.factor(Qfmri$female),ref='0')
 Qfmri$age <- scale(Qfmri$age)
 
 
@@ -136,17 +136,20 @@ demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
 demo$id <- as.character(demo$id)
 Qmeg <- inner_join(Q2,demo,by=c('id'))
-Qmeg$female <- relevel(as.factor(Qmeg$female),ref='0')
+#Qmeg$female <- relevel(as.factor(Qmeg$female),ref='0')
 Qmeg$age <- scale(Qmeg$age)
 
 Qmeg <- Qmeg %>% mutate(dataset = 'MEG')
 Qfmri <- Qfmri %>% mutate(dataset = 'fMRI')
 Q3 <- rbind(Qmeg,Qfmri)
 
+Q3 <- Q3 %>% mutate(sex = case_when(female==0 ~ 'M',
+                                    female==1 ~ 'F'))
+
 
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
+#decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
 qRTV <- quantile(df$rt_vmax_lag,c(0.1,0.9),na.rm=TRUE)
 qH <- NULL
@@ -166,36 +169,36 @@ for (j in 1:length(decode_formula)){
                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                   emmeans_spec = list(
                     RT = list(outcome='rt_csv_sc', model_name='model1', 
-                              specs=formula(~rt_lag_sc:age), at = list(age=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),
+                              specs=formula(~rt_lag_sc:sex), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
                     Vmax = list(outcome='rt_csv_sc', model_name='model1', 
-                                specs=formula(~rt_vmax_lag_sc:age), at = list(age=c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                                specs=formula(~rt_vmax_lag_sc:sex), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                     RTxO = list(outcome='rt_csv_sc',model_name='model1',
-                                specs=formula(~rt_lag_sc:last_outcome:age), at=list(age=c(-2,-1,0,1,2),rt_lag_sc=c(-2,-1,0,1,2))),        
+                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
                     TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
-                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(age = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                     
                   ),
                   emtrends_spec = list(
                     RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
-                              specs=formula(~rt_lag_sc:age), at = list(age=c(-2,-1,0,1,2))),
+                              specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
                     Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
-                                specs=formula(~rt_vmax_lag_sc:age), at = list(age=c(-2,-1,0,1,2))),
+                                specs=formula(~rt_vmax_lag_sc:sex), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
                     RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
-                                specs=formula(~rt_lag_sc:last_outcome:age), at=list(age=c(-2,-1,0,1,2))),
+                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
                     TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
-                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(age = c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                     TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
-                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(age = c(-2,-1,0,1,2),rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                    TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
-                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
+                    # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
+                    #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                   )
   )
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   if (j==1){
-    save(ddq,file=paste0(curr_date,'Age-network-clock-fmri_meg-pred-rt-int-',i,'.Rdata'))
+    save(ddq,file=paste0(curr_date,'Sex-clock-fmri_meg-pred-rt-int-',i,'.Rdata'))
   } else {
-    save(ddq,file=paste0(curr_date,'Age-network-clock-fmri_meg-pred-rt-slo-',i,'.Rdata')) 
+    save(ddq,file=paste0(curr_date,'Sex-clock-fmri_meg-pred-rt-slo-',i,'.Rdata')) 
   } 
   
 }
