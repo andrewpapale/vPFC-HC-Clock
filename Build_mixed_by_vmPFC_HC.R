@@ -13,8 +13,8 @@ do_vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
-do_HC2vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_fb = TRUE # haven't used in a while, check before running again 2024-05-01 AndyP
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
 do_anat_clock = FALSE
 do_symmetry = FALSE
@@ -1128,7 +1128,7 @@ if (do_HC2vPFC_fb){
       )
       
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-feedback-',i,'.Rdata'))
+      save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-feedback-age-',i,'.Rdata'))
     }
   }
   if (do_symmetry){
@@ -1190,10 +1190,10 @@ if (do_HC2vPFC_clock){
   vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
   hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
-  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
+  hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region,side) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup() # 12 -> 2
   hc <- hc %>% group_by(id,run) %>% mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>% ungroup()
   
-  Q <- merge(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+  Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
   #Q <- Q %>% select(!decon1)
   source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
   df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
@@ -1299,7 +1299,7 @@ if (do_HC2vPFC_clock){
   
   if (do_network){
     
-    splits = c('evt_time','network','HC_region')
+    splits = c('evt_time','network','HC_region','side')
     #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -1335,7 +1335,7 @@ if (do_HC2vPFC_clock){
       if (i==4){
         save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
       } else {
-        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-simple-age-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-sidesplit-age-',i,'.Rdata'))
       }
     }
     

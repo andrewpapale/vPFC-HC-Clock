@@ -8,6 +8,7 @@ do_symmetry = FALSE
 do_HC = FALSE
 do_vPFC_HC = TRUE
 do_vPFC_HC_fb = FALSE
+library(fmri.pipeline)
 
 if (do_vPFC){
   
@@ -168,7 +169,7 @@ if (do_vPFC){
   qT <- c(-0.8,0.46)
   if (do_network){
     splits = c('evt_time','network')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -182,7 +183,7 @@ if (do_vPFC){
   }
   if (do_symmetry){
     splits = c('evt_time','symmetry_group')
-    source("~/fmri.pipeline/R/mixed_by.R")
+    #source("~/fmri.pipeline/R/mixed_by.R")
     for (i in 1:length(decode_formula)){
       setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       df0 <- decode_formula[[i]]
@@ -337,7 +338,7 @@ if (do_HC){
   decode_formula[[4]] = formula(~v_entropy_wi +  (1|id))
   qT <- c(-0.8,0.46)
   splits = c('evt_time','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -551,13 +552,17 @@ if (do_vPFC_HC){
   #decode_formula[[2]] = formula(~HC_lag2 + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id))
   #decode_formula[[3]] = formula(~HC_lag1 + HC_lag2 + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id))
 
-  decode_formula[[1]] = formula(~ HC_lag1 + vmPFC_lag1 + HCwithin + HCbetween + (1 | id/run))    
-  decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))    
-  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))
-  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 | id/run))
-  decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + age + gender + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
-  decode_formula[[7]] = formula(~ HC_lag1 + HCbetween + (1 | id/run)) 
+  #decode_formula[[1]] = formula(~ HC_lag1 + vmPFC_lag1 + HCwithin + HCbetween + (1 | id/run))    
+  #decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))    
+  #decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))
+  #decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HC_lag1*v_max_wi + vmPFC_lag1 + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 | id/run))
+  #decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + age + gender + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome * HCwithin + HCbetween + (1 | id/run))
+  #decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
+  #decode_formula[[7]] = formula(~ HC_lag1 + HCbetween + (1 | id/run)) 
+  decode_formula[[1]] = formula(~ HC_lag1 + HCwithin + HCbetween + (1 | id/run))    
+  decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + HCwithin*v_entropy_wi +  HCbetween + (1 | id/run))    
+  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + HCwithin*v_max_wi +  HCbetween + (1 | id/run))
+  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HCwithin +  HCbetween + (1 | id/run)) 
   #decode_formula[[1]] = formula(~HC_lag2 + vmPFC_lag2 + HCwithin + HCbetween + (1 | id/run))    
   #decode_formula[[2]] = formula(~HC_lag2*v_entropy_wi + vmPFC_lag2 + HCwithin +  HCbetween + (1 | id/run))    
   #decode_formula[[3]] = formula(~HC_lag2*v_max_wi + vmPFC_lag2 + HCwithin +  HCbetween + (1 | id/run)) 
@@ -579,7 +584,7 @@ if (do_vPFC_HC){
   Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -810,7 +815,7 @@ if (do_vPFC_HC_fb){
   
   qT <- c(-0.8,0.46)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]

@@ -13,7 +13,7 @@ repo_directory <- "~/clock_analysis"
 HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
-source("~/fmri.pipeline/R/mixed_by.R")
+library(fmri.pipeline)
 
 
 
@@ -141,11 +141,12 @@ if (do_HC2vPFC_clock){
   #decode_formula[[1]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
   #decode_formula[[2]] = formula(~HC_lag1 + age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
   decode_formula[[1]] = formula(~ HC_lag1 + HCwithin + HCbetween + (1 | id/run))    
-  decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + vmPFC_lag1 + HCwithin +  HCbetween + (1 | id/run))    
-  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + HCwithin +  HCbetween + (1 | id/run))
-  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCwithin + HCbetween + (1 | id/run))
-  decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
+  decode_formula[[2]] = formula(~ HC_lag1*v_entropy_wi + HCwithin*v_entropy_wi +  HCbetween + (1 | id/run))    
+  decode_formula[[3]] = formula(~ HC_lag1*v_max_wi + HCwithin*v_max_wi +  HCbetween + (1 | id/run))
+  decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HCwithin +  HCbetween + (1 | id/run)) 
+  #decode_formula[[4]] = formula(~ HC_lag1*v_entropy_wi + HCwithin + HCbetween + (1 | id/run))
+  #decode_formula[[5]] = formula(~ HC_lag1*v_entropy_wi + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCwithin + HCbetween + (1 | id/run))
+  #decode_formula[[6]] = formula(~ HC_lag1 + vmPFC_lag1 + HCbetween + (1 | id/run))  
   #decode_formula[[7]] = formula(~ HC_lag1 + HCbetween + (1 | id/run)) 
   
   #decode_formula[[4]] = formula(~HC_lag1 + HC_lag2 + age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run))    
@@ -153,7 +154,7 @@ if (do_HC2vPFC_clock){
   
   Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
