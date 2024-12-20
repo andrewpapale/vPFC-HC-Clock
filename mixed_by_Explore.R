@@ -5,17 +5,17 @@ library(tidyverse)
 library(pracma)
 
 ncores = 26
-do_vPFC = FALSE
+do_vPFC = TRUE
 do_network = TRUE
 do_symmetry = FALSE
-do_HC = FALSE
+do_HC = TRUE
 do_vPFC_HC = TRUE
 do_vPFC_HC_fb = FALSE
 do_HC_anatomy = FALSE
 if (do_vPFC){
 
 #load('/Volumes/Users/Andrew/MEDuSA_data_Explore/clock-vPFC.Rdata')  
-md <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2-vPFC/clock_aligned_explore_vmpfc.csv.gz')
+md <- read_csv('/Volumes/bierka_root/datamesh/PROC/EXP/MEDuSA/2024-TRdiv2/clock_aligned_explore_vmPFC.csv.gz')
 md <- md %>% mutate(run0 = as.numeric(gsub("run", "", run))) %>% select(!run) %>% rename(run = run0)
 md$id <- as.character(md$id)
     
@@ -120,6 +120,11 @@ demo$age <- scale(demo$age)
 demo$wtar <- scale(demo$wtar)
 demo$education_yrs <- scale(demo$education_yrs)
 
+scaninfo <- read_csv('/Volumes/Users/Andrew/v18-2024-12-04/HC_vPFC_Explore_Clock_Scanner_Dates.csv')
+scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(scale(difftime(scaninfo$scan_date,min(scaninfo$scan_date)))))) %>% select(!registration_redcapid)
+
+demo <- inner_join(demo,scaninfo,by='id')
+
 Q <- merge(demo,Q,by='id')
 Q <- Q %>% filter(group!='ATT')
 Q$group <- relevel(factor(Q$group),ref='HC')
@@ -153,11 +158,11 @@ decode_formula <- NULL
 #decode_formula[[6]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi |id/run))
 #decode_formula[[7]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | id) + (1 | run))
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
-decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
-decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
-decode_formula[[3]] = formula(~age + v_max_wi + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
-decode_formula[[4]] = formula(~v_max_wi + (1|id))
-decode_formula[[5]] = formula(~v_entropy_wi + (1|id))
+decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + scan_which*ddate + (1|id/run))
+decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + scan_which*ddate + (1|id/run))
+decode_formula[[3]] = formula(~age + v_max_wi + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + scan_which*ddate + iti_prev_sc + (1|id/run))
+decode_formula[[4]] = formula(~v_max_wi + scan_which*ddate + (1|id))
+decode_formula[[5]] = formula(~v_entropy_wi + scan_which*ddate + (1|id))
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))
 # decode_formula[[2]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
 # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | id) + (1 | run))
@@ -183,7 +188,7 @@ if (do_network){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-withscanner-',i,'.Rdata'))
   }
 }
 if (do_symmetry){
@@ -327,6 +332,11 @@ if (do_HC){
   demo$wtar <- scale(demo$wtar)
   demo$education_yrs <- scale(demo$education_yrs)
   
+  scaninfo <- read_csv('/Volumes/Users/Andrew/v18-2024-12-04/HC_vPFC_Explore_Clock_Scanner_Dates.csv')
+  scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(scale(difftime(scaninfo$scan_date,min(scaninfo$scan_date)))))) %>% select(!registration_redcapid)
+  
+  demo <- inner_join(demo,scaninfo,by='id')
+  
   Q <- merge(demo,Q,by='id')
   #Q <- Q %>% filter(group!='ATT')
   Q$group <- relevel(factor(Q$group),ref='HC')
@@ -347,10 +357,10 @@ if (do_HC){
   #decode_formula[[2]] = formula(~ v_max_wi + last_outcome + rt_csv_sc +  iti_lag_sc + (1|id/run))
   #decode_formula[[1]] = formula(~ v_entropy_wi_change +  (1|id/run))
   #decode_formula[[1]] = formula(~ group + condition_trial_neg_inv_sc + v_max_wi + last_outcome + age + gender + iti_lag_sc + rt_lag_sc + (1|id/run)) 
-  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id/run))
-  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id/run))
-  decode_formula[[3]] = formula(~v_max_wi +  (1|id/run))
-  decode_formula[[4]] = formula(~v_entropy_wi +  (1|id/run))
+  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + scan_which*ddate + (1|id/run))
+  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + scan_which*ddate + (1|id/run))
+  decode_formula[[3]] = formula(~v_max_wi + scan_which*ddate +  (1|id/run))
+  decode_formula[[4]] = formula(~v_entropy_wi + scan_which*ddate +  (1|id/run))
   qT <- c(-0.8,0.46)
   splits = c('evt_time','HC_region')
   #source("~/fmri.pipeline/R/mixed_by.R")
@@ -362,7 +372,7 @@ if (do_HC){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-RTcorrected-withscanner-',i,'.Rdata'))
   }
 }
 
@@ -533,6 +543,11 @@ if (do_vPFC_HC){
   demo$wtar <- scale(demo$wtar)
   demo$education_yrs <- scale(demo$education_yrs)
   
+  scaninfo <- read_csv('/Volumes/Users/Andrew/v18-2024-12-04/HC_vPFC_Explore_Clock_Scanner_Dates.csv')
+  scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(scale(difftime(scaninfo$scan_date,min(scaninfo$scan_date)))))) %>% select(!registration_redcapid)
+  
+  demo <- inner_join(demo,scaninfo,by='id')
+  
   Q <- merge(demo,Q,by='id')
   #Q <- Q %>% filter(total_earnings_split=='richer')
   Q$group <- relevel(factor(Q$group),ref='HC')
@@ -555,10 +570,10 @@ if (do_vPFC_HC){
   #decode_formula[[1]] = formula(~age*HCwithin + v_entropy_wi*HCwithin + (1|id/run))
   #decode_formula[[2]] = formula(~age*HCwithin + v_max_wi*HCwithin + (1|id/run))
   #decode_formula[[3]] = formula(~age*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
-  decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin+ (1|id/run))
-  decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-  decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween + (1|id/run))
+  decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + scan_which*ddate + (1|id/run))
+  decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + scan_which*ddate + (1|id/run))
+  decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + scan_which*ddate  + (1|id/run))
+  decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween + scan_which*ddate  + (1|id/run))
   #decode_formula[[4]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[5]] = formula(~trial_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[6]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + outcome + HCbetween + (1|id/run))
@@ -611,7 +626,7 @@ if (do_vPFC_HC){
                       # )
       )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-RTcorrected-withscanner-',i,'.Rdata'))
   }
   
   

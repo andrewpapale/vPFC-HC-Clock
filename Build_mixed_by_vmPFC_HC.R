@@ -10,11 +10,11 @@ library(fmri.pipeline)
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 doTesting = FALSE
 do_vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
-do_vPFC_clock = FALSE
+do_vPFC_clock = TRUE
 do_HC_fb = FALSE
 do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
-do_HC2vPFC_clock = TRUE
+do_HC2vPFC_clock = FALSE
 do_anat_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
 do_anat_clock = FALSE
 do_symmetry = FALSE
