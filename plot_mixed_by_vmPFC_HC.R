@@ -205,7 +205,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         if (flipy == TRUE){
           if (all(!is.na(edf$`p, FDR-corrected`))){
             if (all(edf$`p, FDR-corrected`=='p < .001')){
-              if (fe=='HCwithin'){
+              if (fe=='HCwithin' || fe=='HC_lag1'){
                 gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
                   geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1) +
                   geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
@@ -286,7 +286,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         } else {
           if (all(!is.na(edf$`p, FDR-corrected`))){
             if (all(edf$`p, FDR-corrected`=='p < .001')){
-              if (fe=='HCwithin'){
+              if (fe=='HCwithin' || fe=='HC_lag1'){
                 gg1<-ggplot(edf, aes(x=t, y=estimate,group=network2,color=network2)) + 
                   geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1) +
                   geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) + 
