@@ -145,6 +145,7 @@ Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
                   run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 Q <- Q %>% filter(group=='HC')
 Q <- Q %>% filter(!is.na(rewFunc))
+Q$scan_which <- relevel(as.factor(Q$scan_which),ref='P1')
 #Q <- Q %>% filter(trial > 10)
 
 rm(decode_formula)
@@ -158,11 +159,11 @@ decode_formula <- NULL
 #decode_formula[[6]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi |id/run))
 #decode_formula[[7]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | id) + (1 | run))
 #decode_formula[[8]] = formula(~ age + gender + wtar + education_yrs + v_max_wi + trial_neg_inv_sc + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1 + v_max_wi | run) + (1| id))
-decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + scan_which*ddate + (1|id/run))
-decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + scan_which*ddate + (1|id/run))
-decode_formula[[3]] = formula(~age + v_max_wi + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + scan_which*ddate + iti_prev_sc + (1|id/run))
-decode_formula[[4]] = formula(~v_max_wi + scan_which*ddate + (1|id))
-decode_formula[[5]] = formula(~v_entropy_wi + scan_which*ddate + (1|id))
+decode_formula[[1]] = formula(~age + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
+decode_formula[[2]] = formula(~age + v_max_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
+decode_formula[[3]] = formula(~age + v_max_wi + v_entropy_wi + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_prev_sc + (1|id/run))
+decode_formula[[4]] = formula(~v_max_wi + (1|id))
+decode_formula[[5]] = formula(~v_entropy_wi+ (1|id))
 # decode_formula[[1]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome + (1|id/run))
 # decode_formula[[2]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc |id/run))
 # decode_formula[[3]] = formula(~ age + gender + v_entropy_sc*trial_bin + rt_bin + iti_sc + rt_vmax_change_sc + last_outcome + outcome +  (1 + v_entropy_sc | id) + (1 | run))
@@ -188,7 +189,7 @@ if (do_network){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-withscanner-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-scannersplit-',i,'.Rdata'))
   }
 }
 if (do_symmetry){
@@ -351,18 +352,19 @@ if (do_HC){
   Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
                     run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
                     run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  Q$scan_which <- relevel(as.factor(Q$scan_which),ref='P1')
   rm(decode_formula)
   decode_formula <- NULL
   #decode_formula[[1]] = formula(~ v_entropy_wi + last_outcome + rt_csv_sc + iti_lag_sc + (1|id/run))
   #decode_formula[[2]] = formula(~ v_max_wi + last_outcome + rt_csv_sc +  iti_lag_sc + (1|id/run))
   #decode_formula[[1]] = formula(~ v_entropy_wi_change +  (1|id/run))
   #decode_formula[[1]] = formula(~ group + condition_trial_neg_inv_sc + v_max_wi + last_outcome + age + gender + iti_lag_sc + rt_lag_sc + (1|id/run)) 
-  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome + scan_which*ddate + (1|id/run))
-  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + scan_which*ddate + (1|id/run))
-  decode_formula[[3]] = formula(~v_max_wi + scan_which*ddate +  (1|id/run))
-  decode_formula[[4]] = formula(~v_entropy_wi + scan_which*ddate +  (1|id/run))
+  decode_formula[[1]] = formula(~age + run_trial0_neg_inv_sc + gender + v_max_wi + rt_lag_sc + iti_lag_sc + last_outcome  + (1|id/run))
+  decode_formula[[2]] = formula(~age + run_trial0_neg_inv_sc + gender + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1|id/run))
+  decode_formula[[3]] = formula(~v_max_wi +  (1|id/run))
+  decode_formula[[4]] = formula(~v_entropy_wi +  (1|id/run))
   qT <- c(-0.8,0.46)
-  splits = c('evt_time','HC_region')
+  splits = c('evt_time','HC_region','scan_which')
   #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -372,7 +374,7 @@ if (do_HC){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-RTcorrected-withscanner-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-RTcorrected-scannersplit-',i,'.Rdata'))
   }
 }
 
@@ -564,16 +566,17 @@ if (do_vPFC_HC){
   Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
                     run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
                     run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  Q$scan_which <- relevel(as.factor(Q$scan_which),ref='P1')
   rm(decode_formula)
   decode_formula <- NULL
   #decode_formula[[1]] = formula(~age * HCwithin + gender * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + v_entropy_wi_change_lag * HCwithin + rt_csv_sc * HCwithin + iti_lag_sc * HCwithin + iti_sc * HCwithin + last_outcome * HCwithin + outcome*HCwithin + rt_vmax_change_sc * HCwithin +  HCbetween + (1 | id/run)) 
   #decode_formula[[1]] = formula(~age*HCwithin + v_entropy_wi*HCwithin + (1|id/run))
   #decode_formula[[2]] = formula(~age*HCwithin + v_max_wi*HCwithin + (1|id/run))
   #decode_formula[[3]] = formula(~age*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + scan_which*ddate + (1|id/run))
-  decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + scan_which*ddate + (1|id/run))
-  decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + scan_which*ddate  + (1|id/run))
-  decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween + scan_which*ddate  + (1|id/run))
+  decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
+  decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+  decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+  decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
   #decode_formula[[4]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[5]] = formula(~trial_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[6]] = formula(~trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + outcome + HCbetween + (1|id/run))
@@ -593,7 +596,7 @@ if (do_vPFC_HC){
   
   qT2 <- c(-2.62,-0.544,0.372, 0.477)
   qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-  splits = c('evt_time','network','HC_region')
+  splits = c('evt_time','network','HC_region','scan_which')
   #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -626,7 +629,7 @@ if (do_vPFC_HC){
                       # )
       )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-RTcorrected-withscanner-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-RTcorrected-scannersplit-',i,'.Rdata'))
   }
   
   

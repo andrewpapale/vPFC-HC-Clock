@@ -436,7 +436,7 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         print(gg)
         dev.off()
-      } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag')){
+      } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag') | scrcmp(toprocess,'network-by-scanner')){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
         gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network, size=`p, FDR-corrected`)) +
@@ -623,7 +623,56 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
         print(gg)
         dev.off()
         
-      } else if (strcmp(toprocess,'atlas_value-by-block')){
+      
+      } else if (strcmp(toprocess,'network-by-scanner')){
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'_',model_iter,  ".pdf", sep = "")
+        pdf(fname, width = 9, height = 3.5)
+        # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
+        #   geom_line(size = 1) + geom_point() +
+        #   geom_errorbar() +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~HC_region) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #   scale_color_manual(labels=c('DMN','CTR','LIM'),values=c('red','green','blue')) + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        if (all(edf$`p, FDR-corrected`=='p < .001')){
+          gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + 
+            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + facet_wrap(~scan_which) + 
+            geom_line(size = 1) + theme(legend.position = "none") + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+            geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) +
+            #facet_wrap(~HC_region) +
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6)),
+                  axis.title.x = element_text(margin=margin(t=6)))
+        } else {
+          gg<-ggplot(edf, aes(x=t, y=estimate,group=network1,color=network1)) + facet_wrap(~scan_which) + 
+            geom_vline(xintercept = 0, lty = 'dashed', color = 'white', size = 1)+ xlab(epoch_label) + ylab('') +
+            geom_hline(yintercept = 0, lty = 'dashed',color = 'gray', size=1) + 
+            geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) +
+            geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="white") +
+            geom_line(size = 1) + theme(legend.position = "none") +
+            scale_color_manual(values = pal,labels=c('DMN','CTR','LIM')) + 
+            #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+            theme_bw(base_size=13) +
+            #facet_wrap(~HC_region) +
+            theme(legend.title = element_blank(),
+                  panel.grid.major = element_line(colour = "grey45"), 
+                  panel.grid.minor = element_line(colour = "grey45"), 
+                  panel.background = element_rect(fill = 'grey40'),
+                  axis.title.y = element_text(margin=margin(r=6)),
+                  axis.title.x = element_text(margin=margin(t=6)))
+        }
+        print(gg)
+        dev.off()
+        
+        
+        } else if (strcmp(toprocess,'atlas_value-by-block')){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'_',model_iter,  ".pdf", sep = "")
         pdf(fname, width = 36, height = 36)
         # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +

@@ -223,8 +223,91 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
       }
       
       
+    } else if (strcmp(toprocess,'region-by-scanner')){
+      if (all(edf$p_level_fdr=='p < .001')){
+        # fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
+        # pdf(fname, width = 9, height = 3.5)
+        # gg<- ggplot(edf, aes(t, HC_region)) + geom_tile(aes(fill = estimate, alpha = pfdr), size = 1) +
+        #   # geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~visuomotor_grad) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #   scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        # print(gg)
+        # dev.off()
+        
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
+        pdf(fname, width = 9, height = 3.5)
+        # gg <- ggplot(edf, aes(x=t, y=estimate,color=as.factor(bin_num))) +
+        #   geom_line(size = 1) + geom_point(aes(size=pfdr), fill="red") +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + #facet_wrap(~visuomotor_grad) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        #pal1 <- palette(c('#F21A00','#3B9AB2'))
+        gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
+          geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1)+ xlab(epoch_label) +
+          geom_point(aes(size=p_level_fdr, alpha = p_level_fdr)) + scale_alpha_discrete(range=c(1,1)) + scale_size_manual(values=c(6)) +
+          geom_errorbar(aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
+          geom_line(size = 1) + 
+          ylab('Response [AU]') +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
+          facet_grid(~scan_which) + 
+          #scale_color_gradientn(colors = pal, guide = 'none') + 
+          scale_color_manual(values = pal) + 
+          #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+          theme_bw(base_size=13) +
+          theme(legend.title = element_blank(),
+                axis.title.y = element_text(margin=margin(r=6)),
+                axis.title.x = element_text(margin=margin(t=6)))
+        print(gg)
+        dev.off()
+      } else {
+        # fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
+        # pdf(fname, width = 9, height = 3.5)
+        # gg<- ggplot(edf, aes(t, HC_region)) + geom_tile(aes(fill = estimate, alpha = pfdr), size = 1) +
+        #   # geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + facet_wrap(~visuomotor_grad) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) +
+        #   scale_fill_viridis(option = "plasma") + scale_color_grey() + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        # print(gg)
+        # dev.off()
+        
+        fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
+        pdf(fname, width = 9, height = 3.5)
+        # gg <- ggplot(edf, aes(x=t, y=estimate,color=as.factor(bin_num))) +
+        #   geom_line(size = 1) + geom_point(aes(size=pfdr), fill="red") +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + #facet_wrap(~visuomotor_grad) +
+        #   geom_vline(xintercept = 0, lty = "dashed", color = "#FF0000", size = 2) + xlab(epoch_label) +
+        #   labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
+        #pal1 <- palette(c('#F21A00','#3B9AB2'))
+        gg<-ggplot(edf, aes(x=t, y=estimate,color = as.factor(HC_region), group = as.factor(HC_region))) + 
+          geom_hline(yintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1) +
+          geom_vline(xintercept = 0, lty = 'dashed', color = '#A9A9A9', size = 1) + 
+          geom_point(position=position_dodge(width=0.33),aes(size=p_level_fdr, alpha = p_level_fdr)) +
+          geom_errorbar(position=position_dodge(width=0.33),aes(ymin=estimate-std.error,ymax=estimate+std.error),width=0, color="black") +
+          geom_line(position=position_dodge(width=0.33),size = 1) + 
+          xlab(epoch_label) + ylab('Response [AU]') +
+          scale_x_continuous(breaks = c(-4,-2,0,2,4)) + 
+          facet_grid(~scan_which) + 
+          #scale_color_gradientn(colors = pal, guide = 'none') + 
+          scale_color_manual(values = pal) +  
+          xlab(epoch_label) + ylab('Response [AU]') +
+          #geom_text(aes(x=-.5, y = .485, label = "RT(Vmax)"), angle = 90, color = "white", size = 2) +
+          theme_bw(base_size=13) +
+          theme(legend.title = element_blank(),
+                axis.title.y = element_text(margin=margin(r=6),size=22),
+                axis.title.x = element_text(margin=margin(t=6),size=22),
+                legend.text = element_text(size=22),
+                axis.text.x = element_text(size=22),
+                axis.text.y = element_text(size=22)
+          )
+        print(gg)
+        dev.off()
+      }
       
-    } else if (strcmp(toprocess,'axis')){
+      
+      
+      
+      } else if (strcmp(toprocess,'axis')){
       fname = paste(behavmodel,'-',totest,"_",toalign, "_", toprocess, "_", termstr,'-',model_iter, ".pdf", sep = "")
       pdf(fname, width = 9, height = 5)
       print(ggplot(edf, aes(t, as.factor(bin_num))) + geom_tile(aes(fill = estimate, alpha = pfdr), size = 1) +
