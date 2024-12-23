@@ -436,7 +436,7 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
           labs(alpha = expression(italic(p)[FDR])) + ggtitle(paste(termstr)) + ylab("")
         print(gg)
         dev.off()
-      } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag') | scrcmp(toprocess,'network-by-scanner')){
+      } else if (strcmp(toprocess,"network-by-HC") | strcmp(toprocess,'network-by-HClag')){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr, '_',model_iter, ".pdf", sep = "")
         pdf(fname, width = 9, height = 3.5)
         gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network, size=`p, FDR-corrected`)) +

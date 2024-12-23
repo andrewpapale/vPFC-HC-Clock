@@ -804,7 +804,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         }
         
       
-        else if (strcmp(toprocess,'network-by-HC-by-scanner')){
+        } else if (strcmp(toprocess,'network-by-HC-by-scanner')){
           
           fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter, ".pdf", sep = "")
           pdf(fname, width = 9, height = 9)
