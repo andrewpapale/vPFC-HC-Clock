@@ -5,6 +5,8 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(data.table)
+library(fmri.pipeline)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
@@ -13,7 +15,7 @@ toalign <- 'clock'
 do_rand_slopes = FALSE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
-trial_mod = TRUE
+trial_mod = FALSE
 do_vif = FALSE
 
 #### clock ####
@@ -187,7 +189,13 @@ if (do_rand_slopes){
   demo$wtar <- scale(demo$wtar)
   demo$education_yrs <- scale(demo$education_yrs)
   
+  scaninfo <- read_csv('/Volumes/Users/Andrew/v18-2024-12-04/HC_vPFC_Explore_Clock_Scanner_Dates.csv')
+  scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(scale(difftime(scaninfo$scan_date,min(scaninfo$scan_date)))))) %>% select(!registration_redcapid)
+  
   Q <- merge(demo,Q,by='id')
+  
+  Q <- merge(Q,scaninfo,by='id')
+  
   #Q <- Q %>% filter(total_earnings_split=='richer')
   Q$group <- relevel(factor(Q$group),ref='HC')
   #Q <- Q %>% filter(group!='ATT')
@@ -212,7 +220,7 @@ if (do_rand_slopes){
   decode_formula[[3]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin  |id) + (1|run))
   
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -344,6 +352,14 @@ if (do_rt_pred_fmri){
                         run_trial0_neg_inv = -1000 / run_trial0_c,
                         run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv))
     )
+    
+    scaninfo <- read_csv('/Volumes/Users/Andrew/v18-2024-12-04/HC_vPFC_Explore_Clock_Scanner_Dates.csv')
+    scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(scale(difftime(scaninfo$scan_date,min(scaninfo$scan_date)))))) %>% select(!registration_redcapid)
+    
+    scaninfo$id <- as.character(scaninfo$id)
+    
+    Q2 <- inner_join(Q2,scaninfo,by='id')
+    
     #~ (trial_neg_inv + rt_lag + v_max_wi_lag + v_entropy_wi + fmri_beta + last_outcome)^2 +
     #  rt_lag:last_outcome:fmri_beta +
     #  rt_vmax_lag*trial_neg_inv*fmri_beta +
@@ -370,8 +386,8 @@ if (do_rt_pred_fmri){
     qRT <- quantile(df$rt_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     #qH <- c(1,2,3,4)
     qT <- quantile(df$condition_trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
-    splits = c('HC_region','network')
-    source('~/fmri.pipeline/R/mixed_by.R')
+    splits = c('HC_region','network','scan_which')
+    #source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model && !trial_mod){
@@ -400,9 +416,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-scanner-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-scanner-',i,'.Rdata')) 
         }
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,

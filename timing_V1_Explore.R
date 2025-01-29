@@ -4,15 +4,8 @@ library(tidyverse)
 library(pracma)
 
 PPCcaudal <- c('280','281','282','275','277','73','75','77','78','80','81','82')
-V1 <- c('4','7','5','9','11','204','206','202','209','211')
+#V1 <- c('4','7','5','9','11','204','206','202','209','211')
 
-# load MMClock
-load('/Users/dnplserv/DAN/MMClock_rt_dan_tall_ts.RData')
-rt_comb <- rt_comb %>% 
-  filter(atlas_value %in% PPCcaudal) %>% 
-  select(id,run,run_trial,evt_time,iti_prev,decon_interp,rt_csv,atlas_value)
-rt_comb <- rt_comb %>% rename(decon_mean = decon_interp)
-gc()
 
 # load Explore
 rt_exp <- read.csv('/Volumes/Users/Andrew/DAN/Explore_rt_aligned_444_dan.csv.gz')
@@ -40,15 +33,4 @@ scaninfo <- scaninfo %>% mutate(id = registration_redcapid, ddate = as.vector(t(
 rt_exp <- inner_join(rt_exp,scaninfo,by='id')
 rt_exp$scan_which <- relevel(as.factor(rt_exp$scan_which),ref='P1')
 rt_exp <- rt_exp %>% mutate(experiment = 'Explore')
-
-rt_comb <- rt_comb %>% mutate(scan_date = 'pre-2018', scan_which = 'Trio', ddate = '-1',experiment = 'MMClock')
-
-
-rt_comb <- rbind(rt_comb,rt_exp)
-
-rm(rt_exp)
-gc()
-
-setwd('/Users/dnplserv/DAN')
-save(rt_comb, file='2024-12-27-DAN-Merged.Rdata')
-rt_comb$scan_which[is.na(rt_comb$scan_which)] = 'P1'
+rt_exp$scan_which[is.na(rt_exp$scan_which)] = 'P1'
