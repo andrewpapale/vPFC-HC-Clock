@@ -1,4 +1,4 @@
-setwd('/ix/cladouceur/DNPL/BSOC/')
+
 
 # libraries we'll need
 library(tidyverse)
@@ -6,7 +6,7 @@ library(fmri.pipeline)
 # set root directory
 rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
 repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
-
+ncores <- 26
 # load mixed_by function for analyses
 
 
@@ -16,7 +16,7 @@ repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 ##################################
 
 # load the vmPFC data, filter to within 5s of RT, and select vars of interest
-vmPFC <- read_csv(file.path(rootdir,'clock_aligned_bsocial_vmPFC.csv.gz'))
+vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz'))
 
 # calculate some variables
 vmPFC <- vmPFC %>% group_by(id, run) %>% mutate(run_trial = trial - min(trial) + 1) %>% ungroup()
@@ -116,7 +116,7 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-Q <- Q %>% filter(registration_group=='HC')
+Q <- Q %>% filter(group=='HC')
 # now to add in model fits
 #fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 #fits <- fits %>% rename(old_id=id)
