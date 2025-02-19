@@ -3,17 +3,17 @@
 # Feb 2025
 
 library(tidyverse)
-rootdir <- '/ix/cladouceur/DNPL/BSOC'
-repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
+repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 
-hc_r <- read_csv('clock_aligned_bsocial_hc_r.csv.gz')
-hc_l <- read_csv('clock_aligned_bsocial_hc_l.csv.gz')
+hc_r <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_hc_r.csv.gz'))
+hc_l <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_hc_l.csv.gz'))
 
 hc_r <- hc_r %>% mutate(side='r')
 hc_l <- hc_l %>% mutate(side='l')
 
-hc_l_m <- oro.nifti::readNIfTI(file.path(repo_directory,'MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_left_3.125mm.nii.gz'),reorient=FALSE)
-hc_r_m <- oro.nifti::readNIfTI(file.path(repo_directory,'MEDUSA Schaefer Analysis/Explore_HC/transformed_hc_right_3.125mm.nii.gz'),reorient=FALSE)
+hc_l_m <- oro.nifti::readNIfTI(file.path(repo_directory,'bsocial_hc_l.nii.gz'),reorient=FALSE)
+hc_r_m <- oro.nifti::readNIfTI(file.path(repo_directory,'bsocial_hc_r.nii.gz'),reorient=FALSE)
 mi_l <- which(hc_l_m > 0, arr.ind=TRUE)
 mi_r <- which(hc_r_m > 0, arr.ind=TRUE)
 bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)

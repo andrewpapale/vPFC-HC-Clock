@@ -2,14 +2,13 @@ setwd('/ix/cladouceur/DNPL/BSOC/')
 
 # libraries we'll need
 library(tidyverse)
-
+library(fmri.pipeline)
 # set root directory
-rootdir <- '/ix/cladouceur/DNPL/BSOC'
-repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
+repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 
 # load mixed_by function for analyses
-source(file.path(repo_directory,"/mixed_by.R"))
-source(file.path(repo_directory,"/plot_mixed_by_vmPFC_HC.R"))
+
 
 ##################################
 ##### Load in and format data ####
@@ -63,7 +62,7 @@ Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
 Q <- Q %>% select(!decon1)
 
 # Get task behav data
-df <- read_csv('bsocial_clock_trial_df.csv')
+df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 
 # select and scale variables of interest
 df <- df %>% 
@@ -80,10 +79,24 @@ df <- df %>%
 
 # select only vars of interest and merge into MRI data
 behav <- df %>% select(id,run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
-                       rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,v_entropy_wi_change,outcome,
+                       rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev)
 Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
-
+Q <- Q %>% mutate(block = case_when(trial <= 40 ~ 1, 
+                                    trial > 40 & trial <= 80 ~ 2,
+                                    trial > 80 & trial <=120 ~ 3, 
+                                    trial > 120 & trial <=160 ~ 4,
+                                    trial > 160 & trial <=200 ~ 5,
+                                    trial > 200 & trial <=240 ~ 6))
+Q <- Q %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                         trial > 40 & trial <= 80 ~ trial-40,
+                                         trial > 80 & trial <=120 ~ trial-80, 
+                                         trial > 120 & trial <=160 ~ trial-120,
+                                         trial > 160 & trial <=200 ~ trial-160,
+                                         trial > 200 & trial <=240 ~ trial-200))
+Q <- Q %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
+                  run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                  run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -93,7 +106,7 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
-demo <- read_csv('bsoc_clock_N171_dfx_demoonly.csv')
+demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
 demo$id <- as.character(demo$id)
 demo <- demo %>% rename(sex=registration_birthsex,
                         gender=registration_gender,
@@ -103,9 +116,53 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-
+Q <- Q %>% filter(registration_group=='HC')
 # now to add in model fits
-fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
+#fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 #fits <- fits %>% rename(old_id=id)
-fits$id<-gsub("_1","",fits$id)
-Q <- inner_join(Q,fits,by='id')
+#fits$id<-gsub("_1","",fits$id)
+#Q <- inner_join(Q,fits,by='id')
+rm(decode_formula)
+decode_formula <- NULL
+decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
+decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + gender*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
+
+qT2 <- c(-2.62,-0.544,0.372, 0.477)
+qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
+splits = c('evt_time','network','HC_region')
+#source("~/fmri.pipeline/R/mixed_by.R")
+for (i in 1:length(decode_formula)){
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  df0 <- decode_formula[[i]]
+  print(df0)
+  ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
+                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
+                  # emmeans_spec = list(
+                  #   A = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                  #   W = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
+                  #   H = list(outcome='vmPFC_decon', model_name='model1',
+                  #            specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,-1,0,1,2))),
+                  #   Y = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+                  # )#,
+                  # emtrends_spec = list(
+                  # #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                  # #              specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
+                  #   T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                  #               specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT1)),
+                  #   T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                  #               specs=formula(~run_trial0_neg_inv_sc:HCwithin),at=list(run_trial0_neg_inv_sc=qT2))
+                  # #   H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
+                  # #            specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
+                  # #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
+                  # #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+                  # )
+  )
+  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-',i,'.Rdata'))
+}
