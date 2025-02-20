@@ -53,7 +53,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
     ddf <- ddf %>% filter(t > -4)
   }
   #if (strcmp(toprocess,"network")){
-  if (!all(is.na(ddf$p_level_fdr))){
+  if (!all(is.na(ddf$p_adj_fdr_term))){
     ddf <- ddf  %>% mutate(p_fdr = padj_fdr_term, 
                            p_level_fdr = as.factor(case_when(
                              # p_fdr > .1 ~ '0',
