@@ -116,8 +116,8 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-#Q <- Q %>% filter(group=='HC')
-Q <- Q %>% filter(female==0)
+Q <- Q %>% filter(group=='HC')
+#Q <- Q %>% filter(female==0)
 # now to add in model fits
 #fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 #fits <- fits %>% rename(old_id=id)
@@ -168,5 +168,5 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-Monly-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-HConly-',i,'.Rdata'))
 }
