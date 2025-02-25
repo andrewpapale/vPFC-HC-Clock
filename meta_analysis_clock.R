@@ -8,3 +8,6 @@ library(fmri.pipeline)
 
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-02-21-Bsocial-vPFC-HC-HC.Rdata')
 
+Qbsoc <- Q %>% mutate(dataset = 'bsocial')
+
+

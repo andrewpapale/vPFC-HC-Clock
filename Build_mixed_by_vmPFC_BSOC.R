@@ -42,63 +42,61 @@ vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 
 # now load in HC data
 # load in the hippocampus data, filter to within 5s of RT
-load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
-hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+# load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
+# hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+# 
+# # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
+# # AH and PH averages
+# hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
+#   summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
+#   ungroup() # 12 -> 2
+# 
+# # Create a new scaled within-subjects variable (HCwithin) and a between-subjects
+# # variable averaged per subject and run (HCbetween)
+# hc <- hc %>% group_by(id,run) %>%
+#   mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
+#   ungroup()
+# 
+# # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
+# Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+# Q <- Q %>% select(!decon1)
 
-# Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
-# AH and PH averages
-hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
-  summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
-  ungroup() # 12 -> 2
-
-# Create a new scaled within-subjects variable (HCwithin) and a between-subjects
-# variable averaged per subject and run (HCbetween)
-hc <- hc %>% group_by(id,run) %>%
-  mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
-  ungroup()
-
-# Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
-Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
-Q <- Q %>% select(!decon1)
-
-# Get task behav data
-df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 # Get task behav data
 df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300]
 bsoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240]
 df_bsoc <- df %>% filter(id %in% bsoc) %>% mutate(block = case_when(trial <= 40 ~ 1, 
-                                                                    trial > 40 & trial <= 80 ~ 2,
-                                                                    trial > 80 & trial <=120 ~ 3, 
-                                                                    trial > 120 & trial <=160 ~ 4,
-                                                                    trial > 160 & trial <=200 ~ 5,
-                                                                    trial > 200 & trial <=240 ~ 6))
+                                    trial > 40 & trial <= 80 ~ 2,
+                                    trial > 80 & trial <=120 ~ 3, 
+                                    trial > 120 & trial <=160 ~ 4,
+                                    trial > 160 & trial <=200 ~ 5,
+                                    trial > 200 & trial <=240 ~ 6))
 df_bsoc <- df_bsoc %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
-                                                     trial > 40 & trial <= 80 ~ trial-40,
-                                                     trial > 80 & trial <=120 ~ trial-80, 
-                                                     trial > 120 & trial <=160 ~ trial-120,
-                                                     trial > 160 & trial <=200 ~ trial-160,
-                                                     trial > 200 & trial <=240 ~ trial-200))
+                                         trial > 40 & trial <= 80 ~ trial-40,
+                                         trial > 80 & trial <=120 ~ trial-80, 
+                                         trial > 120 & trial <=160 ~ trial-120,
+                                         trial > 160 & trial <=200 ~ trial-160,
+                                         trial > 200 & trial <=240 ~ trial-200))
 df_bsoc <- df_bsoc %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/40.5),
-                              run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
-                              run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+                  run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                  run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 
 df_ksoc <- df %>% filter(id %in% ksoc) %>% mutate(block = case_when(trial <= 50 ~ 1, 
-                                                                    trial > 50 & trial <= 100 ~ 2,
-                                                                    trial > 100 & trial <=150 ~ 3, 
-                                                                    trial > 150 & trial <=200 ~ 4,
-                                                                    trial > 200 & trial <=250 ~ 5,
-                                                                    trial > 250 & trial <=300 ~ 6))
+                                                                   trial > 50 & trial <= 100 ~ 2,
+                                                                   trial > 100 & trial <=150 ~ 3, 
+                                                                   trial > 150 & trial <=200 ~ 4,
+                                                                   trial > 200 & trial <=250 ~ 5,
+                                                                   trial > 250 & trial <=300 ~ 6))
 df_ksoc <- df_ksoc %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial, 
-                                                     trial > 50 & trial <= 100 ~ trial-50,
-                                                     trial > 100 & trial <=150 ~ trial-100, 
-                                                     trial > 150 & trial <=200 ~ trial-150,
-                                                     trial > 200 & trial <=250 ~ trial-200,
-                                                     trial > 250 & trial <=300 ~ trial-250))
+                                                trial > 50 & trial <= 100 ~ trial-50,
+                                                trial > 100 & trial <=150 ~ trial-100, 
+                                                trial > 150 & trial <=200 ~ trial-150,
+                                                trial > 200 & trial <=250 ~ trial-200,
+                                                trial > 250 & trial <=300 ~ trial-250))
 df_ksoc <- df_ksoc %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/50.5),
-                              run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
-                              run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+                    run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                    run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 
 df <- rbind(df_bsoc,df_ksoc)
 # select and scale variables of interest
@@ -117,17 +115,17 @@ df <- df %>%
 # select only vars of interest and merge into MRI data
 behav <- df %>% select(id,scanner_run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
-                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev)
+                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc)
 behav <- behav %>% rename(run = scanner_run)
-Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+Q <- inner_join(behav, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
-Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
-Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
-Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
-Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
+# Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+# Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+# Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
+# Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
 demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
@@ -149,17 +147,17 @@ Q <- Q %>% filter(group=='HC')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
-decode_formula[[2]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[3]] = formula(~trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[4]] = formula(~HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
-
+decode_formula[[1]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_max_wi + rt_lag_sc + last_outcome  + (1|id/run))
+decode_formula[[2]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[3]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[4]] = formula(~v_entropy_wi  + (1|id/run))
+decode_formula[[5]] = formula(~v_max_wi  + (1|id/run))
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','network','HC_region')
+splits = c('evt_time','network')
 #source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -192,5 +190,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-network-clock-HConly-RTcorrected-',i,'.Rdata'))
 }
+
