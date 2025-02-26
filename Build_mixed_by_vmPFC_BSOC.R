@@ -99,6 +99,7 @@ df_ksoc <- df_ksoc %>% mutate(run_trial0_c = run_trial0-floor(run_trial0/50.5),
                     run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
 
 df <- rbind(df_bsoc,df_ksoc)
+#df <- df_bsoc
 # select and scale variables of interest
 df <- df %>% 
   group_by(id, scanner_run) %>% 
@@ -113,10 +114,11 @@ df <- df %>%
          rt_swing_sc = scale(rt_swing)) %>% ungroup()
 
 # select only vars of interest and merge into MRI data
-behav <- df %>% select(id,scanner_run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+behav <- df %>% select(id,scanner_run,trial,run_trial,asc_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
-                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc)
-behav <- behav %>% rename(run = scanner_run)
+                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
+behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
+                                                                                                     trial > 150 ~ trial - 150))
 Q <- inner_join(behav, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 
 # censor out previous and next trials
@@ -138,7 +140,16 @@ Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-Q <- Q %>% filter(group=='HC')
+Q$group <- relevel(factor(Q$group),ref='HC')
+#Q <- Q %>% filter(rewFunc == 'IEV')
+Q <- Q %>% filter(group == 'HC')
+
+scan <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/bsoc_ksoc_scan_which.csv')
+scan <- scan %>% select(registration_redcapid,scan_which) %>% rename(id = registration_redcapid, scanner = scan_which)
+scan$id <- as.character(scan$id)
+Q <- inner_join(Q,scan,by='id')
+
+#Q <- Q %>% filter(group=='HC')
 #Q <- Q %>% filter(female==0)
 # now to add in model fits
 #fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
@@ -147,11 +158,11 @@ Q <- Q %>% filter(group=='HC')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_max_wi + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[2]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[3]] = formula(~trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[4]] = formula(~v_entropy_wi  + (1|id/run))
-decode_formula[[5]] = formula(~v_max_wi  + (1|id/run))
+decode_formula[[1]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_max_wi + rt_lag_sc + last_outcome  + (1|id/run))
+decode_formula[[2]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[3]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_max_wi + scanner*v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[4]] = formula(~ group + scanner + scanner*v_entropy_wi  + (1|id/run))
+decode_formula[[5]] = formula(~ group + scanner + scanner*v_max_wi  + (1|id/run))
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
 
