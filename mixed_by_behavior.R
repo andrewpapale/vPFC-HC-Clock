@@ -59,7 +59,7 @@ df <- df %>%
          rt_swing_sc = scale(rt_swing),
          v_max_wi_lag = lag(v_max_wi)) %>% ungroup()
 
-df <- df %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
+df <- df %>% select(!run) %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
                                                                                                      trial > 150 ~ trial - 150))
 
 
@@ -83,7 +83,7 @@ df <- inner_join(df,demo2,by='id')
 df <- df %>% filter(group=='HC')
 df <- df %>% mutate(sex1 = case_when(sex == 1 ~ 'F', sex == 2 ~ 'M'))
 df <- df %>% select(!sex) %>% rename(sex=sex1)
-df$sex1 <- relevel(as.factor(df$sex1),ref='F')
+df$sex1 <- relevel(as.factor(df$sex),ref='F')
 
 fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 fits$id<-gsub("_1","",fits$id)
