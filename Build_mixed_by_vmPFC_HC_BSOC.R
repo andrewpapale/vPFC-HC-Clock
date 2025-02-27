@@ -120,7 +120,8 @@ df <- df %>%
 behav <- df %>% select(id,scanner_run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
-behav <- behav %>% rename(run = scanner_run)
+behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
+                                                                                                     trial > 150 ~ trial - 150))
 Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 
 # censor out previous and next trials
@@ -133,19 +134,26 @@ Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
 demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
+demo1 <- read_csv(file.path(repo_directory,'2025-02-27-Partial-demo-pull-KSOC.csv'))
 demo$id <- as.character(demo$id)
+demo1$id <- as.character(demo1$registration_redcapid)
 demo <- demo %>% rename(sex=registration_birthsex,
                         gender=registration_gender,
                         group=registration_group) %>%
   select(id,group,age,sex,gender)
-Q <- inner_join(Q,demo,by=c('id'))
+demo1 <- demo1 %>% rename(sex=registration_birthsex,
+                          gender=registration_gender,
+                          group=registration_group) %>%
+  select(id,group,age,sex,gender)
+demo2 <- rbind(demo,demo1)
+Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-#Q <- Q %>% filter(group=='HC')
+Q <- Q %>% filter(group=='HC')
 Q$group <- relevel(factor(Q$group),ref='HC')
 #Q <- Q %>% filter(female==0)
-Q <- Q %>% filter(rewFunc == 'IEV')
+#Q <- Q %>% filter(rewFunc == 'IEV')
 # now to add in model fits
 #fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 #fits <- fits %>% rename(old_id=id)
@@ -153,10 +161,10 @@ Q <- Q %>% filter(rewFunc == 'IEV')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~group*HCwithin + trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
-decode_formula[[2]] = formula(~group*HCwithin + trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[3]] = formula(~group*HCwithin + trial_neg_inv_sc*HCwithin + age*HCwithin + run_trial0_neg_inv_sc*HCwithin + female*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[4]] = formula(~group*HCwithin + HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
+decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1 + HCwithin |id) + (1|(id:run)))
+#decode_formula[[2]] = formula(~ age*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+#decode_formula[[3]] = formula(~ age*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+#decode_formula[[4]] = formula(~ HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
 
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
@@ -196,5 +204,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-All-RTcorrected-IEVonly-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-ranslope-',i,'.Rdata'))
 }
+

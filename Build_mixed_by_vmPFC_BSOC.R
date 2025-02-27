@@ -131,12 +131,19 @@ Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
 demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
+demo1 <- read_csv(file.path(repo_directory,'2025-02-27-Partial-demo-pull-KSOC.csv'))
 demo$id <- as.character(demo$id)
+demo1$id <- as.character(demo1$registration_redcapid)
 demo <- demo %>% rename(sex=registration_birthsex,
                         gender=registration_gender,
                         group=registration_group) %>%
   select(id,group,age,sex,gender)
-Q <- inner_join(Q,demo,by=c('id'))
+demo1 <- demo1 %>% rename(sex=registration_birthsex,
+                          gender=registration_gender,
+                          group=registration_group) %>%
+  select(id,group,age,sex,gender)
+demo2 <- rbind(demo,demo1)
+Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
@@ -158,11 +165,13 @@ Q <- inner_join(Q,scan,by='id')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_max_wi + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[2]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[3]] = formula(~ group + scanner + trial_neg_inv_sc + age + run_trial0_neg_inv_sc + female + scanner*v_max_wi + scanner*v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[4]] = formula(~ group + scanner + scanner*v_entropy_wi  + (1|id/run))
-decode_formula[[5]] = formula(~ group + scanner + scanner*v_max_wi  + (1|id/run))
+decode_formula[[1]] = formula(~ scanner  + age + female + v_max_wi + rt_lag_sc + last_outcome  + (1|id/run))
+decode_formula[[2]] = formula(~ scanner  + age + female + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[3]] = formula(~ scanner  + age + female + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[4]] = formula(~ scanner + v_entropy_wi  + (1|id/run))
+decode_formula[[5]] = formula(~ scanner + v_max_wi  + (1|id/run))
+decode_formula[[6]] = formula(~ scanner + age + female + v_max_wi*v_entropy_wi + rt_lag_sc + last_outcome + (1|id/run))
+
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
 
