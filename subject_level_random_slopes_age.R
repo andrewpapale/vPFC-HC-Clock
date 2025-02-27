@@ -15,6 +15,7 @@ do_just_age = TRUE
 do_rand_slopes = FALSE
 do_rt_pred_fmri = FALSE
 do_rt_pred_meg = FALSE
+do_BSOC = TRUE
 
 if (do_just_age){
 
