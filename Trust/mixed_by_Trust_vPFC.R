@@ -10,7 +10,7 @@ ncores <- 26
 
 
 vmPFC <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_Trust/outcome_aligned_bsocial_vmPFC.csv.gz')
-vmPFC <- vmPFC %>% filter(evt_time > -3 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
+vmPFC <- vmPFC %>% filter(evt_time > -2 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
 vmPFC <- vmPFC %>% mutate(network = case_when(
   atlas_value==67 | atlas_value==171 | atlas_value==65 | atlas_value==66 | atlas_value==170 ~ 'CTR',
   atlas_value==89 | atlas_value==194 | atlas_value==88 | atlas_value==192 | atlas_value==84 | atlas_value==191 | atlas_value==86 | atlas_value==161 ~ 'DMN',
@@ -29,7 +29,7 @@ vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean) %>% select(!run)
 vmPFC <- vmPFC %>% arrange(id,trial,evt_time)
 
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Trust/Trust_HC_outcome_TRdiv2.Rdata')
-hc <- hc %>% filter(evt_time > -3 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
+hc <- hc %>% filter(evt_time > -2 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
 hc <- hc %>% select(!atlas_value & !run)
 hc <- hc %>% group_by(id,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
 hc <- hc %>% rename(decon_mean=decon1)
