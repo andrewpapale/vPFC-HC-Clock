@@ -4,6 +4,9 @@
 library(tidyverse)
 library(fmri.pipeline)
 
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
+repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
+ncores <- 26
 
 # Get task behav data
 df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
@@ -84,6 +87,7 @@ df <- df %>% filter(group=='HC')
 df <- df %>% mutate(sex1 = case_when(sex == 1 ~ 'F', sex == 2 ~ 'M'))
 df <- df %>% select(!sex) %>% rename(sex=sex1)
 df$sex1 <- relevel(as.factor(df$sex),ref='F')
+df$age <- scale(df$age)
 
 fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 fits$id<-gsub("_1","",fits$id)
@@ -133,9 +137,9 @@ for (j in 1:length(decode_formula)){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   if (j==1){
-    save(ddq,file=paste0(curr_date,'Bsocial-Sex-clock-fmri-pred-rt-int','.Rdata'))
+    save(ddq,file=paste0(curr_date,'-Bsocial-Sex-clock-fmri-pred-rt-int','.Rdata'))
   } else {
-    save(ddq,file=paste0(curr_date,'Bsocial-Sex-clock-fmri-pred-rt-slo','.Rdata')) 
+    save(ddq,file=paste0(curr_date,'-Bsocial-Sex-clock-fmri-pred-rt-slo','.Rdata')) 
   } 
   
 }
@@ -152,13 +156,13 @@ for (j in 1:length(decode_formula)){
                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                   emmeans_spec = list(
                     RT = list(outcome='rt_csv_sc', model_name='model1', 
-                              specs=formula(~rt_lag_sc:sex), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
+                              specs=formula(~rt_lag_sc:age), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
                     Vmax = list(outcome='rt_csv_sc', model_name='model1', 
-                                specs=formula(~rt_vmax_lag_sc:sex), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+                                specs=formula(~rt_vmax_lag_sc:age), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                     RTxO = list(outcome='rt_csv_sc',model_name='model1',
-                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
+                                specs=formula(~rt_lag_sc:last_outcome:age), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
                     TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
-                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                     
                   ),
                   emtrends_spec = list(
@@ -179,9 +183,25 @@ for (j in 1:length(decode_formula)){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   if (j==1){
-    save(ddq,file=paste0(curr_date,'Bsocial-Age-clock-fmri-pred-rt-int','.Rdata'))
+    save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-int','.Rdata'))
   } else {
-    save(ddq,file=paste0(curr_date,'Bsocial-Age-clock-fmri-pred-rt-slo','.Rdata')) 
+    save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-slo','.Rdata')) 
   } 
   
 }
+
+
+df$alpha_ffx <- scale(df$alpha_ffx)
+df$gamma_ffx <- scale(df$gamma_ffx)
+df$beta_ffx <- scale(df$beta_ffx)
+df$total_earnings <- scale(df$total_earnings)
+
+df <- df %>% filter(dataset1 == 'bsocial')
+
+ma <- lm(data=df, alpha ~ age*sex)
+mg <- lm(data=df, gamma ~ age*sex)
+mb <- lm(data=df, beta ~ age*sex)
+mE <- lm(data=df, total_earnings ~ age*sex + v_entropy_wi + v_max_wi)
+
+
+
