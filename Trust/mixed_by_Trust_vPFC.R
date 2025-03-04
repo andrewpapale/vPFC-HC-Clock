@@ -74,10 +74,6 @@ for (i in 1:length(decode_formula)){
 }
 
 
-# 2025-03-03 AndyP
-# Trust MEDuSA analysis
-
-
 
 vmPFC <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_Trust/outcome_aligned_bsocial_vmPFC.csv.gz')
 vmPFC <- vmPFC %>% filter(evt_time > -2 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
@@ -127,3 +123,43 @@ for (i in 1:length(decode_formula)){
   save(ddf,file=paste0(curr_date,'-Trust-vmPFC-network-All-RTcorrected-',i,'.Rdata'))
 }
 
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Trust/Trust_HC_outcome_TRdiv2.Rdata')
+hc <- hc %>% filter(evt_time > -2 & evt_time < 5.4) # need to censor to the highest TR with actual data in it or will get an error in mixed_by
+hc <- hc %>% select(!atlas_value & !run)
+hc <- hc %>% group_by(id,trial,evt_time,HC_region) %>% summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+hc <- hc %>% rename(decon_mean=decon1)
+hc <- hc %>% group_by(id) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean(decon_mean,na.rm=TRUE)) %>% ungroup()
+
+df <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_Trust/Tim_trust_trialdf_clean.csv')
+# there are three subjects for whom the task blew up on the last trial, and they were assigned weird, negative timings. One was already dropped from the trial_df due to a lost nifit (221548). Dropping the last trial for the other 2 subjects manually:
+df <- df %>% filter(!(id == 440230 & trial ==192) & !(id == 440124 & trial == 144)) %>% filter(!id==221548)
+df <- df %>% select(id,reward,alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
+df <- df %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
+df$trustee <- relevel(as.factor(df$trustee),ref='neutral')
+
+Q <- inner_join(hc,df,by=c('id','trial'))
+rm(hc)
+gc()
+Q <- Q %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
+
+Q$HCwithin[Q$evt_time >  + Q$outcome_duration + Q$iti_duration] = NA
+Q$HCwithin[Q$evt_time < -(Q$dchoice_duration + Q$pchoice_duration)] = NA
+Q$HCbetween[Q$evt_time >  + Q$outcome_duration + Q$iti_duration] = NA
+Q$HCbetween[Q$evt_time < -(Q$dchoice_duration + Q$pchoice_duration)] = NA
+
+splits = c('HC_region','evt_time')
+decode_formula <- NULL
+decode_formula[[1]] = formula(~ reward + PE_mult_z + V_mult_z + scale(trial) + scale(block) + trustee + scale(iti_duration) + scale(pchoice_duration) + HCbetween + (1|id))
+decode_formula[[2]] = formula(~ reward + PE_mult_z + scale(trial)  + scale(block) + trustee + scale(iti_duration) + scale(pchoice_duration) + HCbetween + (1|id))
+decode_formula[[3]] = formula(~ reward + scale(alpha_transformed) + scale(beta_transformed) + scale(kappaS_transformed) + scale(kappaT_bad_transformed) + scale(kappaT_good_transformed) + scale(kappaT_computer_transformed) + scale(trial) + scale(block) + scale(iti_duration) + scale(pchoice_duration) + HCbetween + (1|id))
+
+for (i in 1:length(decode_formula)){
+  setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+  df0 <- decode_formula[[i]]
+  print(df0)
+  ddf <- mixed_by(Q, outcomes = "HCwithin", rhs_model_formulae = df0 , split_on = splits,
+                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
+  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  save(ddf,file=paste0(curr_date,'-Trust-HC-network-All-RTcorrected-',i,'.Rdata'))
+}
