@@ -23,6 +23,8 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_feedback')
   } else if (strcmp(toalign,'clock') & (strcmp(behavmodel,'explore') | strcmp(behavmodel,'explore-interaction')  | grepl('explore',behavmodel,fixed=TRUE))){
     setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_explore_clock')
+  } else if (strcmp(toalign,'outcome') & (strcmp(behavmodel,'trust'))){
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_trust_outcome')
   }
   
   message("\nPlotting streams decoding")
@@ -44,6 +46,9 @@ plot_mixed_by_vmPFC <- function(ddf,toalign,toprocess,totest,behavmodel,model_it
     epoch_label <- ''
   } else if (strcmp(toalign,'clock') & strcmp(totest,'online')){
     epoch_label <- ''
+  } else if (strcmp(toalign,'outcome')){
+    toalign_str <- 'outcome onset'
+    epoch_label = paste("Time relative to",toalign_str, "[s]")
   }
   # fills for headers for symmetry_group.  Fill by network.
   fills <- palette()

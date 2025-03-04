@@ -12,6 +12,8 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC_interaction')
   } else if (strcmp(toalign,"feedback")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback_HC_interaction')
+  } else if (strcmp(toalign,'outcome') & (strcmp(behavmodel,'trust'))){
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_trust_outcome')
   }
   
   message("\nPlotting streams decoding")
@@ -26,6 +28,9 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
     toalign_str <- 'feedback'
   } else if (strcmp(toalign,'clock')){
     toalign_str <- 'trial onset'  
+  } else if (strcmp(toalign,'outcome')){
+    toalign_str <- 'outcome onset'
+    epoch_label = paste("Time relative to",toalign_str, "[s]")
   }
   epoch_label = paste("Time relative to",toalign_str, "[s]")
   pal_hc = wes_palette("Royal2", 5, type = "discrete")
