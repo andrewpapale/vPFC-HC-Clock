@@ -136,7 +136,7 @@ df <- df %>% filter(!(id == 440230 & trial ==192) & !(id == 440124 & trial == 14
 df <- df %>% select(id,reward,alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
 df <- df %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
 df$trustee <- relevel(as.factor(df$trustee),ref='neutral')
-
+df <- df %>% arrange(id,trial) %>% group_by(id,trustee,block) %>% mutate(block_trial = seq(1,length(unique(trial)),length.out=length(unique(trial)))) %>% ungroup()
 Q <- inner_join(hc,df,by=c('id','trial'))
 rm(hc)
 gc()

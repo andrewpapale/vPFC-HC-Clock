@@ -6,9 +6,9 @@ library(ggplot2)
 
 # 2024-06-27 AndyP
 # Plotting emmeans and emtrends for B2B
-do_vPFC_entropy = TRUE
+do_vPFC_entropy = FALSE
 do_vPFC_vmax = FALSE
-do_vPFC_HC_entropy = FALSE
+do_vPFC_HC_entropy = TRUE
 do_vPFC_HC_vmax = FALSE
 do_vPFC_HC = FALSE
 

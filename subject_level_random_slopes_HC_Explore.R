@@ -12,7 +12,7 @@ library(fmri.pipeline)
 repo_directory <- "~/clock_analysis"
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = FALSE
+do_rand_slopes = TRUE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
 trial_mod = FALSE
@@ -215,9 +215,9 @@ if (do_rand_slopes){
   
   rm(decode_formula)
   decode_formula <- formula(~ (1|id))
-  decode_formula[[1]] = formula(~ age + gender + v_entropy_wi + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-  decode_formula[[2]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
-  decode_formula[[3]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin  |id) + (1|run))
+  decode_formula[[1]] = formula(~ age + gender + v_entropy_wi + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + (1 + HCwithin*v_entropy_wi |id) + (1|run))
+  decode_formula[[2]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin*v_max_wi  |id) + (1|run))
+  decode_formula[[3]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
   
   splits = c('evt_time','network','HC_region')
   #source("~/fmri.pipeline/R/mixed_by.R")
@@ -230,14 +230,14 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-nofixedeffect-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-nofixedeffect-noHCbetween-',i,'.Rdata'))
   }
 }
 
 if (do_rt_pred_fmri){
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-nofixedeffect-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-nofixedeffect-noHCbetween-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     

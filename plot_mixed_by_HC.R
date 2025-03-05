@@ -3,14 +3,18 @@ plot_mixed_by_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model_iter)
   ## Check plots
   if (strcmp(toalign,"clock")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_clock_HC')
+    epoch_label = paste("Time relative to trial onset [s]")
   } else if (strcmp(toalign,"feedback")){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_feedback_HC')
+    epoch_label = paste("Time relative to feedback [s]")
+  } else if (strcmp(toalign,'outcome') & (strcmp(behavmodel,'trust'))){
+    setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/validate_mixed_by_trust_outcome')
+    epoch_label = paste("Time relative to outcome onset [s]")
   }
   
   message("\nPlotting streams decoding")
   library(viridis)
   
-  epoch_label = paste("Time relative to trial onset [s]")
   ddq <- ddf
   ddf <- as_tibble(ddf$coef_df_reml)
   if (strcmp(totest,'Explore-')){

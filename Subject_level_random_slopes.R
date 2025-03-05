@@ -13,7 +13,7 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = FALSE
+do_rand_slopes = TRUE
 simple_model = FALSE
 do_rt_pred_fmri = TRUE
 plot_rt_pred_fmri = FALSE
@@ -133,8 +133,8 @@ if (do_rand_slopes){
     
     rm(decode_formula)
     decode_formula <- formula(~ (1|id))
-    decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-    decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi |id) + (1|run))
+    decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + trial_neg_inv_sc*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + (1 + HCwithin*v_entropy_wi |id) + (1|run))
+    decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin  + rt_lag_sc*HCwithin + last_outcome*HCwithin + (1 + HCwithin*v_max_wi |id) + (1|run))
     
   } else if (strcmp(toalign,'clock')){
     df <- df %>% select(ev,iti_ideal,iti_prev,score_csv,v_max,outcome,v_entropy,rt_lag,v_entropy_full,v_entropy_wi_full,rt_vmax_full,rt_vmax_change_full,rt_csv_sc,rt_csv,id, run, run_trial, last_outcome, trial_neg_inv_sc,pe_max, rt_vmax, score_csv,
@@ -214,9 +214,9 @@ if (do_rand_slopes){
     #decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
     #decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin  + iti_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween + (1 + HCwithin  |id) + (1|run))
   
-    decode_formula[[1]] = formula(~ age + female + trial_neg_inv_sc + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-    decode_formula[[2]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin*v_max_wi  |id) + (1|run))
-    decode_formula[[3]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + HCbetween + (1 + HCwithin  |id) + (1|run))
+    decode_formula[[1]] = formula(~ age + female + trial_neg_inv_sc + v_entropy_wi + rt_lag_sc + iti_lag_sc + last_outcome + (1 + HCwithin*v_entropy_wi |id) + (1|run))
+    decode_formula[[2]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin*v_max_wi  |id) + (1|run))
+    decode_formula[[3]] = formula(~ age + female + trial_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
     
   }
   
@@ -232,14 +232,14 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata'))
   }
 }
 
 if (do_rt_pred_fmri){
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -388,35 +388,35 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          # AH
-          zq <- Q2 %>% filter(network=='DMN' & HC_region =='AH')
-          m_dmn_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_dmn_ah <- anova(m_dmn_ah)
-          zq <- Q2 %>% filter(network=='CTR' & HC_region =='AH')
-          m_ctr_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_ctr_ah <- anova(m_ctr_ah)
-          zq <- Q2 %>% filter(network=='LIM' & HC_region =='AH')
-          m_lim_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_lim_ah <- anova(m_lim_ah)
-          # PH
-          zq <- Q2 %>% filter(network=='DMN' & HC_region =='PH')
-          m_dmn_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_dmn_ph <- anova(m_dmn_ph)
-          zq <- Q2 %>% filter(network=='CTR' & HC_region =='PH')
-          m_ctr_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_ctr_ph <- anova(m_ctr_ph)
-          zq <- Q2 %>% filter(network=='LIM' & HC_region =='PH')
-          m_lim_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_lim_ph <- anova(m_lim_ph)
-          save(am_dmn_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ah-anova-',i,'.Rdata'))
-          save(am_ctr_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ah-anova-',i,'.Rdata'))
-          save(am_lim_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ah-anova-',i,'.Rdata'))
-          save(am_dmn_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ph-anova-',i,'.Rdata'))
-          save(am_ctr_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ph-anova-',i,'.Rdata'))
-          save(am_lim_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ph-anova-',i,'.Rdata'))
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-',i,'.Rdata'))
+          # # AH
+          # zq <- Q2 %>% filter(network=='DMN' & HC_region =='AH')
+          # m_dmn_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_dmn_ah <- anova(m_dmn_ah)
+          # zq <- Q2 %>% filter(network=='CTR' & HC_region =='AH')
+          # m_ctr_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_ctr_ah <- anova(m_ctr_ah)
+          # zq <- Q2 %>% filter(network=='LIM' & HC_region =='AH')
+          # m_lim_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_lim_ah <- anova(m_lim_ah)
+          # # PH
+          # zq <- Q2 %>% filter(network=='DMN' & HC_region =='PH')
+          # m_dmn_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_dmn_ph <- anova(m_dmn_ph)
+          # zq <- Q2 %>% filter(network=='CTR' & HC_region =='PH')
+          # m_ctr_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_ctr_ph <- anova(m_ctr_ph)
+          # zq <- Q2 %>% filter(network=='LIM' & HC_region =='PH')
+          # m_lim_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_lim_ph <- anova(m_lim_ph)
+          # save(am_dmn_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ah-anova-',i,'.Rdata'))
+          # save(am_ctr_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ah-anova-',i,'.Rdata'))
+          # save(am_lim_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ah-anova-',i,'.Rdata'))
+          # save(am_dmn_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ph-anova-',i,'.Rdata'))
+          # save(am_ctr_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ph-anova-',i,'.Rdata'))
+          # save(am_lim_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ph-anova-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-slo-notimesplit-nofixedeffect-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-pred-slo-notimesplit-nofixedeffect-noHCbetween-',i,'.Rdata')) 
         }
         
         
@@ -504,7 +504,7 @@ if (do_rt_pred_meg) {
   
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -646,35 +646,35 @@ if (do_rt_pred_meg) {
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          # AH
-          zq <- Q2 %>% filter(network=='DMN' & HC_region =='AH')
-          m_dmn_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_dmn_ah <- anova(m_dmn_ah)
-          zq <- Q2 %>% filter(network=='CTR' & HC_region =='AH')
-          m_ctr_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_ctr_ah <- anova(m_ctr_ah)
-          zq <- Q2 %>% filter(network=='LIM' & HC_region =='AH')
-          m_lim_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_lim_ah <- anova(m_lim_ah)
-          # PH
-          zq <- Q2 %>% filter(network=='DMN' & HC_region =='PH')
-          m_dmn_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_dmn_ph <- anova(m_dmn_ph)
-          zq <- Q2 %>% filter(network=='CTR' & HC_region =='PH')
-          m_ctr_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_ctr_ph <- anova(m_ctr_ph)
-          zq <- Q2 %>% filter(network=='LIM' & HC_region =='PH')
-          m_lim_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
-          am_lim_ph <- anova(m_lim_ph)
-          save(am_dmn_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ah-anova-',i,'.Rdata'))
-          save(am_ctr_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ah-anova-',i,'.Rdata'))
-          save(am_lim_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ah-anova-',i,'.Rdata'))
-          save(am_dmn_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ph-anova-',i,'.Rdata'))
-          save(am_ctr_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ph-anova-',i,'.Rdata'))
-          save(am_lim_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ph-anova-',i,'.Rdata'))
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-',i,'.Rdata'))
+          # # AH
+          # zq <- Q2 %>% filter(network=='DMN' & HC_region =='AH')
+          # m_dmn_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_dmn_ah <- anova(m_dmn_ah)
+          # zq <- Q2 %>% filter(network=='CTR' & HC_region =='AH')
+          # m_ctr_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_ctr_ah <- anova(m_ctr_ah)
+          # zq <- Q2 %>% filter(network=='LIM' & HC_region =='AH')
+          # m_lim_ah <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_lim_ah <- anova(m_lim_ah)
+          # # PH
+          # zq <- Q2 %>% filter(network=='DMN' & HC_region =='PH')
+          # m_dmn_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_dmn_ph <- anova(m_dmn_ph)
+          # zq <- Q2 %>% filter(network=='CTR' & HC_region =='PH')
+          # m_ctr_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_ctr_ph <- anova(m_ctr_ph)
+          # zq <- Q2 %>% filter(network=='LIM' & HC_region =='PH')
+          # m_lim_ph <- lmer(rt_csv_sc ~(rt_lag_sc + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * subj_level_rand_slope*trial_neg_inv_sc + (1 | id/run), data=zq)
+          # am_lim_ph <- anova(m_lim_ph)
+          # save(am_dmn_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ah-anova-',i,'.Rdata'))
+          # save(am_ctr_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ah-anova-',i,'.Rdata'))
+          # save(am_lim_ah,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ah-anova-',i,'.Rdata'))
+          # save(am_dmn_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-dmn_ph-anova-',i,'.Rdata'))
+          # save(am_ctr_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-ctr_ph-anova-',i,'.Rdata'))
+          # save(am_lim_ph,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-lim_ph-anova-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-slo-notimesplit-nofixedeffect-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-ranslopes-',toalign,'-replication-pred-slo-notimesplit-nofixedeffect-noHCbetween-',i,'.Rdata')) 
         } 
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
