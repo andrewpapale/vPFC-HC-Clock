@@ -97,11 +97,11 @@ vmPFC <- vmPFC %>% arrange(id,trial,evt_time)
 df <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_Trust/Tim_trust_trialdf_clean.csv')
 # there are three subjects for whom the task blew up on the last trial, and they were assigned weird, negative timings. One was already dropped from the trial_df due to a lost nifit (221548). Dropping the last trial for the other 2 subjects manually:
 df <- df %>% filter(!(id == 440230 & trial ==192) & !(id == 440124 & trial == 144)) %>% filter(!id==221548)
-df <- df %>% select(id,reward + alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
+df <- df %>% select(id,reward,alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
 df <- df %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
 df$trustee <- relevel(as.factor(df$trustee),ref='neutral')
 
-Q <- inner_join(Q,df,by=c('id','trial'))
+Q <- inner_join(vmPFC,df,by=c('id','trial'))
 Q <- Q %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
 
 Q$vmPFC_decon[Q$evt_time >  + Q$outcome_duration + Q$iti_duration] = NA

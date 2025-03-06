@@ -6,6 +6,7 @@ library(stringr)
 library(pracma)
 library(wesanderson)
 library(tidyverse)
+library(fmri.pipeline)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
@@ -222,7 +223,7 @@ if (do_rand_slopes){
   
   
   splits = c('evt_time','network','HC_region')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -352,7 +353,7 @@ if (do_rt_pred_fmri){
     qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
     qRS <- quantile(Q2$estimate, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     splits = c('HC_region','network')
-    source('~/fmri.pipeline/R/mixed_by.R')
+    #source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model){
@@ -610,7 +611,7 @@ if (do_rt_pred_meg) {
     qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
     qRS <- quantile(Q2$estimate, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     splits = c('HC_region','network')
-    source('~/fmri.pipeline/R/mixed_by.R')
+    #source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model){
