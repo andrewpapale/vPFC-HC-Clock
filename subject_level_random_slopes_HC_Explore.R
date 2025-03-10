@@ -12,7 +12,7 @@ library(fmri.pipeline)
 repo_directory <- "~/clock_analysis"
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = TRUE
+do_rand_slopes = FALSE
 do_rt_pred_fmri = TRUE
 simple_model = FALSE
 trial_mod = FALSE
@@ -386,7 +386,7 @@ if (do_rt_pred_fmri){
     qRT <- quantile(df$rt_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
     #qH <- c(1,2,3,4)
     qT <- quantile(df$condition_trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
-    splits = c('HC_region','network','scan_which')
+    splits = c('HC_region','network')
     #source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
@@ -416,9 +416,9 @@ if (do_rt_pred_fmri){
         setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
         curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
         if (j==1){
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-scanner-',i,'.Rdata'))
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-int-trial1-10included-noHCbetween-',i,'.Rdata'))
         } else {
-          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-scanner-',i,'.Rdata')) 
+          save(ddq,file=paste0(curr_date,'-vmPFC-HC-network-Explore-ranslopes-',toalign,'-pred-slo-trial1-10included-noHCbetween-',i,'.Rdata')) 
         }
       } else if (simple_model){
         ddq <- mixed_by(Q2, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
