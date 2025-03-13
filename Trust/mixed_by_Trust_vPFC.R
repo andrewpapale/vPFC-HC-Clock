@@ -38,9 +38,19 @@ hc <- hc %>% group_by(id) %>% mutate(HCwithin = scale(decon_mean),HCbetween=mean
 df <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_Trust/Tim_trust_trialdf_clean.csv')
 # there are three subjects for whom the task blew up on the last trial, and they were assigned weird, negative timings. One was already dropped from the trial_df due to a lost nifit (221548). Dropping the last trial for the other 2 subjects manually:
 df <- df %>% filter(!(id == 440230 & trial ==192) & !(id == 440124 & trial == 144)) %>% filter(!id==221548)
-df <- df %>% select(id,reward,alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
+df <- df %>% select(id,reward,t_decides,p_decides,alpha_transformed,beta_transformed,decision,outcome_duration,pchoice_duration, dchoice_duration,outcome_offset,t_decides,trial,pchoice_onset,trustee,block,pchoice_rt,iti_onset,noresponse,kappaS_transformed,kappaT_bad_transformed,kappaT_good_transformed,kappaT_computer_transformed,PE_mult_z,V_mult_z,reward)
 df <- df %>% group_by(id) %>% mutate(iti_duration = lead(iti_onset) - outcome_offset) %>% ungroup()
+df <- df %>% arrange(id,trial) %>% group_by(id,trustee,block) %>% mutate(block_trial = seq(1,length(unique(trial)),length.out=length(unique(trial)))) %>% ungroup()
 df$trustee <- relevel(as.factor(df$trustee),ref='neutral')
+#wrangle trial_type variable
+df <- df %>% mutate(p_dec_char = if_else(p_decides == 0, "keep", 
+                                                     if_else(p_decides == 1, "share", NA_character_)),
+                                trial_type = if_else(!is.na(p_dec_char), 
+                                                     paste("i", p_dec_char, "t", t_decides, sep = "_"),
+                                                     p_dec_char))
+df$trial_type <- as.factor(df$trial_type)
+df$trial_type <- relevel(df$trial_type, ref = "i_share_t_share")
+df <- df %>% group_by(id,trustee) %>% mutate(tdec_prev = lag(t_decides), pdec_prev = lag(p_decides)) %>% ungroup()
 
 Q <- full_join(vmPFC,hc,by=c('id','trial','evt_time'))
 rm(vmPFC,hc)

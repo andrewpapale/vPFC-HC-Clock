@@ -89,7 +89,6 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
   require(iterators)
   require(broom.mixed)
   require(formula.tools)
-  require(ordinal)
 
   ## VALIDATE INPUTS
   # support data.frame input for single dataset execution or a vector of files that are imported and fit sequentially
@@ -196,7 +195,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
     if (!doclmm==TRUE){
       md <- lmerTest::lmer(model_formula, data, control = lmer_control, REML = REML, na.action=na.exclude)
     } else{
-      md <- ordinal::clmm(model_formula, data, control = lmer_control, na.action=na.exclude)
+      md <- lme4::glmer(model_formula, data, control = lmer_control, na.action=na.exclude,family='binomial')
     }
     
     if (refit_on_nonconvergence > 0L & !doclmm==TRUE) {
@@ -233,6 +232,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
 
   # process emmeans specification setup
   if (!is.null(emmeans_spec)) {
+    
     #has the outcome and model name to lookup whether to run a given emmeans specification
     if (is.null(names(emmeans_spec))) {
       names(emmeans_spec) <- paste("emm", seq_along(emmeans_spec), sep="_")
@@ -390,7 +390,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
     mresults[[i]] <- foreach(
       dt_split = iter(data, by = "row"), .packages = c("lme4", "lmerTest", "data.table", "dplyr", "broom.mixed", "emmeans", "ordinal"),
       .noexport = "data", .inorder = FALSE
-    ) %dopar% {
+    ) %do% {
       if (nrow(dt_split$dt[[1L]]) == 0L) {
         warning("No rows found in split. Skipping")
         return(NULL)
@@ -413,7 +413,6 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
           thism_ml <- model_worker(ret$dt[[1]], ff, lmer_control, outcome_transform, scale_predictors, REML=FALSE) #refit with ML for AIC/BIC
           ret[, fit_df := list(glance(thism_ml))]
           if (!doclmm==TRUE){
-            browser()
             ret[, coef_df_ml := list(do.call(tidy, append(tidy_args, x = thism_ml)))]
           } else {
             ret[, coef_df_ml := list(tidy(thism_ml))]
@@ -434,11 +433,13 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
         
         # process emmeans
         if (!is.null(emmeans_spec)) {
+          
           emm_torun <- emm_metadata %>% 
             filter(outcome == !!model_set$outcome[[mm]] & model_name == !!names(model_set$rhs)[mm])
           
           if (nrow(emm_torun) > 0L) {
             this_emmspec <- emmeans_spec[emm_torun %>% pull(emm_number)] #subset list to relevant elements
+            
             emms <- lapply(seq_along(this_emmspec), function(emm_i) {
               tidy(do.call(emmeans, c(this_emmspec[[emm_i]], object=thism))) %>%
                 dplyr::bind_cols(emm_torun[emm_i,] %>% dplyr::select(emm_number, emm_label)) # don't add model and outcome, which will double at the unnest
