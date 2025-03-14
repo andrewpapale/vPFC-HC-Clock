@@ -64,18 +64,6 @@ vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 
-# Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
-# AH and PH averages
-hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
-  summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
-  ungroup() # 12 -> 2
-
-# Create a new scaled within-subjects variable (HCwithin) and a between-subjects
-# variable averaged per subject and run (HCbetween)
-hc <- hc %>% group_by(id,run) %>%
-  mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
-  ungroup()
-
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(run_trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
@@ -95,7 +83,20 @@ hc_ksoc <- hc %>%  filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(tri
                                                                              trial > 200 & trial <=250 ~ trial-200,
                                                                              trial > 250 & trial <=300 ~ trial-250))
 
-hc <- rbind(hc_bsoc,hc_ksoc) %>% rename(run_trial = run_trial0)
+hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
+
+# Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
+# AH and PH averages
+hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
+  summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
+  ungroup() # 12 -> 2
+
+# Create a new scaled within-subjects variable (HCwithin) and a between-subjects
+# variable averaged per subject and run (HCbetween)
+hc <- hc %>% group_by(id,run) %>%
+  mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
+  ungroup()
+
 
 # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
 Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
