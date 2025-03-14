@@ -19,22 +19,26 @@ ncores <- 26
 vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz'))
 
 # calculate some variables
-split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(run_trial)) %>% ungroup()
+split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
 ksoc <- rbind(ksoc,221193,221611)
 bsoc <- rbind(bsoc,221973,219757,220419,220691,221507,221842,440223)
-vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(run_trial <= 40 ~ run_trial, 
-                                                     run_trial > 40 & run_trial <= 80 ~ run_trial-40,
-                                                     run_trial > 80 & run_trial <=120 ~ run_trial-80, 
-                                                     run_trial > 120 & run_trial <=160 ~ run_trial-120)
-)
-vmPFC_ksoc <- vmPFC %>%  filter(id %in% bsoc$id) %>%mutate(run_trial0 = case_when(run_trial <= 50 ~ run_trial, 
-                                                     run_trial > 50 & run_trial <= 100 ~ run_trial-50,
-                                                     run_trial > 100 & run_trial <=150 ~ run_trial-100, 
-                                                     run_trial > 150 & run_trial <=200 ~ run_trial-150)
-)
-vmPFC <- rbind(vmPFC_bsoc,vmPFC_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
+vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                                                                  trial > 40 & trial <= 80 ~ trial-40,
+                                                                                  trial > 80 & trial <=120 ~ trial-80, 
+                                                                                  trial > 120 & trial <=160 ~ trial-120,
+                                                                                  trial > 160 & trial <=200 ~ trial-160,
+                                                                                  trial > 200 & trial <=240 ~ trial-200))
+
+vmPFC_ksoc <- vmPFC %>%  filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial, 
+                                                                                  trial > 50 & trial <= 100 ~ trial-50,
+                                                                                  trial > 100 & trial <=150 ~ trial-100, 
+                                                                                  trial > 150 & trial <=200 ~ trial-150,
+                                                                                  trial > 200 & trial <=250 ~ trial-200,
+                                                                                  trial > 250 & trial <=300 ~ trial-250))
+
+vmPFC <- rbind(vmPFC_bsoc,vmPFC_ksoc) %>% rename(run_trial = run_trial0)
 # network and symmetry group as per the mmclock data:
 vmPFC <- vmPFC %>% mutate(network = case_when(atlas_value %in% c(55, 56, 159, 160) ~ 'LIM',
                                               atlas_value %in% c(65,66,67, 170, 171) ~ 'CTR',
@@ -77,17 +81,21 @@ ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
 ksoc <- rbind(ksoc,221193,221611)
 bsoc <- rbind(bsoc,221973,219757,220419,220691,221507,221842,440223)
-hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(run_trial <= 40 ~ run_trial, 
-                                                                                  run_trial > 40 & run_trial <= 80 ~ run_trial-40,
-                                                                                  run_trial > 80 & run_trial <=120 ~ run_trial-80, 
-                                                                                  run_trial > 120 & run_trial <=160 ~ run_trial-120)
-)
-hc_ksoc <- hc %>%  filter(id %in% bsoc$id) %>%mutate(run_trial0 = case_when(run_trial <= 50 ~ run_trial, 
-                                                                                  run_trial > 50 & run_trial <= 100 ~ run_trial-50,
-                                                                                  run_trial > 100 & run_trial <=150 ~ run_trial-100, 
-                                                                                  run_trial > 150 & run_trial <=200 ~ run_trial-150)
-)
-hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
+hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                                                            trial > 40 & trial <= 80 ~ trial-40,
+                                                                            trial > 80 & trial <=120 ~ trial-80, 
+                                                                            trial > 120 & trial <=160 ~ trial-120,
+                                                                            trial > 160 & trial <=200 ~ trial-160,
+                                                                            trial > 200 & trial <=240 ~ trial-200))
+
+hc_ksoc <- hc %>%  filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial, 
+                                                                             trial > 50 & trial <= 100 ~ trial-50,
+                                                                             trial > 100 & trial <=150 ~ trial-100, 
+                                                                             trial > 150 & trial <=200 ~ trial-150,
+                                                                             trial > 200 & trial <=250 ~ trial-200,
+                                                                             trial > 250 & trial <=300 ~ trial-250))
+
+hc <- rbind(hc_bsoc,hc_ksoc) %>% rename(run_trial = run_trial0)
 
 # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
 Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
