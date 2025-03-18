@@ -15,19 +15,21 @@ library(lme4)
 library(emmeans)
 library(sciplot)
 library(MplusAutomation)
+library(lmerTest)
 
 # set root directory - change for your needs
-rootdir <- '/ix/cladouceur/DNPL'
-repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
-
+#rootdir <- '/ix/cladouceur/DNPL'
+#repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
+repo_directory <- "~/clock_analysis"
 # load some source code that we'll need to use
-setwd(rootdir)
-source('get_trial_data.R')
+#setwd(rootdir)
+#source('get_trial_data.R')
 
 # load mixed_by function for analyses
-source(file.path(repo_directory,"/mixed_by.R"))
-source(file.path(repo_directory,"/plot_mixed_by_vmPFC_HC.R"))
-source(file.path(rootdir,'/plot_mixed_by_vmPFC_HC_simplified_networksymmetry.R'))
+#source(file.path(repo_directory,"/mixed_by.R"))
+#source(file.path(repo_directory,"/plot_mixed_by_vmPFC_HC.R"))
+#source(file.path(rootdir,'/plot_mixed_by_vmPFC_HC_simplified_networksymmetry.R'))
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 
 ##################################
 ##### Load in and format data ####
@@ -35,7 +37,7 @@ source(file.path(rootdir,'/plot_mixed_by_vmPFC_HC_simplified_networksymmetry.R')
 ##################################
 
 # load the vmPFC data, filter to within 5s of RT, and select vars of interest
-load('MMclock_clock_Aug2023.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
 vmPFC <- clock_comb
 vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
 rm(clock_comb)
@@ -43,7 +45,8 @@ vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symme
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 
 # load in the hippocampus data, filter to within 5s of RT
-load('/ix/cladouceur/DNPL/HC_clock_Aug2023.Rdata')
+#load('/ix/cladouceur/DNPL/HC_clock_Aug2023.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 
 # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
@@ -71,7 +74,7 @@ Q1 <- Q1 %>% group_by(id,run,run_trial) %>%
 
 # Get task behav data
 # (had to download it from UNCDEPENdlab github first)
-df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_fmri')
+df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
 
 # select and scale variables of interest
 df <- df %>% 
@@ -92,7 +95,7 @@ behav <- df %>% select(id,run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_la
 Q1 <- inner_join(behav, Q1, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 
 # add in age and sex variables
-demo <- read.table(file=file.path(rootdir, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
 demo <- demo %>% rename(id=lunaid)
 demo <- demo %>% select(!adult & !scandate)
 Q1 <- inner_join(Q1,demo,by=c('id'))
@@ -103,25 +106,24 @@ Q1_AH <- Q1 %>% filter(HC_region == "AH")
 Q1_PH <- Q1 %>% filter(HC_region == "PH")
 
 # test whether MLMs are still significant
-library(lmerTest)
 
 m1 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_AH)
 summary(m1)
 
-m1 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_AH)
-summary(m1)
+m2 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_AH)
+summary(m2)
 
-m1 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_AH)
-summary(m1)
+m3 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_AH)
+summary(m3)
 
-m1 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_PH)
-summary(m1)
+m4 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_PH)
+summary(m4)
 
-m1 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_PH)
-summary(m1)
+m5 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_PH)
+summary(m5)
 
-m1 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
-summary(m1)
+m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
+summary(m6)
 
 #save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_AHforMplus.Rdata'))
 #save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_PHforMplus.Rdata'))

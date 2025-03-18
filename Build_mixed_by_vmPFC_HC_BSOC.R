@@ -201,23 +201,23 @@ Q$group <- relevel(factor(Q$group),ref='HC')
 #Q <- Q %>% filter(female==0)
 #Q <- Q %>% filter(rewFunc == 'IEV')
 # now to add in model fits
-#fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
-#fits <- fits %>% rename(old_id=id)
+#fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
+#fits <- fits %>% rename(id=old_id)
 #fits$id<-gsub("_1","",fits$id)
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
 decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
-decode_formula[[2]] = formula(~ age*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[3]] = formula(~ age*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[4]] = formula(~ HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
+decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
+decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + (1|id/run))
+decode_formula[[4]] = formula(~ HCwithin*v_entropy_wi  + (1|id/run))
 
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','network','HC_region')
+splits = c('evt_time','symmetry_group','HC_region')
 #source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -250,6 +250,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-HConly-RTcorrected-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-symmetry-clock-HConly-RTcorrected-',i,'.Rdata'))
 }
 

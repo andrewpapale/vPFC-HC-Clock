@@ -148,8 +148,10 @@ Q3 <- Q3 %>% mutate(sex = case_when(female==0 ~ 'M',
                                     female==1 ~ 'F'))
 
 
+Q3 <- Q3 %>% filter(rt_csv < 4 & rt_csv > 0.2)
+Q3 <- Q3 %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
+decode_formula[[1]] <- formula(~rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc*trial_neg_inv_sc*sex + rt_lag_sc*trial_neg_inv_sc*sex + (1 | id/run))
 #decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 qVL <- quantile(df$v_max_wi_lag,c(0.1,0.9),na.rm=TRUE)
 qRTV <- quantile(df$rt_vmax_lag,c(0.1,0.9),na.rm=TRUE)
@@ -165,30 +167,30 @@ splits = c('dataset')
 print(i)
 for (j in 1:length(decode_formula)){
   
-  ddq <- mixed_by(Q3, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+  ddq <- mixed_by(Q3, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                   emmeans_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', 
+                    RT = list(outcome='rt_csv', model_name='model1', 
                               specs=formula(~rt_lag_sc:sex), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', 
+                    Vmax = list(outcome='rt_csv', model_name='model1', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',
+                    RTxO = list(outcome='rt_csv',model_name='model1',
                                 specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
+                    TrxVmax = list(outcome='rt_csv',model_name='model1',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                     
                   ),
                   emtrends_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
+                    RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
                               specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
+                    Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
+                    RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
                                 specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
+                    TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
-                    TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
+                    TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
                                     specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
                     # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
                     #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))

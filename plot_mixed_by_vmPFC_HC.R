@@ -426,7 +426,7 @@ plot_mixed_by_vmPFC_HC <- function(ddf,toalign,toprocess,totest,behavmodel,model
         #print(gg2)
         dev.off()
         #} 
-        #} else if (strcmp(toprocess,'network-by-HC-by-rewFunc')){
+        } else if (strcmp(toprocess,'network-by-HC-by-rewFunc')){
         fname = paste(behavmodel,'-',totest,"_",toalign, "_line_", toprocess, "_", termstr,'-',hc_LorR, '-',model_iter, ".pdf", sep = "")
         pdf(fname, width = 12, height = 9)
         # gg <- ggplot(edf, aes(x=t, y=estimate, ymin=estimate-std.error, ymax=estimate+std.error, color=network1, size=`p, FDR-corrected`)) +
