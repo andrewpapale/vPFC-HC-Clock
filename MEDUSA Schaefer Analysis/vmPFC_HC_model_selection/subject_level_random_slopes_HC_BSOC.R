@@ -200,7 +200,7 @@ Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-#Q <- Q %>% filter(group=='HC')
+Q <- Q %>% filter(group=='HC')
 Q$group <- relevel(factor(Q$group),ref='HC')
 #Q <- Q %>% filter(female==0)
 #Q <- Q %>% filter(rewFunc == 'IEV')
@@ -221,7 +221,6 @@ decode_formula[[3]] = formula(~ age + gender + run_trial0_neg_inv_sc + v_max_wi 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
 splits = c('evt_time','network','HC_region')
-#source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   df0 <- decode_formula[[i]]
