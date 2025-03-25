@@ -63,6 +63,38 @@ hc <- hc %>% group_by(id,run) %>%
 
 # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
 Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+rm(vmPFC, hc)
+gc()
+
+# Get task behav data
+# (had to download it from UNCDEPENdlab github first)
+df <- get_trial_data(repo_directory=repo_directory,dataset='mmclock_fmri')
+
+# select and scale variables of interest
+df <- df %>% 
+  group_by(id, run) %>% 
+  mutate(v_chosen_sc = scale(v_chosen),
+         score_sc = scale(score_csv),
+         iti_sc = scale(iti_ideal),
+         iti_lag_sc = scale(iti_prev),
+         v_max_sc = scale(v_max),
+         rt_vmax_sc = scale(rt_vmax),
+         v_entropy_sc = scale(v_entropy),
+         rt_swing_sc = scale(rt_swing))
+
+# select only vars of interest and merge into MRI data
+behav <- df %>% select(id,run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+                       rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,v_entropy_wi_change,outcome,
+                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev)
+Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+
+# censor out previous and next trials
+Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
+Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
+Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # summarize over evt_time and atlas_value and pivot to create new columns with data averaged across network
 Q1 <- Q %>% select(!decon1) %>% group_by(id,run,run_trial,network,HC_region) %>% 
@@ -107,31 +139,31 @@ Q1_PH <- Q1 %>% filter(HC_region == "PH")
 
 # test whether MLMs are still significant
 
-m1 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_AH)
-summary(m1)
-
-m2 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_AH)
-summary(m2)
-
-m3 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_AH)
-summary(m3)
-
-m4 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_PH)
-summary(m4)
-
-m5 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_PH)
-summary(m5)
-
-m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
-summary(m6)
+# m1 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_AH)
+# summary(m1)
+# 
+# m2 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_AH)
+# summary(m2)
+# 
+# m3 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_AH)
+# summary(m3)
+# 
+# m4 <- lmer(vmPFC_decon_CTR ~ HCwithin_CTR*female + (1|id), data = Q1_PH)
+# summary(m4)
+# 
+# m5 <- lmer(vmPFC_decon_DMN ~ HCwithin_DMN*female + (1|id), data = Q1_PH)
+# summary(m5)
+# 
+# m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
+# summary(m6)
 
 #save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_AHforMplus.Rdata'))
 #save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_PHforMplus.Rdata'))
 
-setwd(file.path(rootdir,"Mplus"))
+setwd(file.path(rootdir))
 
-#prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
-#prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
 
 # Alright! Was able to run the random slopes models. Now need to extract random slopes and put them
 # back into the dataframe. Can use Michael's MplusAutomation for that.
@@ -164,6 +196,6 @@ for(netname in c("CTR","DMN","LIM")){
 }
 
 # now saving these again
-#prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
-#prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
+prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
+prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
 
