@@ -198,9 +198,14 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # summarize over evt_time and atlas_value and pivot to create new columns with data averaged across network
-Q1 <- Q %>% select(!decon1) %>% group_by(id,run,run_trial,network,HC_region) %>% 
-  summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE), HCbetween = mean(HCbetween,na.rm=TRUE)) %>% 
-  ungroup()
+# Q1 <- Q %>% select(!decon1) %>% group_by(id,run,run_trial,network,HC_region) %>% 
+#   summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE), HCbetween = mean(HCbetween,na.rm=TRUE)) %>% 
+#   ungroup()
+
+Q1 <- Q %>% filter(evt_time==0) %>% select(!decon1) %>% group_by(id,run,run_trial,network,HC_region) %>%
+     summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE), HCbetween = mean(HCbetween,na.rm=TRUE)) %>% 
+     ungroup()
+
 Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
   pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
   ungroup()
@@ -311,13 +316,13 @@ Q1_PH <- Q1 %>% filter(HC_region == "PH")
 # m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
 # summary(m6)
 
-save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_AHforMplus.Rdata'))
-save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_PHforMplus.Rdata'))
+save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
+save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
 
 setwd(file.path(rootdir))
 
-prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
-prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_AH_evt_time0_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_PH_evt_time0_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
 
 # Alright! Was able to run the random slopes models. Now need to extract random slopes and put them
 # back into the dataframe. Can use Michael's MplusAutomation for that.
