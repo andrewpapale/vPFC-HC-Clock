@@ -15,7 +15,7 @@ rt_comb <- rt_comb %>% rename(decon_mean = decon_interp)
 gc()
 
 # load Explore
-rt_exp <- read.csv('/Volumes/Users/Andrew/DAN/Explore_rt_aligned_444_dan.csv.gz')
+rt_exp <- read.csv('/Volumes/Users/Andrew/DAN/fixed DAN/feedback_aligned_bsocial_dan.csv.gz')
 rt_exp <- rt_exp %>% filter(atlas_value %in% PPCcaudal) %>% 
   select(id,run,trial,evt_time,decon_mean, atlas_value)
 

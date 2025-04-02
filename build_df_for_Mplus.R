@@ -21,6 +21,7 @@ library(lmerTest)
 #rootdir <- '/ix/cladouceur/DNPL'
 #repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
 repo_directory <- "~/clock_analysis"
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_MPlus'
 # load some source code that we'll need to use
 #setwd(rootdir)
 #source('get_trial_data.R')
@@ -97,7 +98,7 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # summarize over evt_time and atlas_value and pivot to create new columns with data averaged across network
-Q1 <- Q %>% select(!decon1) %>% group_by(id,run,run_trial,network,HC_region) %>% 
+Q1 <- Q %>% select(!decon1) %>% filter(evt_time==0) %>% group_by(id,run,run_trial,network,HC_region) %>% 
   summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE), HCbetween = mean(HCbetween,na.rm=TRUE)) %>% 
   ungroup()
 Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
@@ -157,45 +158,45 @@ Q1_PH <- Q1 %>% filter(HC_region == "PH")
 # m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
 # summary(m6)
 
-#save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_AHforMplus.Rdata'))
-#save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_PHforMplus.Rdata'))
+save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
+save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
 
 setwd(file.path(rootdir))
 
-prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
-prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_evt_time0_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
 
 # Alright! Was able to run the random slopes models. Now need to extract random slopes and put them
 # back into the dataframe. Can use Michael's MplusAutomation for that.
-library(MplusAutomation)
-
-list.files(getwd()) # let's see what we got in here
-
-# let's make a function
-getslopes <- function(HC_region, network){
-  # get filename
-  filename <- paste0("mmclock_get_HC_vmPFC_randslopes_",HC_region,"_",network,".out")
-  renamevar <- paste0(HC_region,"_",network,"_rs")
-  
-  #read in model
-  wm_rs <- readModels(filename)
-  
-  ## save the savedata from the mplus output to an object
-  slopes <- wm_rs$savedata %>% 
-    dplyr::select(ID, RS.Mean) %>% 
-    group_by(ID) %>% slice_head() %>% ungroup() %>%
-    rename(id = ID, !! sym(renamevar) := RS.Mean)
-
-  return(slopes)
-}
-
-# ok we ran six models: 3 networks (DMN, CTR, LIM) x 2 HC regions (AH, PH).
-for(netname in c("CTR","DMN","LIM")){
-  Q1_AH <- merge.data.frame(Q1_AH,getslopes("AH",netname),by="id")
-  Q1_PH <- merge.data.frame(Q1_PH,getslopes("PH",netname),by="id")
-}
-
-# now saving these again
-prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
-prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
+# library(MplusAutomation)
+# 
+# list.files(getwd()) # let's see what we got in here
+# 
+# # let's make a function
+# getslopes <- function(HC_region, network){
+#   # get filename
+#   filename <- paste0("mmclock_get_HC_vmPFC_randslopes_",HC_region,"_",network,".out")
+#   renamevar <- paste0(HC_region,"_",network,"_rs")
+#   
+#   #read in model
+#   wm_rs <- readModels(filename)
+#   
+#   ## save the savedata from the mplus output to an object
+#   slopes <- wm_rs$savedata %>% 
+#     dplyr::select(ID, RS.Mean) %>% 
+#     group_by(ID) %>% slice_head() %>% ungroup() %>%
+#     rename(id = ID, !! sym(renamevar) := RS.Mean)
+# 
+#   return(slopes)
+# }
+# 
+# # ok we ran six models: 3 networks (DMN, CTR, LIM) x 2 HC regions (AH, PH).
+# for(netname in c("CTR","DMN","LIM")){
+#   Q1_AH <- merge.data.frame(Q1_AH,getslopes("AH",netname),by="id")
+#   Q1_PH <- merge.data.frame(Q1_PH,getslopes("PH",netname),by="id")
+# }
+# 
+# # now saving these again
+# prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
+# prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_withrs_taa.dat", dummyCode = c("outcome"), overwrite = TRUE)
 

@@ -62,7 +62,7 @@
 #' @return A data.table object containing all coefficients for each model estimated separately by \code{split_on}
 #'
 #' @importFrom lmerTest lmer
-#' @importFrom lme4 lmerControl
+#' @importFrom lme4 glmerControl
 #' @importFrom checkmate assert_data_frame assert_character assert_subset assert_formula
 #' @importFrom foreach %dopar% foreach registerDoSEQ
 #' @importFrom iterators iter
@@ -76,9 +76,9 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
                      padjust_by = "term", padjust_method = "BY", outcome_transform = NULL, scale_predictors = NULL,
                      ncores = 1L, cl = NULL, refit_on_nonconvergence = 3,
                      tidy_args = list(effects = "fixed", conf.int = TRUE),
-                     lmer_control = lmerControl(optimizer = "nloptwrap"),
+                     glmer_control = glmerControl(optimizer = "nloptwrap"),
                      calculate=c("parameter_estimates_reml", "parameter_estimates_ml", "fit_statistics"),
-                     return_models = FALSE, emmeans_spec = NULL, emtrends_spec=NULL,doclmm=FALSE) {
+                     return_models = FALSE, emmeans_spec = NULL, emtrends_spec=NULL,doclmm=TRUE) {
   
   require(data.table) # remove for package
   require(dplyr)
@@ -175,7 +175,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
   }
 
   # worker subfunction to fit a given model to a data split
-  model_worker <- function(data, model_formula, lmer_control, outcome_transform = NULL, scale_predictors = NULL, REML = TRUE) {
+  model_worker <- function(data, model_formula, glmer_control, outcome_transform = NULL, scale_predictors = NULL, REML = TRUE) {
     if (!is.null(outcome_transform)) { # apply transformation to outcome
       lhs <- all.vars(model_formula)[1]
       data[[lhs]] <- outcome_transform(data[[lhs]])
@@ -195,7 +195,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
     if (!doclmm==TRUE){
       md <- lmerTest::lmer(model_formula, data, control = lmer_control, REML = REML, na.action=na.exclude)
     } else{
-      md <- lme4::glmer(model_formula, data, control = lmer_control, na.action=na.exclude,family='binomial')
+      md <- lme4::glmer(model_formula, data, control = glmer_control, na.action=na.exclude,family='binomial')
     }
     
     if (refit_on_nonconvergence > 0L & !doclmm==TRUE) {
@@ -203,7 +203,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
       while (any(grepl("failed to converge", md@optinfo$conv$lme4$messages)) && rfc < refit_on_nonconvergence) {
         # print(md@optinfo$conv$lme4$conv)
         ss <- getME(md, c("theta", "fixef"))
-        lmod <- lmer_control
+        lmod <- glmer_control
         lmod$optimizer <- "bobyqa" # produces convergence more reliably
         md <- update(md, start = ss, control = lmod)
         rfc <- rfc + 1 # increment refit counter
@@ -405,18 +405,14 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
         ret[, rhs := as.character(model_set$rhs[mm])]
 
         if ("parameter_estimates_reml" %in% calculate) {
-          thism <- model_worker(ret$dt[[1]], ff, lmer_control, outcome_transform, scale_predictors, REML=TRUE)
-          ret[, coef_df_reml := list(do.call(tidy, append(tidy_args, x = thism)))]
+          thism <- model_worker(ret$dt[[1]], ff, glmer_control, outcome_transform, scale_predictors, REML=TRUE)
+          ret[, coef_df_reml := list(do.call(tidy, append(tidy_args, x= thism)))]
         }
         
         if (any(c("parameter_estimates_ml", "fit_statistics") %in% calculate)) {
-          thism_ml <- model_worker(ret$dt[[1]], ff, lmer_control, outcome_transform, scale_predictors, REML=FALSE) #refit with ML for AIC/BIC
+          thism_ml <- model_worker(ret$dt[[1]], ff, glmer_control, outcome_transform, scale_predictors, REML=FALSE) #refit with ML for AIC/BIC
           ret[, fit_df := list(glance(thism_ml))]
-          if (!doclmm==TRUE){
             ret[, coef_df_ml := list(do.call(tidy, append(tidy_args, x = thism_ml)))]
-          } else {
-            ret[, coef_df_ml := list(tidy(thism_ml))]
-          }
         }
         
         
@@ -432,6 +428,8 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
         # ret[, model := list(list(thism))] #not sure why a double list is needed, but a single list does not make a list-column
         
         # process emmeans
+        
+        
         if (!is.null(emmeans_spec)) {
           
           emm_torun <- emm_metadata %>% 
@@ -440,8 +438,10 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
           if (nrow(emm_torun) > 0L) {
             this_emmspec <- emmeans_spec[emm_torun %>% pull(emm_number)] #subset list to relevant elements
             
+            browser()
+            
             emms <- lapply(seq_along(this_emmspec), function(emm_i) {
-              tidy(do.call(emmeans, c(this_emmspec[[emm_i]], object=thism))) %>%
+              tidy(do.call(emmeans, c(object=thism,this_emmspec[[emm_i]]))) %>%
                 dplyr::bind_cols(emm_torun[emm_i,] %>% dplyr::select(emm_number, emm_label)) # don't add model and outcome, which will double at the unnest
             })
             names(emms) <- names(this_emmspec)
@@ -453,6 +453,7 @@ mixed_by_clmm <- function(data, outcomes = NULL, rhs_model_formulae = NULL, mode
 
         # process emtrends
         if (!is.null(emtrends_spec)) {
+          
           emt_torun <- emt_metadata %>% 
             filter(outcome == !!model_set$outcome[[mm]] & model_name == !!names(model_set$rhs)[mm])
 
