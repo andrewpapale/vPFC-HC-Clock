@@ -208,15 +208,16 @@ Q$age <- scale(Q$age)
 rm(decode_formula)
 
 decode_formula <- formula(~ (1|id))
-decode_formula[[1]] = formula(~ age + female + v_entropy_wi + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-decode_formula[[2]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin*v_max_wi  |id) + (1|run))
-decode_formula[[3]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
+#decode_formula[[1]] = formula(~ age + female + v_entropy_wi + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + (1 + HCwithin*v_entropy_wi |id) + (1|run))
+#decode_formula[[2]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin*v_max_wi  |id) + (1|run))
+decode_formula[[1]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
+decode_formula[[2]] <- NULL
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','symmetry_group','HC_region')
+splits = c('evt_time','network','HC_region')
 #source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
