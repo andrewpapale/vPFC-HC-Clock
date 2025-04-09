@@ -196,60 +196,8 @@ Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-#Q <- Q %>% filter(group=='HC')
-#Q$group <- relevel(factor(Q$group),ref='HC')
-#Q <- Q %>% filter(female==0)
-#Q <- Q %>% filter(rewFunc == 'IEV')
-# now to add in model fits
-#fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
-#fits <- fits %>% rename(id=old_id)
-#fits$id<-gsub("_1","",fits$id)
-#Q <- inner_join(Q,fits,by='id')
-rm(decode_formula)
 
-decode_formula <- formula(~ (1|id))
-#decode_formula[[1]] = formula(~ age + female + v_entropy_wi + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + last_outcome + (1 + HCwithin*v_entropy_wi |id) + (1|run))
-#decode_formula[[2]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin*v_max_wi  |id) + (1|run))
-decode_formula[[1]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
-# decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
-# decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
-decode_formula[[2]] <- NULL
 
-qT2 <- c(-2.62,-0.544,0.372, 0.477)
-qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','network','HC_region')
-#source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1:length(decode_formula)){
-  setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  df0 <- decode_formula[[i]]
-  print(df0)
-  ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
-                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
-                  # emmeans_spec = list(
-                  #   A = list(outcome='vmPFC_decon',model_name='model1',
-                  #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
-                  #   W = list(outcome='vmPFC_decon',model_name='model1',
-                  #            specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
-                  #   H = list(outcome='vmPFC_decon', model_name='model1',
-                  #            specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,-1,0,1,2))),
-                  #   Y = list(outcome='vmPFC_decon',model_name='model1',
-                  #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                  # )#,
-                  # emtrends_spec = list(
-                  # #   HxW = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                  # #              specs = formula(~v_entropy_wi:wtar),at=list(wtar = c(-1,-0.5,0,0.5,1))),
-                  #   T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                  #               specs=formula(~trial_neg_inv_sc:HCwithin),at=list(trial_neg_inv_sc=qT1)),
-                  #   T_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                  #               specs=formula(~run_trial0_neg_inv_sc:HCwithin),at=list(run_trial0_neg_inv_sc=qT2))
-                  # #   H = list(outcome='vmPFC_decon',model_name='model1', var = 'v_entropy_wi',
-                  # #            specs = formula(~v_entropy_wi),at=list(v_entropy_wi=c(-2,-1,0,1,2))),
-                  # #   HxY = list(outcome='vmPFC_decon',model_name='model1',var='v_entropy_wi',
-                  # #              specs=formula(~v_entropy_wi:education_yrs),at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                  # )
-  )
-  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-RTcorrected-ranslopes-',i,'.Rdata'))
-}
+
+
 

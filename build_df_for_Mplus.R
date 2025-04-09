@@ -17,7 +17,7 @@ library(sciplot)
 library(MplusAutomation)
 library(lmerTest)
 
-do_evttime0 = FALSE
+do_evttime0 = TRUE
 
 # set root directory - change for your needs
 #rootdir <- '/ix/cladouceur/DNPL'
@@ -93,9 +93,7 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # summarize over evt_time and atlas_value and pivot to create new columns with data averaged across network
 if (do_evttime0==TRUE){
-  Q1 <- Q %>% filter(evt_time==0) %>% group_by(id,run,run_trial,network,HC_region) %>% 
-    mutate(vmPFC_decon = scale(vmPFC_decon),HCwithin = scale(HCwithin)) %>% 
-    ungroup()
+  Q1 <- Q %>% filter(evt_time==0)
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
     pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
     ungroup()
@@ -124,7 +122,7 @@ if (do_evttime0==TRUE){
   
 } else {
   Q1 <- Q %>% group_by(id,run,run_trial,network,HC_region) %>% 
-    summarize(vmPFC_decon = scale(vmPFC_decon),HCwithin = scale(HCwithin)) %>% 
+    summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
     ungroup()
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
     pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
@@ -161,8 +159,8 @@ Q1 <- inner_join(Q1,demo,by=c('id'))
 Q1$female <- relevel(as.factor(Q1$female),ref='0')
 Q1$age <- scale(Q1$age)
 
-Q1_AH <- Q1 %>% filter(HC_region == "AH")
-Q1_PH <- Q1 %>% filter(HC_region == "PH")
+Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
 
 # test whether MLMs are still significant
 
