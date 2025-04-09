@@ -22,8 +22,8 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+ksoc <- rbind(ksoc,221193)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
                                                                                   trial > 80 & trial <=120 ~ trial-80, 
@@ -68,8 +68,8 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+ksoc <- rbind(ksoc,221193)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
                                                                             trial > 80 & trial <=120 ~ trial-80, 

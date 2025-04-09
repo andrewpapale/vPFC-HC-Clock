@@ -24,8 +24,8 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+ksoc <- rbind(ksoc,221193)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
                                                                                   trial > 80 & trial <=120 ~ trial-80, 
@@ -70,8 +70,8 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+ksoc <- rbind(ksoc,221193)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
                                                                             trial > 80 & trial <=120 ~ trial-80, 
@@ -181,7 +181,7 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 if (do_evttime0==TRUE){
   Q1 <- Q %>% filter(evt_time==0)
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
-    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
+    pivot_wider(values_from=c(vmPFC_decon),names_from = 'network') %>% 
     ungroup()  
   
 } else {
@@ -189,7 +189,7 @@ if (do_evttime0==TRUE){
     summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
     ungroup()
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
-    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
+    pivot_wider(values_from=c(vmPFC_decon),names_from = 'network') %>% 
     ungroup()
   
   
@@ -272,14 +272,14 @@ demo1 <- demo1 %>% rename(sex=registration_birthsex,
                           group=registration_group) %>%
   select(id,group,age,sex,gender)
 demo2 <- rbind(demo,demo1)
-Q <- inner_join(Q,demo2,by=c('id'))
-Q$female <- ifelse(Q$sex==1,1,0)
-Q <- Q %>% select(!sex)
-Q$age <- scale(Q$age)
+Q1 <- inner_join(Q1,demo2,by=c('id'))
+Q1$female <- ifelse(Q1$sex==1,1,0)
+Q1 <- Q1 %>% select(!sex)
+Q1$age <- scale(Q1$age)
 
 
-Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
-Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
 
 
 if (do_evttime0==TRUE){
