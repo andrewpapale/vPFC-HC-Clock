@@ -4,6 +4,7 @@
 library(tidyverse)
 library(fmri.pipeline)
 # set root directory
+rootdir1 <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_MPlus'
 rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
 repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 ncores <- 26
@@ -286,7 +287,7 @@ if (do_evttime0==TRUE){
   save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
   save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
   
-  setwd(file.path(rootdir))
+  setwd(file.path(rootdir1))
   
   prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_evt_time0_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
@@ -295,7 +296,7 @@ if (do_evttime0==TRUE){
   save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_AHforMplus.Rdata'))
   save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_PHforMplus.Rdata'))
   
-  setwd(file.path(rootdir))
+  setwd(file.path(rootdir1))
   
   prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
