@@ -9,6 +9,7 @@ repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 ncores <- 26
 # load mixed_by function for analyses
 
+do_evttime0 = TRUE
 
 ##################################
 ##### Load in and format data ####
@@ -168,15 +169,93 @@ behav <- df %>% select(id,scanner_run,trial,run_trial,run_trial0,v_chosen_sc,sco
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
 behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
-Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
 
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
-Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
-Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
+
+if (do_evttime0==TRUE){
+  Q1 <- Q %>% filter(evt_time==0)
+  Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
+    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
+    ungroup()  
+  
+} else {
+  Q1 <- Q %>% group_by(id,run,run_trial,network,HC_region) %>% 
+    summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
+    ungroup()
+  Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
+    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
+    ungroup()
+  
+  
+  # Get task behav data
+  df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
+  split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
+  ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
+  bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
+  ksoc <- rbind(ksoc,221193)
+  bsoc <- rbind(bsoc,221973,221507,221842,440223)
+  df_bsoc <- df %>% filter(id %in% bsoc$id) %>% mutate(block = case_when(trial <= 40 ~ 1, 
+                                                                         trial > 40 & trial <= 80 ~ 2,
+                                                                         trial > 80 & trial <=120 ~ 3, 
+                                                                         trial > 120 & trial <=160 ~ 4,
+                                                                         trial > 160 & trial <=200 ~ 5,
+                                                                         trial > 200 & trial <=240 ~ 6))
+  df_bsoc <- df_bsoc %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
+                                                       trial > 40 & trial <= 80 ~ trial-40,
+                                                       trial > 80 & trial <=120 ~ trial-80, 
+                                                       trial > 120 & trial <=160 ~ trial-120,
+                                                       trial > 160 & trial <=200 ~ trial-160,
+                                                       trial > 200 & trial <=240 ~ trial-200))
+  df_bsoc <- df_bsoc %>% mutate(protocol = 'bsocial',
+                                run_trial0_c = run_trial0-floor(run_trial0/40.5),
+                                run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                                run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  
+  df_ksoc <- df %>% filter(id %in% ksoc$id) %>% mutate(block = case_when(trial <= 50 ~ 1, 
+                                                                         trial > 50 & trial <= 100 ~ 2,
+                                                                         trial > 100 & trial <=150 ~ 3, 
+                                                                         trial > 150 & trial <=200 ~ 4,
+                                                                         trial > 200 & trial <=250 ~ 5,
+                                                                         trial > 250 & trial <=300 ~ 6))
+  df_ksoc <- df_ksoc %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial, 
+                                                       trial > 50 & trial <= 100 ~ trial-50,
+                                                       trial > 100 & trial <=150 ~ trial-100, 
+                                                       trial > 150 & trial <=200 ~ trial-150,
+                                                       trial > 200 & trial <=250 ~ trial-200,
+                                                       trial > 250 & trial <=300 ~ trial-250))
+  df_ksoc <- df_ksoc %>% mutate(protocol = 'ksocial',
+                                run_trial0_c = run_trial0-floor(run_trial0/50.5),
+                                run_trial0_neg_inv = -(1 / run_trial0_c) * 100,
+                                run_trial0_neg_inv_sc = as.vector(scale(run_trial0_neg_inv)))
+  
+  df <- rbind(df_bsoc,df_ksoc)
+  # select and scale variables of interest
+  df <- df %>% 
+    group_by(id, scanner_run) %>% 
+    mutate(id = as.character(id),
+           v_chosen_sc = scale(v_chosen),
+           score_sc = scale(score_csv),
+           iti_sc = scale(iti_ideal),
+           iti_lag_sc = scale(iti_prev),
+           v_max_sc = scale(v_max),
+           rt_vmax_sc = scale(rt_vmax),
+           v_entropy_sc = scale(v_entropy),
+           rt_swing_sc = scale(rt_swing)) %>% ungroup()
+  
+  # select only vars of interest and merge into MRI data
+  behav <- df %>% select(id,scanner_run,trial,run_trial,run_trial0,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+                         rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
+                         v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
+  behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
+  Q1 <- inner_join(behav, Q1, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
+  
+  
+}
 
 # add in age and sex variables
 demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
@@ -196,6 +275,32 @@ Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
+
+
+Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+
+
+if (do_evttime0==TRUE){
+  
+  save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
+  save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
+  
+  setwd(file.path(rootdir))
+  
+  prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_evt_time0_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  
+} else {
+  save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_AHforMplus.Rdata'))
+  save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_PHforMplus.Rdata'))
+  
+  setwd(file.path(rootdir))
+  
+  prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  
+}
 
 
 
