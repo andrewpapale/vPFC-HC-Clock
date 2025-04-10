@@ -22,7 +22,6 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
@@ -54,7 +53,7 @@ vmPFC <- vmPFC %>% mutate(network = case_when(atlas_value %in% c(55, 56, 159, 16
 vmPFC <- vmPFC %>% mutate(run1 = case_when(run=='run1'~1,run=='run2'~2)) %>% select(!run) %>% rename(run=run1)
 vmPFC$id <- as.character(vmPFC$id)
 # select vars of interest
-vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
 # filter to only event times of interest
 vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -68,7 +67,6 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
@@ -88,7 +86,7 @@ hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_t
 
 # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
 # AH and PH averages
-hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
+hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>%
   summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
   ungroup() # 12 -> 2
 
@@ -101,11 +99,11 @@ hc <- hc %>% group_by(id,run) %>%
 rm(hc_bsoc,hc_ksoc)
 gc()
 # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
-Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
+Q <- inner_join(vmPFC,hc,by=c("id","run","trial","evt_time"))
 Q <- Q %>% select(!decon1)
 
 rm(hc,vmPFC)
-
+gc()
 # Get task behav data
 #df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 # Get task behav data
@@ -113,7 +111,6 @@ df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 df_bsoc <- df %>% filter(id %in% bsoc$id) %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                                                        trial > 40 & trial <= 80 ~ 2,
@@ -168,7 +165,7 @@ behav <- df %>% select(id,scanner_run,trial,run_trial,run_trial0,v_chosen_sc,sco
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
 behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
-Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+Q <- inner_join(behav, Q, by = c("id", "run", "trial")) %>% arrange("id","run","trial","evt_time")
 
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
@@ -213,7 +210,8 @@ decode_formula <- formula(~ (1|id))
 decode_formula[[1]] = formula(~ age + female + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome + (1 + HCwithin  |id) + (1|run))
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
-decode_formula[[2]] <- NULL
+decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome*HCwithin + (1 + HCwithin  |id) + (1|run))
+decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc  + iti_lag_sc + last_outcome*HCwithin + (1  |id/run))
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)

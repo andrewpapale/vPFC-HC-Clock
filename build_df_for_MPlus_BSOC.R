@@ -3,6 +3,7 @@
 # libraries we'll need
 library(tidyverse)
 library(fmri.pipeline)
+library(MplusAutomation)
 # set root directory
 rootdir1 <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_MPlus'
 rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
@@ -10,7 +11,7 @@ repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
 ncores <- 26
 # load mixed_by function for analyses
 
-do_evttime0 = TRUE
+do_evttime0 = FALSE
 
 ##################################
 ##### Load in and format data ####
@@ -24,7 +25,6 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
@@ -56,7 +56,7 @@ vmPFC <- vmPFC %>% mutate(network = case_when(atlas_value %in% c(55, 56, 159, 16
 vmPFC <- vmPFC %>% mutate(run1 = case_when(run=='run1'~1,run=='run2'~2)) %>% select(!run) %>% rename(run=run1)
 vmPFC$id <- as.character(vmPFC$id)
 # select vars of interest
-vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
+vmPFC <- vmPFC %>% select(id,run,trial,run_trial,decon_mean,atlas_value,evt_time,symmetry_group,network)
 # filter to only event times of interest
 vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
@@ -70,7 +70,6 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
@@ -90,21 +89,14 @@ hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_t
 
 # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
 # AH and PH averages
-hc <- hc %>% group_by(id,run,run_trial,evt_time,HC_region) %>%
-  summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
+hc <- hc %>% group_by(id,run,trial,run_trial,evt_time,HC_region) %>%
+  summarize(HCwithin = mean(decon_mean,na.rm=TRUE)) %>% 
   ungroup() # 12 -> 2
-
-# Create a new scaled within-subjects variable (HCwithin) and a between-subjects
-# variable averaged per subject and run (HCbetween)
-hc <- hc %>% group_by(id,run) %>%
-  mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
-  ungroup()
 
 rm(hc_bsoc,hc_ksoc)
 gc()
 # Merge vmPFC and HC data; remove unscaled within-S variable (decon1)
-Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
-Q <- Q %>% select(!decon1)
+Q <- inner_join(vmPFC,hc,by=c("id","run","trial","evt_time"))
 
 rm(hc,vmPFC)
 
@@ -115,7 +107,6 @@ df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193)
 bsoc <- rbind(bsoc,221973,221507,221842,440223)
 df_bsoc <- df %>% filter(id %in% bsoc$id) %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                                                        trial > 40 & trial <= 80 ~ 2,
@@ -168,9 +159,9 @@ df <- df %>%
 # select only vars of interest and merge into MRI data
 behav <- df %>% select(id,scanner_run,trial,run_trial,run_trial0,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
-                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
+                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc,outcome)
 behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
-Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
+Q <- inner_join(behav, Q, by = c("id", "run", "trial")) %>% arrange("id","run","trial")
 
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
@@ -180,16 +171,16 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 
 if (do_evttime0==TRUE){
   Q1 <- Q %>% filter(evt_time==0)
-  Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
-    pivot_wider(values_from=c(vmPFC_decon),names_from = 'network') %>% 
+  Q1 <- Q1 %>% select(!evt_time) %>% group_by(id,run,trial) %>% 
+    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
     ungroup()  
   
 } else {
-  Q1 <- Q %>% group_by(id,run,run_trial,network,HC_region) %>% 
+  Q1 <- Q %>% group_by(id,run,trial,network,HC_region) %>% 
     summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
     ungroup()
-  Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
-    pivot_wider(values_from=c(vmPFC_decon),names_from = 'network') %>% 
+  Q1 <- Q1 %>% group_by(id,run,trial) %>% 
+    pivot_wider(values_from=c(vmPFC_decon,HCwithin),names_from = 'network') %>% 
     ungroup()
   
   
@@ -251,9 +242,9 @@ if (do_evttime0==TRUE){
   # select only vars of interest and merge into MRI data
   behav <- df %>% select(id,scanner_run,trial,run_trial,run_trial0,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                          rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
-                         v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
+                         v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc,outcome)
   behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
-  Q1 <- inner_join(behav, Q1, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
+  Q1 <- inner_join(behav, Q1, by = c("id", "run", "trial")) %>% arrange("id","run","trial")
   
   
 }
@@ -278,8 +269,8 @@ Q1 <- Q1 %>% select(!sex)
 Q1$age <- scale(Q1$age)
 
 
-Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
-Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
 
 
 if (do_evttime0==TRUE){
