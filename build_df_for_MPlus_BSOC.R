@@ -275,19 +275,21 @@ Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwith
 
 if (do_evttime0==TRUE){
   
+  setwd(file.path(rootdir1))
+  
   save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
   save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
   
-  setwd(file.path(rootdir1))
   
   prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_evt_time0_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 } else {
-  save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_AHforMplus.Rdata'))
-  save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_PHforMplus.Rdata'))
   
   setwd(file.path(rootdir1))
+  
+  save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_AHforMplus.Rdata'))
+  save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_PHforMplus.Rdata'))
   
   prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
