@@ -496,7 +496,8 @@ if (do_vPFC_HC_entropy){
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-pred-int-1.Rdata')
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-nofixedeffect-1.Rdata')
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-01-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-03-05-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
+  #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-03-05-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-15-vmPFC-HC-network-ranslopes-clock-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
   mmclock_fmri <- ddq$coef_df_reml %>% 
     filter(effect=='fixed' & term=="rt_lag_sc:subj_level_rand_slope:last_outcomeReward") %>% 
     mutate(p_fdr_me = padj_fdr_term,p_level_fdr_me = as.factor(case_when(p_fdr_me > .05 ~ '1',p_fdr_me < .05 ~ '2'))) %>%
@@ -506,7 +507,8 @@ if (do_vPFC_HC_entropy){
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-07-vmPFC-HC-network-ranslopes-clock-replication-pred-int-1.Rdata')
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-1.Rdata')
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-01-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-03-05-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
+  #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-03-05-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-15-vmPFC-HC-network-ranslopes-clock-replication-pred-int-notimesplit-nofixedeffect-rtvmax_by_trial-noHCbetween-1.Rdata')
   emt_mmclock_meg <- ddq$emtrends_list
   mmclock_meg <- ddq$coef_df_reml %>% 
     filter(effect=='fixed' & term=="rt_lag_sc:subj_level_rand_slope:last_outcomeReward") %>% 

@@ -6,10 +6,8 @@ library(tidyverse)
 library(fmri.pipeline)
 library(MplusAutomation)
 # set root directory
-rootdir1 <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_BSOC_MPlus'
-rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
-repo_directory <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
-repo_directory1 <- '~/clock_analysis'
+
+repo_directory <- "~/clock_analysis"
 ncores <- 26
 # load mixed_by function for analyses
 
@@ -18,8 +16,11 @@ ncores <- 26
 #####     Clock-aligned     ######
 ##################################
 
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-09-Bsocial-vPFC-HC-network-clock-RTcorrected-ranslopes-1.Rdata')
-#load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-09-Bsocial-vPFC-HC-network-clock-RTcorrected-ranslopes-2.Rdata')
+setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
+model_str <- paste0('-vmPFC-HC-network-','clock','-ranslopes-nofixedeffect-noHCbetween-',3,'.Rdata')
+model_str <- Sys.glob(paste0('*',model_str))
+load(model_str)
+
 Q <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin')
 
 Q <- Q %>% rename(id=level)
@@ -28,29 +29,16 @@ Q$id <- as.character(Q$id)
 Qah <- Q %>% filter(HC_region == "AH")
 Qph <- Q %>% filter(HC_region == "PH")
 
-# add in age and sex variables
-demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
-demo1 <- read_csv(file.path(repo_directory,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+# test age & sex
+demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+demo <- demo %>% rename(id=lunaid)
+demo <- demo %>% select(!adult & !scandate)
 demo$id <- as.character(demo$id)
-demo1$id <- as.character(demo1$registration_redcapid)
-demo <- demo %>% rename(sex=registration_birthsex,
-                        gender=registration_gender,
-                        group=registration_group) %>%
-  select(id,group,age,sex,gender)
-demo1 <- demo1 %>% rename(sex=registration_birthsex,
-                          gender=registration_gender,
-                          group=registration_group) %>%
-  select(id,group,age,sex,gender)
-demo2 <- rbind(demo,demo1)
+Q <- inner_join(Q,demo,by=c('id'))
+Q$female <- relevel(as.factor(Q$female),ref='0')
 
-Qah <- inner_join(Qah,demo2,by=c('id'))
-Qph <- inner_join(Qph,demo2,by=c('id'))
-
-Qah$female <- ifelse(Qah$sex==1,1,0)
-Qah <- Qah %>% select(!sex)
-
-Qph$female <- ifelse(Qph$sex==1,1,0)
-Qph <- Qph %>% select(!sex)
+Qah <- inner_join(Qah,demo,by=c('id'))
+Qph <- inner_join(Qph,demo,by=c('id'))
 
 Qah <- Qah %>% mutate(sex = case_when(female == 1 ~ 'F',
                                       female == 0 ~ 'M'))
@@ -62,14 +50,12 @@ Qah$sex <- as.factor(Qah$sex)
 Qph$sex <- as.factor(Qph$sex)
 
 Q <- rbind(Qah,Qph)
-Q <- Q %>% mutate(age_bin = case_when(age < 20 ~ '< 20',
-                                      age >= 20 & age < 25 ~ '20-25',
-                                      age >= 25 & age < 30 ~ '25-30',
-                                      age >= 30 & age < 35 ~ '30-35',
-                                      age >= 35 & age < 40 ~ '35-40',
-                                      age >= 40 & age < 45 ~ '40-45',
-                                      age >= 45 & age < 50 ~ '45-50',
-                                      age >= 50 ~ '>=50'))
+Q <- Q %>% mutate(age_bin = case_when(age < 15 ~ '< 15',
+                                      age >= 15 & age < 18 ~ '15-18',
+                                      age >= 18 & age < 21 ~ '18-21',
+                                      age >= 21 & age < 24 ~ '21-24',
+                                      age >= 24 & age < 27 ~ '24-27',
+                                      age >= 27 ~ '>= 27'))
 
 Q <- Q %>% select(age_bin,HC_region,estimate,sex,network)
 
@@ -78,13 +64,13 @@ Q1 <- Q %>% group_by(age_bin,sex,HC_region,network) %>% summarize(estimate0 = me
 
 #ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + geom_line() + facet_wrap(~HC_region)
 
-Q1$age_bin <- factor(Q1$age_bin, levels = c('< 20','20-25','25-30','30-35','35-40','40-45','45-50','>=50'))
+Q1$age_bin <- factor(Q1$age_bin, levels = c('< 15','15-18','18-21','21-24','24-27','>= 27'))
 
 ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + 
   geom_line() + geom_errorbar(aes(ymin=estimate0-sd0/sqrt(N), ymax = estimate0+sd0/sqrt(N))) +
   facet_wrap(network~HC_region)
 
-ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth() + facet_wrap(network~HC_region)
+ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth()
 
 # load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
 # hc <- hc %>% filter(evt_time > -5 & evt_time < 5)

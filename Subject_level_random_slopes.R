@@ -14,9 +14,9 @@ HC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 vmPFC_cache_dir = '~/vmPFC/MEDUSA Schaefer Analysis'
 ncores <- 26
 toalign <- 'clock'
-do_rand_slopes = TRUE
+do_rand_slopes = FALSE
 simple_model = FALSE
-do_rt_pred_fmri = TRUE
+do_rt_pred_fmri = FALSE
 plot_rt_pred_fmri = FALSE
 do_rt_pred_meg = TRUE
 plot_rt_pred_meg = FALSE
@@ -202,8 +202,8 @@ if (do_rand_slopes){
     Q$age <- scale(Q$age)
     Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
     Q$vmPFC_decon[Q$evt_time < -(Q$iti_lag)] = NA;
-    Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_lag] = NA;
-    Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_lag] = NA;
+    Q$HCwithin[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
+    Q$HCbetween[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
     Q$HCwithin[Q$evt_time < -(Q$iti_lag)] = NA;
     Q$HCbetween[Q$evt_time < -(Q$iti_lag)] = NA;
     Q$expl_longer <- relevel(as.factor(Q$expl_longer),ref='0')
@@ -233,14 +233,14 @@ if (do_rand_slopes){
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
     )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-corrected-censoring-',i,'.Rdata'))
   }
 }
 
 if (do_rt_pred_fmri){
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-corrected-censoring-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
@@ -505,7 +505,7 @@ if (do_rt_pred_meg) {
   
   for (i in 1:3){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
-    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-',i,'.Rdata')
+    model_str <- paste0('-vmPFC-HC-network-',toalign,'-ranslopes-nofixedeffect-noHCbetween-corrected-censoring-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
     load(model_str)
     
