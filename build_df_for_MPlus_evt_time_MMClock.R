@@ -17,7 +17,7 @@ ncores <- 26
 #####     Clock-aligned     ######
 ##################################
 
-load("/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-03-05-vmPFC-HC-network-clock-ranslopes-nofixedeffect-noHCbetween-3.Rdata")
+load("/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-15-vmPFC-HC-network-clock-ranslopes-nofixedeffect-noHCbetween-corrected-censoring-3.Rdata")
 Q <- ddf$coef_df_reml %>% filter(effect=='ran_vals' & term=='HCwithin')
 Q <- Q %>% rename(id=level)
 Q$id <- as.character(Q$id)

@@ -17,13 +17,13 @@ library(sciplot)
 library(MplusAutomation)
 library(lmerTest)
 
-do_evttime0 = TRUE
+do_evttime0 = FALSE
 
 # set root directory - change for your needs
 #rootdir <- '/ix/cladouceur/DNPL'
 #repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
 repo_directory <- "~/clock_analysis"
-rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_MPlus'
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_BSOC_MPlus'
 # load some source code that we'll need to use
 #setwd(rootdir)
 #source('get_trial_data.R')
@@ -121,7 +121,7 @@ if (do_evttime0==TRUE){
   #Q1 <- inner_join(behav, Q1, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
   
 } else {
-  Q1 <- Q %>% group_by(id,run,run_trial,network,HC_region) %>% 
+  Q1 <- Q %>% filter(evt_time >= -2 & evt_time <= 2) %>% group_by(id,run,run_trial,network,HC_region) %>% 
     summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
     ungroup()
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
@@ -182,24 +182,22 @@ Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwith
 # m6 <- lmer(vmPFC_decon_LIM ~ HCwithin_LIM*female + (1|id), data = Q1_PH)
 # summary(m6)
 
+setwd(file.path(rootdir))
+
 if (do_evttime0==TRUE){
   
   save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_evt_time0_AHforMplus.Rdata'))
   save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_evt_time0_PHforMplus.Rdata'))
   
-  setwd(file.path(rootdir))
-  
   prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_evt_time0_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 } else {
-  save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_AHforMplus.Rdata'))
-  save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_PHforMplus.Rdata'))
+  save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_neg2toplus2_AHforMplus.Rdata'))
+  save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_neg2toplus2_PHforMplus.Rdata'))
   
-  setwd(file.path(rootdir))
-  
-  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
-  prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_neg2toplus2_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_neg2toplus2_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 }
 
