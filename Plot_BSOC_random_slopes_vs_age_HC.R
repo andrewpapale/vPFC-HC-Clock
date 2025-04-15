@@ -71,7 +71,8 @@ Q <- Q %>% mutate(age_bin = case_when(age < 20 ~ '< 20',
                                       age >= 45 & age < 50 ~ '45-50',
                                       age >= 50 ~ '>=50'))
 
-Q <- Q %>% select(age_bin,HC_region,estimate,sex,network)
+Q <- Q %>% select(id,age_bin,HC_region,estimate,sex,network,evt_time)
+#Q <- Q %>% filter(evt_time >=-2 & evt_time <=2)
 
 Q1 <- Q %>% group_by(age_bin,sex,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE),sd0 = sd(estimate,na.rm=TRUE), N=n()) %>% ungroup()
 
@@ -84,46 +85,53 @@ ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) +
   geom_line() + geom_errorbar(aes(ymin=estimate0-sd0/sqrt(N), ymax = estimate0+sd0/sqrt(N))) +
   facet_wrap(network~HC_region)
 
-ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth() + facet_wrap(network~HC_region)
+ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth()
 
-# load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
-# hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
-# 
-# split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
-# ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
-# bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-# bsoc <- rbind(bsoc,221973,221507,221842,440223)
-# hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
-#                                                                             trial > 40 & trial <= 80 ~ trial-40,
-#                                                                             trial > 80 & trial <=120 ~ trial-80, 
-#                                                                             trial > 120 & trial <=160 ~ trial-120,
-#                                                                             trial > 160 & trial <=200 ~ trial-160,
-#                                                                             trial > 200 & trial <=240 ~ trial-200))
-# 
-# hc_ksoc <- hc %>%  filter(id %in% ksoc$id) %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial, 
-#                                                                              trial > 50 & trial <= 100 ~ trial-50,
-#                                                                              trial > 100 & trial <=150 ~ trial-100, 
-#                                                                              trial > 150 & trial <=200 ~ trial-150,
-#                                                                              trial > 200 & trial <=250 ~ trial-200,
-#                                                                              trial > 250 & trial <=300 ~ trial-250))
-# 
-# hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
-# 
-# # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
-# # AH and PH averages
-# hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>%
-#   summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>% 
-#   ungroup() # 12 -> 2
-# 
-# # Create a new scaled within-subjects variable (HCwithin) and a between-subjects
-# # variable averaged per subject and run (HCbetween)
-# hc <- hc %>% group_by(id,run) %>%
-#   mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
-#   ungroup()
-# 
-# rm(hc_bsoc,hc_ksoc)
-# gc()
-# 
-# 
-# 
-# 
+load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
+hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
+
+split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
+ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
+bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
+hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial,
+                                                                            trial > 40 & trial <= 80 ~ trial-40,
+                                                                            trial > 80 & trial <=120 ~ trial-80,
+                                                                            trial > 120 & trial <=160 ~ trial-120,
+                                                                            trial > 160 & trial <=200 ~ trial-160,
+                                                                            trial > 200 & trial <=240 ~ trial-200))
+
+hc_ksoc <- hc %>%  filter(id %in% ksoc$id) %>% mutate(run_trial0 = case_when(trial <= 50 ~ trial,
+                                                                             trial > 50 & trial <= 100 ~ trial-50,
+                                                                             trial > 100 & trial <=150 ~ trial-100,
+                                                                             trial > 150 & trial <=200 ~ trial-150,
+                                                                             trial > 200 & trial <=250 ~ trial-200,
+                                                                             trial > 250 & trial <=300 ~ trial-250))
+
+hc <- rbind(hc_bsoc,hc_ksoc) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
+
+# Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
+# AH and PH averages
+hc <- hc %>% group_by(id,run,trial,evt_time,HC_region) %>%
+  summarize(decon1 = mean(decon_mean,na.rm=TRUE)) %>%
+  ungroup() # 12 -> 2
+
+# Create a new scaled within-subjects variable (HCwithin) and a between-subjects
+# variable averaged per subject and run (HCbetween)
+hc <- hc %>% group_by(id,run) %>%
+  mutate(HCwithin = scale(decon1),HCbetween=mean(decon1,na.rm=TRUE)) %>%
+  ungroup()
+
+rm(hc_bsoc,hc_ksoc)
+gc()
+
+hc0 <- hc %>% group_by(id,HC_region) %>% filter(evt_time > -2 & evt_time < 2) %>% summarize(HCwithin = mean(HCwithin,na.rm=TRUE)) %>% ungroup()
+
+Q2 <- inner_join(Q,hc0,by=c('id','HC_region'))
+
+Q2 <- Q2 %>% mutate(HC_bin = ntile(HCwithin,6))
+
+Q3 <- Q2 %>% group_by(id,HC_bin,sex,network,HC_region) %>% summarize(mE = mean(estimate,na.rm=TRUE)) %>% ungroup()
+
+ggplot(Q3, aes(x=HC_bin,y=mE,color=sex,group=sex)) + geom_smooth() + facet_wrap(network~HC_region,scales='free_y')
+ggplot(Q3 %>% filter(network=='LIM' & HC_region=='AH'), aes(x=HC_bin,y=mE,color=sex,group=sex)) + geom_smooth()
