@@ -5,6 +5,7 @@
 library(tidyverse)
 library(fmri.pipeline)
 library(MplusAutomation)
+library(ggpubr)
 # set root directory
 rootdir1 <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMClock_BSOC_MPlus'
 rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
@@ -42,24 +43,12 @@ demo1 <- demo1 %>% rename(sex=registration_birthsex,
                           group=registration_group) %>%
   select(id,group,age,sex,gender)
 demo2 <- rbind(demo,demo1)
+demo2 <- demo2 %>% mutate(sex = case_when(sex == 1 ~ 'F',
+                                      sex == 2 ~ 'M'))
+demo2$sex <- as.factor(demo2$sex)
 
 Qah <- inner_join(Qah,demo2,by=c('id'))
 Qph <- inner_join(Qph,demo2,by=c('id'))
-
-Qah$female <- ifelse(Qah$sex==1,1,0)
-Qah <- Qah %>% select(!sex)
-
-Qph$female <- ifelse(Qph$sex==1,1,0)
-Qph <- Qph %>% select(!sex)
-
-Qah <- Qah %>% mutate(sex = case_when(female == 1 ~ 'F',
-                                      female == 0 ~ 'M'))
-
-Qph <- Qph %>% mutate(sex = case_when(female == 1 ~ 'F',
-                                      female == 0 ~ 'M'))
-
-Qah$sex <- as.factor(Qah$sex)
-Qph$sex <- as.factor(Qph$sex)
 
 Q <- rbind(Qah,Qph)
 Q <- Q %>% mutate(age_bin = case_when(age < 20 ~ '< 20',
@@ -71,21 +60,33 @@ Q <- Q %>% mutate(age_bin = case_when(age < 20 ~ '< 20',
                                       age >= 45 & age < 50 ~ '45-50',
                                       age >= 50 ~ '>=50'))
 
-Q <- Q %>% select(id,age_bin,HC_region,estimate,sex,network,evt_time)
-#Q <- Q %>% filter(evt_time >=-2 & evt_time <=2)
+Q <- Q %>% select(id,age,age_bin,HC_region,estimate,sex,network)
+Q <- Q %>% group_by(network,HC_region) %>% mutate(estimate0 = scale(estimate)) %>% ungroup()
 
-Q1 <- Q %>% group_by(age_bin,sex,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE),sd0 = sd(estimate,na.rm=TRUE), N=n()) %>% ungroup()
+Q4 <- Q %>% group_by(id,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE)) %>% ungroup()
+age0 <- demo2 %>% select(id,age,sex)
+Q4 <- inner_join(Q4,age0,by=c('id'))
+Q4 <- Q4 %>% group_by(network,HC_region) %>% mutate(estimate0 = scale(estimate0))
 
+ggplot(Q4, aes(x=age,y=estimate0,color=network)) + geom_smooth() + geom_jitter() + facet_wrap(~sex) + xlab('age') + ylab('random slope scaled') + ggtitle('BSocial')
 
-#ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + geom_line() + facet_wrap(~HC_region)
+# ggscatter(Q4,x="age",y="estimate0",add='reg.line') + 
+#   stat_cor(method='pearson',size=8) + 
+#   facet_grid(~sex,scales='free_y') +
+#   theme(text = element_text(size = 18))
+
+Q1 <- Q %>% group_by(id,age_bin,sex,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE),sd0 = sd(estimate,na.rm=TRUE), N=n()) %>% ungroup()
 
 Q1$age_bin <- factor(Q1$age_bin, levels = c('< 20','20-25','25-30','30-35','35-40','40-45','45-50','>=50'))
 
-ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + 
-  geom_line() + geom_errorbar(aes(ymin=estimate0-sd0/sqrt(N), ymax = estimate0+sd0/sqrt(N))) +
-  facet_wrap(network~HC_region)
 
-ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth()
+# ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + 
+#   geom_line() + geom_errorbar(aes(ymin=estimate0-sd0/sqrt(N), ymax = estimate0+sd0/sqrt(N))) +
+#   facet_wrap(network~HC_region)
+
+
+ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth() + facet_wrap(network~HC_region, scales='free_y') + xlab('age binned') + ylab('estimate scaled') + ggtitle('BSocial')
+ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex, group=sex)) + geom_smooth() + xlab('age binned') + ylab('estimate scaled') + ggtitle('BSocial')
 
 load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
@@ -125,13 +126,25 @@ hc <- hc %>% group_by(id,run) %>%
 rm(hc_bsoc,hc_ksoc)
 gc()
 
-hc0 <- hc %>% group_by(id,HC_region) %>% filter(evt_time > -2 & evt_time < 2) %>% summarize(HCwithin = mean(HCwithin,na.rm=TRUE)) %>% ungroup()
+hc0 <- hc %>% group_by(id,HC_region) %>% filter(evt_time > -2 & evt_time < 2) %>% summarize(HCwithin0 = mean(HCwithin,na.rm=TRUE)) %>% ungroup()
+
+hc0 <- hc0 %>% group_by(HC_region) %>% mutate(HCwithin0 = scale(HCwithin0))
 
 Q2 <- inner_join(Q,hc0,by=c('id','HC_region'))
 
-Q2 <- Q2 %>% mutate(HC_bin = ntile(HCwithin,6))
+Q5 <- Q2 %>% group_by(id,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE),meanHC = mean(HCwithin0,na.rm=TRUE)) %>% ungroup()
+age0 <- demo2 %>% select(id,age,sex)
+Q6 <- inner_join(Q5,age0,by=c('id'))
+Q6 <- Q6 %>% group_by(network,HC_region) %>% mutate(estimate0 = scale(estimate0))
 
-Q3 <- Q2 %>% group_by(id,HC_bin,sex,network,HC_region) %>% summarize(mE = mean(estimate,na.rm=TRUE)) %>% ungroup()
+ggplot(Q6, aes(x=meanHC,y=estimate0,color=network)) + geom_smooth() + geom_jitter() + facet_wrap(~sex) + xlab('mean scaled HC activity') + ylab('random slope scaled') + ggtitle('Bsocial')
 
-ggplot(Q3, aes(x=HC_bin,y=mE,color=sex,group=sex)) + geom_smooth() + facet_wrap(network~HC_region,scales='free_y')
-ggplot(Q3 %>% filter(network=='LIM' & HC_region=='AH'), aes(x=HC_bin,y=mE,color=sex,group=sex)) + geom_smooth()
+Q2 <- Q2 %>% group_by(network,HC_region) %>% mutate(HC_bin = ntile(HCwithin0,6)) %>% ungroup()
+
+Q3 <- Q2 %>% group_by(id,HC_bin,sex,network,HC_region) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+
+Q3 <- Q3 %>% group_by(network,HC_region) %>% mutate(estimate_scaled = scale(estimate)) %>% ungroup()
+
+ggplot(Q3, aes(x=HC_bin,y=estimate_scaled,color=sex,group=sex)) + geom_smooth() + facet_wrap(network~HC_region,scales='free_y') + xlab('Hippocampal activity binned') + ylab('Scaled Random Slope') + ggtitle('BSocial')
+ggplot(Q3 %>% filter(network=='LIM' & HC_region=='AH'), aes(x=HC_bin,y=estimate_scaled,color=sex,group=sex)) + geom_smooth()+ xlab('Hippocampal activity binned') + ylab('Scaled Random Slope') + ggtitle('BSocial')
+ggplot(Q3, aes(x=HC_bin,y=estimate_scaled,color=sex,group=sex)) + geom_smooth()+ xlab('Hippocampal activity binned') + ylab('Scaled Random Slope') + ggtitle('BSocial - All Networks')
