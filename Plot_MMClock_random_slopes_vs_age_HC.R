@@ -53,7 +53,6 @@ Q <- Q %>% mutate(age_bin = case_when(age < 15 ~ '< 15',
                                       age >= 27 ~ '>= 27'))
 
 Q <- Q %>% select(id,age_bin,HC_region,estimate,sex,network)
-Q <- Q %>% group_by(network,HC_region) %>% mutate(estimate0 = scale(estimate)) %>% ungroup()
 
 Q4 <- Q %>% group_by(id,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE)) %>% ungroup()
 age0 <- demo %>% select(id,age,sex)
@@ -63,7 +62,7 @@ Q4 <- Q4 %>% group_by(network,HC_region) %>% mutate(estimate0 = scale(estimate0)
 ggplot(Q4, aes(x=age,y=estimate0,color=network)) + geom_smooth() + geom_jitter() + facet_wrap(~sex) + xlab('age') + ylab('random slope scaled') + ggtitle('MMClock')
 
 
-Q1 <- Q %>% group_by(id,age_bin,sex,HC_region,network) %>% summarize(estimate0 = mean(estimate0,na.rm=TRUE),sd0 = sd(estimate,na.rm=TRUE), N=n()) %>% ungroup()
+Q1 <- Q %>% group_by(id,age_bin,sex,HC_region,network) %>% summarize(estimate0 = mean(estimate,na.rm=TRUE),sd0 = sd(estimate,na.rm=TRUE), N=n()) %>% ungroup()
 
 
 #ggplot(Q1, aes(x=age_bin,y=estimate0,color=sex,group=sex)) + geom_line() + facet_wrap(~HC_region)

@@ -22,8 +22,7 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
                                                                                   trial > 80 & trial <=120 ~ trial-80, 
@@ -68,8 +67,7 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
                                                                             trial > 80 & trial <=120 ~ trial-80, 
@@ -113,8 +111,7 @@ df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611)
-bsoc <- rbind(bsoc,221973,219757,220419,220691,221507,221842,440223)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 df_bsoc <- df %>% filter(id %in% bsoc$id) %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                                                     trial > 40 & trial <= 80 ~ 2,
                                                                     trial > 80 & trial <=120 ~ 3, 
@@ -195,6 +192,7 @@ demo2 <- rbind(demo,demo1)
 Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
+Q <- Q %>% filter(age <= 50)
 Q$age <- scale(Q$age)
 #Q <- Q %>% filter(group=='HC')
 Q$group <- relevel(factor(Q$group),ref='HC')
@@ -207,17 +205,17 @@ Q$group <- relevel(factor(Q$group),ref='HC')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~ age*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin  + (1|id/run))
-decode_formula[[2]] = formula(~ age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + (1|id/run))
-decode_formula[[3]] = formula(~ age*HCwithin + female*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + (1|id/run))
-decode_formula[[4]] = formula(~ HCwithin*v_entropy_wi  + (1|id/run))
+decode_formula[[1]] = formula(~ group*HCwithin + age*HCwithin + female*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + HCbetween  + (1|id/run))
+decode_formula[[2]] = formula(~ group*HCwithin +age*HCwithin + female*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + HCbetween + last_outcome*HCwithin + HCbetween  + (1|id/run))
+decode_formula[[3]] = formula(~ group*HCwithin +age*HCwithin + female*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + HCbetween  + (1|id/run))
+decode_formula[[4]] = formula(~ group*HCwithin + HCwithin*v_entropy_wi + HCbetween  + (1|id/run))
 
 # decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
 # decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','symmetry_group','HC_region')
+splits = c('evt_time','network','HC_region')
 #source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -250,6 +248,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-symmetry-clock-HConly-RTcorrected-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-All-RTcorrected-',i,'.Rdata'))
 }
 

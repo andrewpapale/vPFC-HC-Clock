@@ -22,8 +22,7 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-ksoc <- rbind(ksoc,221193,221611,220691) # 220691 was bsoc, but was run with > 240 trials
-bsoc <- rbind(bsoc,221973,219757,220419,221507,221842,440223)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
                                                                                   trial > 80 & trial <=120 ~ trial-80, 
@@ -87,8 +86,7 @@ df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300]
 bsoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240]
-ksoc <- rbind(ksoc,221193,221611)
-bsoc <- rbind(bsoc,221973,219757,220419,220691,221507,221842,440223)
+bsoc <- rbind(bsoc,221973,221507,221842,440223)
 df_bsoc <- df %>% filter(id %in% bsoc) %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                     trial > 40 & trial <= 80 ~ 2,
                                     trial > 80 & trial <=120 ~ 3, 
@@ -166,19 +164,20 @@ demo1 <- demo1 %>% rename(sex=registration_birthsex,
   select(id,group,age,sex,gender)
 demo2 <- rbind(demo,demo1)
 Q <- inner_join(Q,demo2,by=c('id'))
+Q <- Q %>% filter(age <= 50)
 Q$age <- scale(Q$age)
 Q$group <- relevel(factor(Q$group),ref='HC')
 #Q <- Q %>% filter(rewFunc == 'IEV')
-Q <- Q %>% filter(group == 'HC')
+#Q <- Q %>% filter(group == 'HC')
 
-scan <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/bsoc_ksoc_scan_which.csv')
-scan <- scan %>% select(registration_redcapid,scan_which) %>% rename(id = registration_redcapid, scanner = scan_which)
-scan$id <- as.character(scan$id)
-Q <- inner_join(Q,scan,by='id')
+# scan <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/bsoc_ksoc_scan_which.csv')
+# scan <- scan %>% select(registration_redcapid,scan_which) %>% rename(id = registration_redcapid, scanner = scan_which)
+# scan$id <- as.character(scan$id)
+# Q <- inner_join(Q,scan,by='id')
 Q <- Q %>% mutate(sex = case_when(sex==1 ~ 'M',
                                     sex==2 ~ 'F'))
 Q$sex <- relevel(as.factor(Q$sex),ref='M')
-Q <- Q %>% filter(group=='HC')
+#Q <- Q %>% filter(group=='HC')
 #Q <- Q %>% filter(female==0)
 # now to add in model fits
 #fits <- read_csv('fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
@@ -187,17 +186,16 @@ Q <- Q %>% filter(group=='HC')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~ scanner  + age + sex + v_max_wi*sex + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[2]] = formula(~ scanner  + age + sex + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[3]] = formula(~ scanner  + age + sex + v_max_wi*sex + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[4]] = formula(~ scanner  + age + sex + v_max_wi*age + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[5]] = formula(~ scanner  + age + sex + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[6]] = formula(~ scanner  + age + sex + v_max_wi*age + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[7]] = formula(~ scanner  + age + sex + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*sex + (1|id/run))
-decode_formula[[8]] = formula(~ scanner  + age + sex + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*age + (1|id/run))
-
-# decode_formula[[1]] <- formula(~v_entropy_wi + (1|id/run))
-# decode_formula[[2]] <- formula(~v_max_wi + (1|id/run))
+decode_formula[[1]] = formula(~  group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + rt_lag_sc + last_outcome  + (1|id/run))
+decode_formula[[2]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[3]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[4]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + rt_lag_sc + last_outcome  + (1|id/run))
+decode_formula[[5]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[6]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
+decode_formula[[7]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*sex + (1|id/run))
+decode_formula[[8]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*age + (1|id/run))
+decode_formula[[9]] <- formula(~group + v_entropy_wi + (1|id/run))
+decode_formula[[10]] <- formula(~group + v_max_wi + (1|id/run))
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
@@ -234,6 +232,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-network-clock-HConly-RTcorrected-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-network-clock-All-RTcorrected-',i,'.Rdata'))
 }
 
