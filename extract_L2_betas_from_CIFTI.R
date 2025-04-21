@@ -19,6 +19,6 @@ for (iS in 1:nSubj){
     file_name <- strsplit(file, "\\.")[[1]][1]
     system(paste0('wb_command -cifti-separate ', file, ' COLUMN -metric CORTEX_LEFT ', file_name,'_cortex_left.func.gii'))
     system(paste0('wb_command -cifti-separate ', file, ' COLUMN -metric CORTEX_RIGHT ', file_name,'_cortex_right.func.gii'))
-    system(paste0('3dROIstats -mask ', atlas, ' ', file_name,'_cortex_right.func.gii > ', file,'_cortex_right.txt'))
+    system(paste0('3dROIstats -mask ', atlas, ' ', file_name,'_cortex_right.func.gii > ', file_name,'_cortex_right.txt'))
     system(paste0('3dROIstats -mask ', atlas, ' ', file_name,'_cortex_left.func.gii > ', file_name,'_cortex_left.txt'))
 }
