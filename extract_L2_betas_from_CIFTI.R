@@ -15,7 +15,7 @@ for (iS in 1:nSubj){
     setwd(ses0)
     func0 <- list.files(ses0,full.names=TRUE)
     setwd(func0)
-    file <- list.files(func0,full.names=FALSE)
+    file <- list.files(func0,pattern="\\.nii",full.names=FALSE)
     file_name <- strsplit(file, "\\.")[[1]][1]
     system(paste0('wb_command -cifti-separate ', file, ' COLUMN -metric CORTEX_LEFT ', file_name,'_cortex_left.func.gii'))
     system(paste0('wb_command -cifti-separate ', file, ' COLUMN -metric CORTEX_RIGHT ', file_name,'_cortex_right.func.gii'))
