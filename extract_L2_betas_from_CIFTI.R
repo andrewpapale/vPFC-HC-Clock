@@ -31,9 +31,14 @@ for (iS in 1:nSubj){
   disp(L2roifiles[iS])
   curr_file <- read.table(L2roifiles[iS], sep="\t", header=TRUE)
   df0 <- curr_file %>% pivot_longer(cols = starts_with("Mean_")) %>% 
-    mutate(atlas_value = str_extract(name, "(?<=_)[0-9]+"), id = str_extract(File, "[^_]+")) %>%
+    mutate(atlas_value = as.numeric(str_extract(name, "(?<=_)[0-9]+")), id = str_extract(File, "[^_]+")) %>%
     mutate(id = str_extract(id, "(?<=-)[A-za-z0-9]+")) %>%
     select(!File & !name & !Sub.brick)
+  
+  if (grepl('_right',L2roifiles[iS])){
+    df0 <- df0 %>% mutate(atlas_value = atlas_value + 200)
+  }
+  
   df0 <- df0[, c(3,2,1)]
   df <- rbind(df, df0)
 }
