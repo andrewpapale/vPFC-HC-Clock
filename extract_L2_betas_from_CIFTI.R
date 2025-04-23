@@ -22,3 +22,18 @@ for (iS in 1:nSubj){
     system(paste0('3dROIstats -mask ', atlas, ' ', file_name,'_cortex_right.func.gii > ', file_name,'_cortex_right.txt'))
     system(paste0('3dROIstats -mask ', atlas, ' ', file_name,'_cortex_left.func.gii > ', file_name,'_cortex_left.txt'))
 }
+
+L2roifiles <- list.files('/Volumes/Users/Andrew/ABCD_MID_Task_L2s/abcd-hcp-pipeline', pattern = '.txt', recursive = TRUE, full.names = TRUE)
+
+df <- NULL
+nSubj <- length(L2roifiles)
+for (iS in 1:nSubj){
+  disp(L2roifiles[iS])
+  curr_file <- read.table(L2roifiles[iS], sep="\t", header=TRUE)
+  df0 <- curr_file %>% pivot_longer(cols = starts_with("Mean_")) %>% 
+    mutate(atlas_value = str_extract(name, "(?<=_)[0-9]+"), id = str_extract(File, "[^_]+")) %>%
+    mutate(id = str_extract(id, "(?<=-)[A-za-z0-9]+")) %>%
+    select(!File & !name & !Sub.brick)
+  df0 <- df0[, c(3,2,1)]
+  df <- rbind(df, df0)
+}
