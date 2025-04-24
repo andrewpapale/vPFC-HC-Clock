@@ -69,6 +69,7 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial >=26 ~ 'Late',
 )))
 
+df <- df %>% select(!run_trial) %>% rename(run_trial=condition_trial)
 df1 <- df
 rm(df)
 
