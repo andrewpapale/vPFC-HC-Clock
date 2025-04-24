@@ -225,8 +225,8 @@ df2 <- inner_join(df2, demo, by=c('id'))
 df3 <- inner_join(df3, demo, by=c('id'))
 
 
-df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi) 
-df2 <- df2 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi) 
-df3 <- df3 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi) 
+df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
+df2 <- df2 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
+df3 <- df3 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
 
 df <- rbind(df1,df2,df3)
