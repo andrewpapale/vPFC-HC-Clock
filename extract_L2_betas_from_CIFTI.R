@@ -1,11 +1,15 @@
 # 2025-04-21 AndyP
-# Extract L2 betas from the ABCD MID dataset.  These filese are CIFTIs and need to be converted to GIFTIS
+# Extract L2 betas from the ABCD MID dataset.  These files are CIFTIs and need to be converted to GIFTIS
 # The conversion takes place using tools from the connectomics workbench: https://www.humanconnectome.org/software/connectome-workbench
 # Then, use AFNI to extract L2 betas in a Schaefer mask
 library(tidyverse)
 
 Sys.setenv(PATH = paste(Sys.getenv("PATH"),"/Users/dnplserv/abin/", sep = ":"))
 datadir <- '/Volumes/Users/Andrew/ABCC_MID_L2/fmriresults01/derivatives/abcd-hcp-pipeline'
+
+# I did two passes on the data, one with the fsLR_L.gii atlas and one with the resampled atlas (but stopped partway through as I was getting mostly warnings about dimension mismatches). 
+# It is possible different subjects were computed with the resampled atlas...I resampled with 3dresample, but Jo Etzel advises against this.  The original contrast 10 .nii CIFTI file was in a different dimension.
+# Apparently there are some "standard" CIFTI file dimensions that we should be able to find for Schaefer masks.
 #atlas <- '/Volumes/Users/Andrew/ABCC_MID_L2/Schaefer2018_400Parcels_7Networks_order_fsLR_resampled.gii'
 atlas <- '/Volumes/Users/Andrew/ABCC_MID_L2/Schaefer2018_400Parcels_7Networks_order_fsLR_L.label.gii'
 

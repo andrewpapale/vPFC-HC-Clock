@@ -247,4 +247,9 @@ ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=me
 ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_entropy,ymin = mean_v_entropy-sd_ventropy/sqrt(N), ymax = mean_v_entropy+sd_ventropy/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
 
 
-df0 <- df %>% group_by(rewFunc, dataset, run_trial) %>% summarize(mean_v_max = mean(v_max,na.rm=TRUE), sd_vmax = sd(v_max,na.rm=TRUE),mean_v_entropy = mean(v_entropy_wi,na.rm=TRUE), sd_ventropy = sd(v_entropy_wi,na.rm=TRUE), N = n()) %>% ungroup()
+df0 <- df %>% group_by(rewFunc, dataset, run_trial) %>% summarize(mean_v_max = mean(v_max_wi,na.rm=TRUE), sd_vmax = sd(v_max_wi,na.rm=TRUE),mean_v_entropy = mean(v_entropy_wi,na.rm=TRUE), sd_ventropy = sd(v_entropy_wi,na.rm=TRUE), N = n()) %>% ungroup()
+
+ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_max,ymin = mean_v_max-sd_vmax/sqrt(N), ymax = mean_v_max+sd_vmax/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
+ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_entropy,ymin = mean_v_entropy-sd_ventropy/sqrt(N), ymax = mean_v_entropy+sd_ventropy/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
+
+ggplot(df0 %>% filter(rewFunc=='IEV' | rewFunc=='DEV'), aes(x=run_trial,y=mean_v_max-mean_v_entropy,color=dataset,group=dataset)) + geom_line() + facet_wrap(~rewFunc)
