@@ -235,9 +235,9 @@ df2 <- inner_join(df2, demo, by=c('id'))
 df3 <- inner_join(df3, demo, by=c('id'))
 
 
-df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
-df2 <- df2 %>% select(id,run,trial,run_trial,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
-df3 <- df3 %>% select(id,run,trial,run_trial,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
+df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,trial_bin,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
+df2 <- df2 %>% select(id,run,trial,run_trial,trial_bin,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
+df3 <- df3 %>% select(id,run,trial,run_trial,trial_bin,rt_swing,last_outcome,outcome,ev,magnitude,v_max_above_median,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset)
 
 df <- rbind(df1,df2,df3)
 #rm(df1,df2,df3)
@@ -264,13 +264,25 @@ ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=me
 df <- df %>%  group_by(id,run,dataset) %>% 
   mutate(ev_above_median = case_when(mean(ev,na.rm=TRUE) > median(ev,na.rm=TRUE) ~ 'TRUE',
                                     mean(ev,na.rm=TRUE) < median(ev,na.rm=TRUE) ~ 'FALSE')) %>% ungroup()
-df0 <- df %>% filter(!is.na(ev_above_median))  %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
 
-df0 <- df0 %>% group_by(dataset,run_trial,ev_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
+df$trial_bin <- factor(df$trial_bin,levels = c('Early','Middle','Late'))
 
-ggplot(df0, aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(~ev_above_median) + ggtitle('Expected Value Median Split')
+df0 <- df %>% filter(!is.na(ev_above_median))  %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(outcome == 'Reward')
 
-df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward') %>% group_by(dataset,run_trial,v_max_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
+df0 <- df0 %>% group_by(dataset,trial_bin,rewFunc,ev_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
 
-ggplot(df0, aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(~v_max_above_median) + ggtitle('Vmax Median Split')
+ggplot(df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV' & outcome == 'Reward'), aes(x=trial_bin,y=rt_swing,color=dataset,group=interaction(dataset,trial_bin))) + geom_boxplot(notch=TRUE,outlier.shape=NA) + facet_grid(rewFunc~ev_above_median) + ggtitle('Expected Value Median Split')
 
+df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(outcome == 'Reward') %>% group_by(dataset,run_trial,rewFunc,v_max_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
+
+ggplot(df0, aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~v_max_above_median) + ggtitle('Vmax Median Split')
+
+df <- df %>%  group_by(id,run,dataset) %>% 
+  mutate(magnitude_above_median = case_when(mean(magnitude,na.rm=TRUE) > median(magnitude,na.rm=TRUE) ~ 'TRUE',
+                                            mean(magnitude,na.rm=TRUE) < median(magnitude,na.rm=TRUE) ~ 'FALSE')) %>% ungroup()
+df0 <- df %>% filter(!is.na(magnitude_above_median))  %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
+
+df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward') %>% group_by(dataset,trial_bin,rewFunc,magnitude_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
+df0 <- df0 %>% filter(!is.na(magnitude_above_median))
+
+ggplot(df0, aes(x=trial_bin,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~magnitude_above_median) + ggtitle('Magnitude Median Split')
