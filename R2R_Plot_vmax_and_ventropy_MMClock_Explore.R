@@ -12,6 +12,7 @@ df <- df %>%
          condition_trial_neg_inv = -1000 / condition_trial,
          condition_trial_neg_inv_sc = as.vector(scale(condition_trial_neg_inv)),
   ) %>% ungroup()
+
 df <- df %>%
   group_by(id) %>% 
   mutate(v_entropy_sc_r = scale(v_entropy)) %>% ungroup() %>%
@@ -70,6 +71,14 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
 )))
 
 df <- df %>% select(!run_trial) %>% rename(run_trial=condition_trial)
+
+df <- df %>% select(!run) %>% mutate(run = case_when(trial <= 40 ~ 1, 
+                                      trial > 40 & trial <= 80 ~ 2,
+                                      trial > 80 & trial <=120 ~ 3, 
+                                      trial > 120 & trial <=160 ~ 4,
+                                      trial > 160 & trial <=200 ~ 5,
+                                      trial > 200 & trial <=240 ~ 6))
+
 df1 <- df
 rm(df)
 
@@ -226,8 +235,8 @@ df2 <- inner_join(df2, demo, by=c('id'))
 df3 <- inner_join(df3, demo, by=c('id'))
 
 
-df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
-df2 <- df2 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
-df3 <- df3 %>% select(id,run,trial,run_trial,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
+df1 <- df1 %>% filter(group=='HC')  %>% select(id,run,trial,run_trial,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
+df2 <- df2 %>% select(id,run,trial,run_trial,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
+df3 <- df3 %>% select(id,run,trial,run_trial,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
 
 df <- rbind(df1,df2,df3)

@@ -27,7 +27,7 @@ for (iS in 1:nSubj){
   }
 }
 
-L2roifiles <- list.files('/Volumes/Users/Andrew/ABCD_MID_Task_L2s/abcd-hcp-pipeline', pattern = glob2rx("*29*.txt"), recursive = TRUE, full.names = TRUE)
+L2roifiles <- list.files('/Volumes/Users/Andrew/ABCC_MID_L2/fmriresults01/derivatives/abcd-hcp-pipeline', pattern = glob2rx("*29*.txt"), recursive = TRUE, full.names = TRUE)
 
 df <- NULL
 nSubj <- length(L2roifiles)
