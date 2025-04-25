@@ -240,3 +240,11 @@ df2 <- df2 %>% select(id,run,trial,run_trial,rewFunc,v_entropy,v_entropy_wi,v_ma
 df3 <- df3 %>% select(id,run,trial,run_trial,rewFunc,v_entropy,v_entropy_wi,v_max,v_max_wi,dataset) 
 
 df <- rbind(df1,df2,df3)
+
+df0 <- df %>% group_by(rewFunc, dataset, run_trial) %>% summarize(mean_v_max = mean(v_max,na.rm=TRUE), sd_vmax = sd(v_max,na.rm=TRUE),mean_v_entropy = mean(v_entropy,na.rm=TRUE), sd_ventropy = sd(v_entropy,na.rm=TRUE), N = n()) %>% ungroup()
+
+ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_max,ymin = mean_v_max-sd_vmax, ymax = mean_v_max+sd_vmax, color=dataset,group=dataset)) + geom_errorbar() + facet_grid(~rewFunc)
+ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_entropy,ymin = mean_v_entropy-sd_ventropy/sqrt(N), ymax = mean_v_entropy+sd_ventropy/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
+
+
+df0 <- df %>% group_by(rewFunc, dataset, run_trial) %>% summarize(mean_v_max = mean(v_max,na.rm=TRUE), sd_vmax = sd(v_max,na.rm=TRUE),mean_v_entropy = mean(v_entropy_wi,na.rm=TRUE), sd_ventropy = sd(v_entropy_wi,na.rm=TRUE), N = n()) %>% ungroup()
