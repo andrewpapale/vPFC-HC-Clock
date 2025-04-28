@@ -121,7 +121,7 @@ if (do_evttime0==TRUE){
   #Q1 <- inner_join(behav, Q1, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial")
   
 } else {
-  Q1 <- Q %>% filter(evt_time >= -2 & evt_time <= 2) %>% group_by(id,run,run_trial,network,HC_region) %>% 
+  Q1 <- Q %>% filter(evt_time >= 0 & evt_time <= 4) %>% group_by(id,run,run_trial,network,HC_region) %>% 
     summarize(vmPFC_decon = mean(vmPFC_decon,na.rm=TRUE),HCwithin = mean(HCwithin,na.rm=TRUE)) %>% 
     ungroup()
   Q1 <- Q1 %>% group_by(id,run,run_trial) %>% 
@@ -193,11 +193,11 @@ if (do_evttime0==TRUE){
   prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_evt_time0_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 } else {
-  save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_neg2toplus2_AHforMplus.Rdata'))
-  save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_neg2toplus2_PHforMplus.Rdata'))
+  save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_0to4_AHforMplus.Rdata'))
+  save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_0to4_PHforMplus.Rdata'))
   
-  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_neg2toplus2_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
-  prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_neg2toplus2_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock0to4_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_0to4_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 }
 

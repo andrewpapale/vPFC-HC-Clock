@@ -68,11 +68,7 @@ df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
   rt_csv_sc > 0 & rt_csv_sc <= 1 ~ '0.5',
   rt_csv_sc > 1 ~ '1'
 )))
-df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
-  run_trial <= 13 ~ 'Early',
-  run_trial > 13 & run_trial < 26 ~ 'Middle',
-  run_trial >=26 ~ 'Late',
-)))
+
 
 df <- df %>% select(!run_trial) %>% rename(run_trial=condition_trial)
 
@@ -82,6 +78,24 @@ df <- df %>% select(!run) %>% mutate(run = case_when(trial <= 40 ~ 1,
                                       trial > 120 & trial <=160 ~ 4,
                                       trial > 160 & trial <=200 ~ 5,
                                       trial > 200 & trial <=240 ~ 6))
+
+df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
+  # run_trial <= 13 ~ 'Early',
+  # run_trial > 13 & run_trial < 26 ~ 'Middle',
+  # run_trial >=26 ~ 'Late',
+  run_trial <= 5 ~ '1-5',
+  run_trial > 5 & run_trial <= 10 ~ '6-10',
+  run_trial > 10 & run_trial <= 15 ~ '11-15',
+  run_trial > 15 & run_trial <= 20 ~ '16-20',
+  run_trial > 20 & run_trial <= 25 ~ '21-25',
+  run_trial > 25 & run_trial <= 30 ~ '26-30',
+  run_trial > 30 & run_trial <= 35 ~ '30-35',
+  run_trial > 35 & run_trial <= 40 ~ '36-40',
+  run_trial > 40 & run_trial <= 45 ~ '40-45',
+  run_trial > 45 & run_trial <= 50 ~ '46-50',
+  run_trial > 50 & run_trial <= 55 ~ '51-55',
+  run_trial > 55 & run_trial <= 63 ~ '55-63'
+)))
 
 df1 <- df
 rm(df)
@@ -140,9 +154,21 @@ df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
   rt_csv_sc > 1 ~ '1'
 )))
 df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
-  run_trial <= 15 ~ 'Early',
-  run_trial > 15 & run_trial < 30 ~ 'Middle',
-  run_trial >=30 ~ 'Late',
+  # run_trial <= 15 ~ 'Early',
+  # run_trial > 15 & run_trial < 30 ~ 'Middle',
+  # run_trial >=30 ~ 'Late',
+  run_trial <= 5 ~ '1-5',
+  run_trial > 5 & run_trial <= 10 ~ '6-10',
+  run_trial > 10 & run_trial <= 15 ~ '11-15',
+  run_trial > 15 & run_trial <= 20 ~ '16-20',
+  run_trial > 20 & run_trial <= 25 ~ '21-25',
+  run_trial > 25 & run_trial <= 30 ~ '26-30',
+  run_trial > 30 & run_trial <= 35 ~ '30-35',
+  run_trial > 35 & run_trial <= 40 ~ '36-40',
+  run_trial > 40 & run_trial <= 45 ~ '40-45',
+  run_trial > 45 & run_trial <= 50 ~ '46-50',
+  run_trial > 50 & run_trial <= 55 ~ '51-55',
+  run_trial > 55 & run_trial <= 63 ~ '55-63'
 )))
 
 df2 <- df
@@ -201,9 +227,21 @@ df <- df %>% group_by(id,run)  %>% mutate(rt_bin = (case_when(
   rt_csv_sc > 1 ~ '1'
 )))
 df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
-  run_trial <= 15 ~ 'Early',
-  run_trial > 15 & run_trial < 30 ~ 'Middle',
-  run_trial >=30 ~ 'Late',
+  # run_trial <= 15 ~ 'Early',
+  # run_trial > 15 & run_trial < 30 ~ 'Middle',
+  # run_trial >=30 ~ 'Late',
+  run_trial <= 5 ~ '1-5',
+  run_trial > 5 & run_trial <= 10 ~ '6-10',
+  run_trial > 10 & run_trial <= 15 ~ '11-15',
+  run_trial > 15 & run_trial <= 20 ~ '16-20',
+  run_trial > 20 & run_trial <= 25 ~ '21-25',
+  run_trial > 25 & run_trial <= 30 ~ '26-30',
+  run_trial > 30 & run_trial <= 35 ~ '30-35',
+  run_trial > 35 & run_trial <= 40 ~ '36-40',
+  run_trial > 40 & run_trial <= 45 ~ '40-45',
+  run_trial > 45 & run_trial <= 50 ~ '46-50',
+  run_trial > 50 & run_trial <= 55 ~ '51-55',
+  run_trial > 55 & run_trial <= 63 ~ '55-63'
 )))
 
 df3 <- df
@@ -254,29 +292,32 @@ ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=me
 
 df0 <- df %>% group_by(rewFunc, dataset, run_trial) %>% summarize(mean_v_max = mean(v_max_wi,na.rm=TRUE), sd_vmax = sd(v_max_wi,na.rm=TRUE),mean_v_entropy = mean(v_entropy_wi,na.rm=TRUE), sd_ventropy = sd(v_entropy_wi,na.rm=TRUE), N = n()) %>% ungroup()
 
-ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_max,ymin = mean_v_max-sd_vmax/sqrt(N), ymax = mean_v_max+sd_vmax/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
-ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_entropy,ymin = mean_v_entropy-sd_ventropy/sqrt(N), ymax = mean_v_entropy+sd_ventropy/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
+#ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_max,ymin = mean_v_max-sd_vmax/sqrt(N), ymax = mean_v_max+sd_vmax/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
+#ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_v_entropy,ymin = mean_v_entropy-sd_ventropy/sqrt(N), ymax = mean_v_entropy+sd_ventropy/sqrt(N), color=dataset,group=dataset)) + geom_errorbar() + geom_line() + facet_grid(~rewFunc)
 
 # # The relative scaled v_max versus v_entropy could be interesting, the variables are correlated
 # #ggplot(df0 %>% filter(rewFunc=='IEV' | rewFunc=='DEV'), aes(x=run_trial,y=mean_v_max-mean_v_entropy,color=dataset,group=dataset)) + geom_line() + facet_wrap(~rewFunc)
 #
-df0 <- df %>% group_by(rewFunc,dataset,run_trial,last_outcome) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE), N=n()) %>% ungroup()
-df0 <- df0 %>% filter(!is.na(last_outcome))
+#df0 <- df %>% group_by(rewFunc,dataset,run_trial,last_outcome) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE), N=n()) %>% ungroup()
+#df0 <- df0 %>% filter(!is.na(last_outcome))
 #
-ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~last_outcome)
+#ggplot(df0 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~last_outcome)
 #
+
+
+df$trial_bin = factor(df$trial_bin,levels = c('1-5','6-10','11-15','16-20','21-25','26-30','30-35','36-40','40-45','46-50','51-55','55-63'))
 
 df <- df %>%  group_by(id,run,dataset) %>% 
   mutate(ev_above_median = case_when(mean(ev,na.rm=TRUE) > median(ev,na.rm=TRUE) ~ 'TRUE',
                                     mean(ev,na.rm=TRUE) < median(ev,na.rm=TRUE) ~ 'FALSE')) %>% ungroup()
 
-df$trial_bin <- factor(df$trial_bin,levels = c('Early','Middle','Late'))
+#df$trial_bin <- factor(df$trial_bin,levels = c('Early','Middle','Late'))
 
 df <- df %>%  group_by(id,run,dataset) %>% 
   mutate(magnitude_above_median = case_when(mean(magnitude,na.rm=TRUE) > median(magnitude,na.rm=TRUE) ~ 'TRUE',
                                             mean(magnitude,na.rm=TRUE) < median(magnitude,na.rm=TRUE) ~ 'FALSE')) %>% ungroup()
 
-#df0 <- df %>% filter(!is.na(ev_above_median))  %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(outcome == 'Reward')
+dfev <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
 
 # df0 <- df0 %>% group_by(dataset,trial_bin,rewFunc,ev_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
 # 
@@ -288,84 +329,113 @@ df <- df %>%  group_by(id,run,dataset) %>%
 # # this is a line plot
 # ggplot(df0, aes(x=run_trial,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~v_max_above_median) + ggtitle('Vmax Median Split')
 # 
-# df0 <- df %>% filter(!is.na(magnitude_above_median))  %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
+dfmag <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
 # 
 # df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward') %>% group_by(dataset,run_trial,rewFunc,magnitude_above_median) %>% summarize(mean_rt_swing = mean(rt_swing,na.rm=TRUE), sd_rt_swing = sd(rt_swing,na.rm=TRUE),N=n()) %>% ungroup()
-# df0 <- df0 %>% filter(!is.na(magnitude_above_median))
+# dfmag <- dfmag %>% filter(!is.na(magnitude_above_median))
 # 
 # # this is a line plot
 # ggplot(df0, aes(x=trial_bin,y=mean_rt_swing,ymin=mean_rt_swing-sd_rt_swing/sqrt(N),ymax=mean_rt_swing+sd_rt_swing/sqrt(N),color=dataset,group=dataset)) + geom_line() + geom_errorbar() + facet_grid(rewFunc~magnitude_above_median) + ggtitle('Magnitude Median Split')
 
-decode_formula <- NULL
-decode_formula[[1]] <- formula(~ rt_lag_sc*v_entropy_wi*last_outcome + rt_lag_sc*v_max_wi*last_outcome + rt_lag_sc*trial_bin*last_outcome + (1 | id))
+dfvmax <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
 
-splits1 = c('dataset','ev_above_median')
-splits2 = c('dataset','magnitude_above_median')
-splits3 = c('dataset')
-nsplits = 3;
+# decode_formula <- NULL
+# decode_formula[[1]] <- formula(~ rt_lag_sc*v_entropy_wi*last_outcome + rt_lag_sc*v_max_wi*last_outcome + rt_lag_sc*trial_bin*last_outcome + (1 | id))
+# 
+
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~ rt_lag_sc + (1|id/run))
+splits1 = c('dataset','trial_bin','v_max_above_median')
+splits2 = c('dataset','trial_bin','ev_above_median')
+splits3 = c('dataset','trial_bin','magnitude_above_median')
+splits4 = c('dataset','trial_bin','last_outcome')
+nsplits = 4;
+# for (j in 1:nsplits){
+#   if (j==1){
+#     curr_splits <- splits1
+#     df0 <- df %>% filter(!is.na(ev_above_median))
+#   } else if (j==2){
+#     curr_splits <- splits2
+#     df0 <- df %>% filter(!is.na(magnitude_above_median))
+#   } else if (j==3){
+#     curr_splits <- splits3
+#   }
+#   ddq <- mixed_by(df0, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[1]], split_on = curr_splits,return_models=TRUE,
+#                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+#                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+#                   emtrends_spec = list(
+#                     ventropy = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+#                               specs=formula(~rt_lag_sc:v_entropy_wi:last_outcome), at=list(v_entropy_wi = c(-2,-1,0,1,2))),
+#                     vmax = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+#                                 specs=formula(~rt_lag_sc:v_max_wi:last_outcome), at=list(v_max_wi = c(-2,-1,0,1,2))),
+#                     trial = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
+#                                 specs=formula(~rt_lag_sc:trial_bin:last_outcome))
+#                     )
+#   )
+#   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+#   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+#   save(ddq,file=paste0(curr_date,'-vPFC-HC-R2R-rtpred-',j,'.Rdata'))
+#   
+# }
+# 
+# load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-26-vPFC-HC-R2R-rtpred-3.Rdata')
+# 
+# ventropy <- ddq$emtrends_list$ventropy
+# vmax <- ddq$emtrends_list$vmax
+# trial <- ddq$emtrends_list$trial
+# 
+# ventropy <- ventropy %>% filter(v_entropy_wi %in% c(-1,1))%>% mutate(entropy = case_when(v_entropy_wi == -1 ~ 'low entropy',
+#                                                                                v_entropy_wi == +1 ~ 'high entropy'))
+# vmax <- vmax %>% filter(v_max_wi %in% c(-1,1)) %>% mutate(vmax = case_when(v_max_wi == -1 ~ 'low vmax',
+#                                                                     v_max_wi == +1 ~ 'high vmax'))
+# trial$trial_bin <- factor(trial$trial_bin,levels=c('Early','Middle','Late'))
+# 
+# ggplot(ventropy, aes(x=entropy,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
+# 
+# ggplot(vmax, aes(x=vmax,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
+# 
+# ggplot(trial, aes(x=trial_bin,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
+# 
+# 
+# 
+# load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-26-vPFC-HC-R2R-rtpred-1.Rdata')
+# 
+# ventropy <- ddq$emtrends_list$ventropy
+# vmax <- ddq$emtrends_list$vmax
+# trial <- ddq$emtrends_list$trial
+# 
+# ventropy <- ventropy %>% filter(v_entropy_wi %in% c(-1,1))%>% mutate(entropy = case_when(v_entropy_wi == -1 ~ 'low entropy',
+#                                                                                          v_entropy_wi == +1 ~ 'high entropy'))
+# vmax <- vmax %>% filter(v_max_wi %in% c(-1,1)) %>% mutate(vmax = case_when(v_max_wi == -1 ~ 'low vmax',
+#                                                                            v_max_wi == +1 ~ 'high vmax'))
+# trial$trial_bin <- factor(trial$trial_bin,levels=c('Early','Middle','Late'))
+# 
+# ggplot(ventropy, aes(x=interaction(entropy,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+# 
+# ggplot(vmax, aes(x=interaction(vmax,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+# 
+# ggplot(trial, aes(x=interaction(trial_bin,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 for (j in 1:nsplits){
   if (j==1){
     curr_splits <- splits1
-    df0 <- df %>% filter(!is.na(ev_above_median))
+    df0 <- dfvmax %>% filter(!is.na(v_max_above_median))
   } else if (j==2){
     curr_splits <- splits2
-    df0 <- df %>% filter(!is.na(magnitude_above_median))
+    df0 <- dfev %>% filter(!is.na(ev_above_median))
   } else if (j==3){
     curr_splits <- splits3
+    df0 <- dfmag %>% filter(!is.na(magnitude_above_median))
+  } else if (j==4){
+    curr_splits <- splits4
+    df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV')
   }
   ddq <- mixed_by(df0, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[1]], split_on = curr_splits,return_models=TRUE,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
-                  emtrends_spec = list(
-                    ventropy = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                              specs=formula(~rt_lag_sc:v_entropy_wi:last_outcome), at=list(v_entropy_wi = c(-2,-1,0,1,2))),
-                    vmax = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                                specs=formula(~rt_lag_sc:v_max_wi:last_outcome), at=list(v_max_wi = c(-2,-1,0,1,2))),
-                    trial = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
-                                specs=formula(~rt_lag_sc:trial_bin:last_outcome))
-                    )
-  )
+                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE))
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   save(ddq,file=paste0(curr_date,'-vPFC-HC-R2R-rtpred-',j,'.Rdata'))
-  
 }
-
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-26-vPFC-HC-R2R-rtpred-3.Rdata')
-
-ventropy <- ddq$emtrends_list$ventropy
-vmax <- ddq$emtrends_list$vmax
-trial <- ddq$emtrends_list$trial
-
-ventropy <- ventropy %>% filter(v_entropy_wi %in% c(-1,1))%>% mutate(entropy = case_when(v_entropy_wi == -1 ~ 'low entropy',
-                                                                               v_entropy_wi == +1 ~ 'high entropy'))
-vmax <- vmax %>% filter(v_max_wi %in% c(-1,1)) %>% mutate(vmax = case_when(v_max_wi == -1 ~ 'low vmax',
-                                                                    v_max_wi == +1 ~ 'high vmax'))
-trial$trial_bin <- factor(trial$trial_bin,levels=c('Early','Middle','Late'))
-
-ggplot(ventropy, aes(x=entropy,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
-
-ggplot(vmax, aes(x=vmax,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
-
-ggplot(trial, aes(x=trial_bin,y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = dataset, group=dataset)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse()
-
-
-
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-04-26-vPFC-HC-R2R-rtpred-1.Rdata')
-
-ventropy <- ddq$emtrends_list$ventropy
-vmax <- ddq$emtrends_list$vmax
-trial <- ddq$emtrends_list$trial
-
-ventropy <- ventropy %>% filter(v_entropy_wi %in% c(-1,1))%>% mutate(entropy = case_when(v_entropy_wi == -1 ~ 'low entropy',
-                                                                                         v_entropy_wi == +1 ~ 'high entropy'))
-vmax <- vmax %>% filter(v_max_wi %in% c(-1,1)) %>% mutate(vmax = case_when(v_max_wi == -1 ~ 'low vmax',
-                                                                           v_max_wi == +1 ~ 'high vmax'))
-trial$trial_bin <- factor(trial$trial_bin,levels=c('Early','Middle','Late'))
-
-ggplot(ventropy, aes(x=interaction(entropy,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-ggplot(vmax, aes(x=interaction(vmax,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-ggplot(trial, aes(x=interaction(trial_bin,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
+ddf <- ddq$coef_df_reml %>% filter(effect=='fixed' & term=='rt_lag_sc')
+ggplot(ddf, aes(x=trial_bin,y=estimate,ymin = estimate-std.error,ymax=estimate+std.error,color=dataset,group=dataset)) + geom_errorbar() + geom_line() + scale_y_reverse() + geom_point() + facet_wrap(~last_outcome) + ylab('<-- more -- RT swings -- less -->')
