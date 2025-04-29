@@ -288,8 +288,8 @@ if (do_evttime0==TRUE){
   
   setwd(file.path(rootdir1))
   
-  save(Q1_AH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_0to4_AHforMplus.Rdata'))
-  save(Q1_PH,file=file.path(rootdir,'bsocial_HC_vmPFC_clock_0to4_PHforMplus.Rdata'))
+  save(Q1_AH,file='bsocial_HC_vmPFC_clock_0to4_AHforMplus.Rdata')
+  save(Q1_PH,file='bsocial_HC_vmPFC_clock_0to4_PHforMplus.Rdata')
   
   prepareMplusData(df = Q1_AH, filename = "bsocial_HC_vmPFC_clock_0to4_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "bsocial_HC_vmPFC_clock_0to4_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)

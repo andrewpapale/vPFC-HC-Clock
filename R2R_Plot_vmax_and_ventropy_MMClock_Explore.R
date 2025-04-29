@@ -348,7 +348,7 @@ decode_formula[[1]] <- formula(~ rt_lag_sc + (1|id/run))
 splits1 = c('dataset','trial_bin','v_max_above_median')
 splits2 = c('dataset','trial_bin','ev_above_median')
 splits3 = c('dataset','trial_bin','magnitude_above_median')
-splits4 = c('dataset','trial_bin','last_outcome')
+splits4 = c('dataset','trial_bin')
 nsplits = 4;
 # for (j in 1:nsplits){
 #   if (j==1){
@@ -416,7 +416,7 @@ nsplits = 4;
 # 
 # ggplot(trial, aes(x=interaction(trial_bin,ev_above_median),y=rt_lag_sc.trend,ymin = rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error,color = ev_above_median, group=ev_above_median)) + geom_errorbar() + geom_point() + facet_grid(dataset~last_outcome,scales = 'free_y') + scale_y_reverse() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-for (j in 1:nsplits){
+for (j in 4:nsplits){
   if (j==1){
     curr_splits <- splits1
     df0 <- dfvmax %>% filter(!is.na(v_max_above_median))
@@ -428,14 +428,14 @@ for (j in 1:nsplits){
     df0 <- dfmag %>% filter(!is.na(magnitude_above_median))
   } else if (j==4){
     curr_splits <- splits4
-    df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV')
+    df0 <- df %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV') %>% filter(last_outcome == 'Reward')
   }
   ddq <- mixed_by(df0, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[1]], split_on = curr_splits,return_models=TRUE,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE))
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-vPFC-HC-R2R-rtpred-',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-vPFC-HC-R2R-rtpred-Omission',5,'.Rdata'))
 }
 ddf <- ddq$coef_df_reml %>% filter(effect=='fixed' & term=='rt_lag_sc')
-ggplot(ddf, aes(x=trial_bin,y=estimate,ymin = estimate-std.error,ymax=estimate+std.error,color=dataset,group=dataset)) + geom_errorbar() + geom_line() + scale_y_reverse() + geom_point() + facet_wrap(~last_outcome) + ylab('<-- more -- RT swings -- less -->')
+ggplot(ddf, aes(x=trial_bin,y=estimate,ymin = estimate-std.error,ymax=estimate+std.error,color=dataset,group=dataset)) + geom_errorbar() + geom_line() + scale_y_reverse() + geom_point() + ylab('<-- less -- RT swings -- more -->') + facet_wrap(~v_max_above_median)
