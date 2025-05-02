@@ -159,8 +159,8 @@ Q1 <- inner_join(Q1,demo,by=c('id'))
 Q1$female <- relevel(as.factor(Q1$female),ref='0')
 Q1$age <- scale(Q1$age)
 
-Q1_AH <- Q1 %>% filter(HC_region == "AH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
-Q1_PH <- Q1 %>% filter(HC_region == "PH") %>% mutate(HCwithin_LIM = scale(HCwithin_LIM), HCwithin_CTR = scale(HCwithin_CTR), HCwithin_DMN = scale(HCwithin_DMN), vmPFC_decon_LIM = scale(vmPFC_decon_LIM),vmPFC_decon_CTR = scale(vmPFC_decon_CTR), vmPFC_decon_DMN = scale(vmPFC_decon_DMN))
+Q1_AH <- Q1 %>% filter(HC_region == "AH") 
+Q1_PH <- Q1 %>% filter(HC_region == "PH") 
 
 # test whether MLMs are still significant
 
@@ -196,7 +196,7 @@ if (do_evttime0==TRUE){
   save(Q1_AH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_0to4_AHforMplus.Rdata'))
   save(Q1_PH,file=file.path(rootdir,'mmclock_HC_vmPFC_clock_0to4_PHforMplus.Rdata'))
   
-  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock0to4_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
+  prepareMplusData(df = Q1_AH, filename = "mmclock_HC_vmPFC_clock_0to4_AH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   prepareMplusData(df = Q1_PH, filename = "mmclock_HC_vmPFC_clock_0to4_PH_forMplus_taa.dat", dummyCode = c("outcome", "female"), overwrite = TRUE)
   
 }
