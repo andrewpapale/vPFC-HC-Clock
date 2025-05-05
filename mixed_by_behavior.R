@@ -99,8 +99,8 @@ df0 <- df %>% mutate(dataset1 = 'bsocial_copy')
 df <- rbind(df,df0)
 
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * run_trial0_neg_inv_sc + (1 | id/run))
+decode_formula[[2]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * run_trial0_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 
 splits = c('dataset1')
 for (j in 1:length(decode_formula)){
