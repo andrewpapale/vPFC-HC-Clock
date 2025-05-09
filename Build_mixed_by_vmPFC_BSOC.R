@@ -132,12 +132,14 @@ df <- df %>%
          v_max_sc = scale(v_max),
          rt_vmax_sc = scale(rt_vmax),
          v_entropy_sc = scale(v_entropy),
-         rt_swing_sc = scale(rt_swing)) %>% ungroup()
+         rt_swing_sc = scale(rt_swing),
+         abs_pe_max_lag_sc = scale(abs(pe_max_lag)),
+         rt_vmax_change_sc = scale(rt_vmax_change)) %>% ungroup()
 
 # select only vars of interest and merge into MRI data
 behav <- df %>% select(id,scanner_run,trial,run_trial0,run_trial,asc_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
-                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
+                       v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc,v_entropy_wi_change_lag,rt_vmax_lag_sc,abs_pe_max_lag_sc,rt_vmax_change_sc)
 behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
 Q <- inner_join(behav, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 
@@ -186,16 +188,20 @@ Q$sex <- relevel(as.factor(Q$sex),ref='M')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- NULL
-decode_formula[[1]] = formula(~  group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[2]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[3]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[4]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + rt_lag_sc + last_outcome  + (1|id/run))
-decode_formula[[5]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[6]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
-decode_formula[[7]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*sex + (1|id/run))
-decode_formula[[8]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*age + (1|id/run))
-decode_formula[[9]] <- formula(~group + v_entropy_wi + (1|id/run))
-decode_formula[[10]] <- formula(~group + v_max_wi + (1|id/run))
+# decode_formula[[1]] = formula(~  group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + rt_lag_sc + last_outcome  + (1|id/run))
+# decode_formula[[2]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
+# decode_formula[[3]] = formula(~ group + age + sex + run_trial0_neg_inv_sc + v_max_wi*sex + v_entropy_wi*sex + rt_lag_sc + last_outcome + (1|id/run))
+# decode_formula[[4]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + rt_lag_sc + last_outcome  + (1|id/run))
+# decode_formula[[5]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
+# decode_formula[[6]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi*age + v_entropy_wi*age + rt_lag_sc + last_outcome + (1|id/run))
+# decode_formula[[7]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*sex + (1|id/run))
+# decode_formula[[8]] = formula(~ group  + age + sex + run_trial0_neg_inv_sc + v_max_wi + v_entropy_wi + rt_lag_sc + last_outcome*age + (1|id/run))
+# decode_formula[[9]] <- formula(~group + v_entropy_wi + (1|id/run))
+# decode_formula[[10]] <- formula(~group + v_max_wi + (1|id/run))
+
+decode_formula[[1]] = formula(~ group + sex + v_entropy_wi_change_lag*age + rt_vmax_lag_sc*age + abs_pe_max_lag_sc*age + rt_vmax_change_sc*age +  + rt_lag_sc + iti_lag_sc + (1|id/run))
+decode_formula[[2]] = formula(~ group + age + v_entropy_wi_change_lag*sex + rt_vmax_lag_sc*sex + abs_pe_max_lag_sc*sex + rt_vmax_change_sc*sex +  + rt_lag_sc + iti_lag_sc + (1|id/run))
+
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)

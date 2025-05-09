@@ -44,6 +44,7 @@ df <- df %>%
          v_max_lag_sc = scale(lag(v_max)),
          v_entropy_wi_change_lag = lag(v_entropy_wi_change),
          abs_rt_vmax_change = abs(rt_vmax_change),
+         rt_vmax_change_sc = scale(rt_vmax_change),
          rt_vmax_change_bin = case_when(
            abs_rt_vmax_change < 4/24 ~ 'No Change',
            abs_rt_vmax_change >= 4/24 ~ 'Change'
@@ -52,8 +53,7 @@ df <- df %>%
            v_entropy_wi_change_lag < -0.5 ~ 'Decrease',
            v_entropy_wi_change_lag > 0.5  ~ 'Increase',
            v_entropy_wi_change_lag >= -0.5 & v_entropy_wi_change_lag <= 0.5 ~ 'No Change'
-         ),
-         rt_vmax_change_sc = scale(rt_vmax_change)) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
+         )) %>% arrange(id, run, run_trial) %>% mutate(log10kld4 = case_when(
            kld4 ==0 ~ NA_real_,
            kld4 >0 ~ log10(kld4)
          )) %>% mutate(log10kld4_lag = case_when(
@@ -82,7 +82,7 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial >=30 ~ 'Late',
 )))
 #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,rt_vmax_change_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,rt_vmax_change_sc,abs_pe_max_lag_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag, rt_vmax_lag_sc,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
 Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -105,13 +105,14 @@ Q$sex <- relevel(as.factor(Q$sex),ref='M')
 Q$age <- scale(Q$age)
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
-decode_formula[[1]] = formula(~ age + sex + v_entropy_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
-decode_formula[[2]] = formula(~ age + sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
-decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
-decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
-decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
-decode_formula[[6]] = formula(~ age + sex + v_entropy_wi*age + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
-
+#decode_formula[[1]] = formula(~ age + sex + v_entropy_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+#decode_formula[[2]] = formula(~ age + sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
+#decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+#decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+#decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
+#decode_formula[[6]] = formula(~ age + sex + v_entropy_wi*age + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
+decode_formula[[1]] = formula(~ sex + v_entropy_wi_change_lag*age + rt_vmax_lag_sc*age + abs_pe_max_lag_sc*age + rt_vmax_change_sc*age +  + rt_lag_sc + iti_lag_sc + (1|id/run))
+decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex + rt_vmax_lag_sc*sex + abs_pe_max_lag_sc*sex + rt_vmax_change_sc*sex +  + rt_lag_sc + iti_lag_sc + (1|id/run))
 
 qT <- c(-0.7,0.43)
 
@@ -125,5 +126,5 @@ for (i in 1:length(decode_formula)){
                   tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-alternate-regressors-agesex-',i,'.Rdata'))
 }

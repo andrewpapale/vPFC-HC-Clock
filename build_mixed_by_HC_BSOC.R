@@ -105,10 +105,14 @@ df <- df %>%
          v_max_sc = scale(v_max),
          rt_vmax_sc = scale(rt_vmax),
          v_entropy_sc = scale(v_entropy),
-         rt_swing_sc = scale(rt_swing)) %>% ungroup()
+         rt_swing_sc = scale(rt_swing),         
+         v_entropy_wi_change_lag = lag(v_entropy_wi_change),
+         abs_rt_vmax_change = abs(rt_vmax_change),
+         rt_vmax_change_sc = scale(rt_vmax_change),
+         abs_pe_max_lag_sc = scale(abs(pe_max_lag))) %>% ungroup()
 
 # select only vars of interest and merge into MRI data
-behav <- df %>% select(id,scanner_run,trial,run_trial0,run_trial,asc_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+behav <- df %>% select(id,scanner_run,trial,run_trial0,run_trial,v_entropy_wi_change_lag,rt_vmax_lag_sc,abs_pe_max_lag_sc,rt_vmax_change_sc,asc_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,run_trial0_neg_inv_sc,rewFunc)
 behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% rename(run_trial = run_trial0)
@@ -159,12 +163,15 @@ Q$sex <- relevel(as.factor(Q$sex),ref='M')
 #Q <- inner_join(Q,fits,by='id')
 rm(decode_formula)
 decode_formula <- formula(~ (1|id))
-decode_formula[[1]] = formula(~ age + sex + v_entropy_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween +  (1|id/run))
-decode_formula[[2]] = formula(~ age + sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  HCbetween +  (1 |id/run))
-decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + HCbetween +  iti_lag_sc + (1|id/run))
-decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
-decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween +  (1 |id/run))
-decode_formula[[6]] = formula(~ age + sex + v_entropy_wi*age + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
+# decode_formula[[1]] = formula(~ age + sex + v_entropy_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween +  (1|id/run))
+# decode_formula[[2]] = formula(~ age + sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  HCbetween +  (1 |id/run))
+# decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + HCbetween +  iti_lag_sc + (1|id/run))
+# decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
+# decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween +  (1 |id/run))
+# decode_formula[[6]] = formula(~ age + sex + v_entropy_wi*age + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
+decode_formula[[1]] = formula(~ group + sex + v_entropy_wi_change_lag*age + rt_vmax_lag_sc*age + abs_pe_max_lag_sc*age + rt_vmax_change_sc*age +  + rt_lag_sc + iti_lag_sc + (1|id/run))
+decode_formula[[2]] = formula(~ group + age + v_entropy_wi_change_lag*sex + rt_vmax_lag_sc*sex + abs_pe_max_lag_sc*sex + rt_vmax_change_sc*sex +  + rt_lag_sc + iti_lag_sc + (1|id/run))
+
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
 splits = c('evt_time','HC_region')
@@ -200,6 +207,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-HC-region-clock-All-agesex-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-HC-region-clock-All-alternate-regressors-agesex-',i,'.Rdata'))
 }
 

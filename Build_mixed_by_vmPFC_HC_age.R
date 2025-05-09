@@ -12,7 +12,7 @@ doTesting = FALSE
 do_vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
 do_vPFC_clock = FALSE
 do_HC_fb = FALSE
-do_HC_clock = TRUE
+do_HC_clock = FALSE
 do_HC2vPFC_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
 do_HC2vPFC_clock = TRUE
 do_anat_fb = FALSE # haven't used in a while, check before running again 2024-05-01 AndyP
@@ -1273,7 +1273,11 @@ if (do_HC2vPFC_clock){
                                                        total_earnings < median(df$total_earnings,na.rm=TRUE)~'poorer'))
   
   #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-  df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,total_earnings_split,outcome,iti_ideal,iti_prev,rt_csv,abs_pe_max_lag_sc,v_entropy_wi,rt_vmax_change_sc,trial_bin,rewFunc,trial_neg_inv_sc,rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+  df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,total_earnings_split,outcome,iti_ideal,iti_prev,rt_csv,
+                      abs_pe_max_lag_sc,v_entropy_wi,rt_vmax_change_sc,trial_bin,rewFunc,trial_neg_inv_sc,
+                      rt_csv_sc,v_entropy_sc,expl_longer,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,
+                      v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc,
+                      v_entropy_wi_change_lag,abs_rt_vmax_change,rt_vmax_lag_sc,rt_vmax_change_sc,abs_pe_max_lag_sc)
   Q <- inner_join(df, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
   Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
   Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -1294,22 +1298,30 @@ if (do_HC2vPFC_clock){
   demo <- demo %>% select(!adult & !scandate)
   Q <- inner_join(Q,demo,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
+  Q <- Q %>% mutate(sex = case_when(female==1 ~ 'F',
+                                    female==0 ~ 'M'))
+  Q$sex <- relevel(as.factor(Q$sex),ref='M')
   Q$age <- scale(Q$age)
   if (remove_1to10){
     Q <- Q %>% filter(trial > 10)
   }
   rm(decode_formula)
   decode_formula <- NULL
-  decode_formula[[1]] = formula(~ female + v_entropy_wi * HCwithin * age + trial_neg_inv_sc + v_max_wi * HCwithin * age + rt_csv_sc + iti_lag_sc + iti_sc + last_outcome + HCbetween + (1 | id/run)) 
+  #decode_formula[[1]] = formula(~ female + v_entropy_wi * HCwithin * age + trial_neg_inv_sc + v_max_wi * HCwithin * age + rt_csv_sc + iti_lag_sc + iti_sc + last_outcome + HCbetween + (1 | id/run)) 
   #decode_formula[[3]] = formula(~ age + female + abs_pe_max_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin  + rt_csv_sc*HCwithin  + iti_lag_sc*HCwithin + iti_sc + HCwithin*HCbetween + (1| id/run))
   #decode_formula[[1]] = formula(~ v_max_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[2]] = formula(~ v_entropy_wi*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[1]] = formula(~v_max_wi + (1|id/run))
   #decode_formula[[1]] = formula(~v_max_wi*HCwithin + v_entropy_wi*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[2]] = formula(~age * HCwithin *v_entropy_wi + HCbetween + (1 | id/run)) 
+  #decode_formula[[2]] = formula(~age * HCwithin *v_entropy_wi + HCbetween + (1 | id/run)) 
   #decode_formula[[2]] = formula(~age * HCwithin + female * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
   #decode_formula[[3]] = formula(~age * HCwithin + female * HCwithin + v_entropy_wi * HCwithin + trial_neg_inv_sc * HCwithin + v_max_wi * HCwithin + rt_lag_sc*HCwithin + iti_lag_sc * HCwithin + last_outcome * HCwithin + HCbetween + (1 | id/run)) 
   #decode_formula[[4]] = formula(~age * HCwithin + female * HCwithin + abs_pe_max_lag_sc * HCwithin + trial_neg_inv_sc * HCwithin + rt_lag_sc*HCwithin + HCbetween + (1|id/run))
+  #decode_formula[[1]] = formula(~ sex + v_entropy_wi_change_lag*age*HCwithin + rt_vmax_lag_sc*age*HCwithin + abs_pe_max_lag_sc*age*HCwithin + rt_vmax_change_sc*age*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
+  #decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex*HCwithin + rt_vmax_lag_sc*sex*HCwithin + abs_pe_max_lag_sc*sex*HCwithin + rt_vmax_change_sc*sex*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
+  
+  decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
+  
   
   qT <- c(-2.62,-0.704,0.29, 0.430)
   
@@ -1323,7 +1335,7 @@ if (do_HC2vPFC_clock){
       print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                       # emmeans_spec = list(
                       #   H = list(outcome='vmPFC_decon', model_name='model1', 
                       #            specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
@@ -1332,6 +1344,13 @@ if (do_HC2vPFC_clock){
                       #   Tr = list(outcome='vmPFC_decon',model_name='model1',
                       #             specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       # ),
+                      emtrends_spec = list(
+                        rtvmax1rt = list(outcome='vmPFC_decon',model_name='model1', var = 'rt_vmax_lag_sc',
+                                         specs = formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5))),
+                        rtvmax2hc = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                                         specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),rt_vmax_lag_sc = c(-1.5,1.5))),
+                        rtvmax3age = list(outcome='vmPFC_decon',model_name='model1',var='age',
+                                          specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5)))
                       #emtrends_spec = list(
                       #   H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #               specs=formula(~v_entropy_sc:HCwithin), at=list(HCwithin=c(-1.5,1.5),v_entropy_sc=c(-1.5,1.5))),
@@ -1345,13 +1364,13 @@ if (do_HC2vPFC_clock){
                       #               specs=formula(~HCbetween:HCwithin),at=list(HCbetween=c(-1.5,1,5))),
                       #   RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #                specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5)))
-                      #)
+                      )
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (i==4){
         save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
       } else {
-        save(ddf,file=paste0(curr_date,'-Age-vmPFC-HC-network-clock-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'MMClock-vPFC-HC-network-clock-alternate-regressors-agesex-emtrends-',i,'.Rdata'))
       }
     }
     
