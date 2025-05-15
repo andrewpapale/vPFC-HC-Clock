@@ -10,3 +10,7 @@ df <- get_trial_data(repo_directory=repo_directory,dataset='explore')
 df0 <- df %>% filter(id == '202200' & run == 1) %>% select(clock_onset, rt_csv)
 
 str <- NULL; for (iD in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iD],":",df0$rt_csv[iD],' '))}
+
+fileConn <- file("p.1D")
+writeLines(str,fileConn)
+close(fileConn)
