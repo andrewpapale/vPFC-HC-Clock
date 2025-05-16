@@ -9,6 +9,6 @@ onsets = interp1(1:nTR,1:nTR,test(:,4)./TR,'nearest');
 parameter = test1;
 PM = zeros(nTR,1); 
 PM(onsets) = parameter / max(parameter);
-cPM = conv(rdmU1(:,3),PM);
-cPM = cPM(1:nTR);
+cPM = conv(PM,rdmU1(:,3));
+cPM = cPM(nTR:end);
 
