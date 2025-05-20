@@ -43,18 +43,19 @@ for (iD in ids){
       checkmate::assert(length(dir2)==1)
       
       str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iQ],":",df0$rt_csv[iQ],' '))}
+      
       fileConn <- file("clock_onset_regressor.1D")
       writeLines(str,fileConn)
       close(fileConn)
       
-      fileConn <- file(paste0(iD,'-run-',run0,'-clock_onset_regressor-script.tcsh'))
+      fileConn <- file(paste0(iD,'-run-',run0,'-clock_onset_regressor_script.tcsh'))
       
-      str <- paste0(
+      str <- paste(
         '
-#!/bin/tcsh \\ 
+#!/bin/tcsh
 
 3dDeconvolve                                                                 \\
-    -input           ',dir2,'  \\
+    -input          ',dir2,'  \\
     -polort          -1                                                      \\
     -num_stimts      1                                                       \\
     -GOFORIT         120                                                     \\
@@ -62,7 +63,7 @@ for (iD in ids){
     -x1D             clock_onset_regressor_dmU.1D                                                
 \\
 3dDeconvolve                                                                 \\
-    -input           ',dir2,'  \\
+    -input          ',dir2,'  \\
     -polort          -1                                                      \\
     -num_stimts      1                                                       \\
     -GOFORIT         120                                                     \\
@@ -70,10 +71,11 @@ for (iD in ids){
     -x1D             clock_onset_regressor_dmUn.1D                                               
 
 \\
-# simplify formatting: output number-only files \\
- \\
-1dcat clock_onset_regressor_dmU.1D  > r_dmU.1D \\
-1dcat clock_onset_regressor_dmUn.1D > r_dmUn.1D \\'
+# simplify formatting: output number-only files
+
+1dcat clock_onset_regressor_dmU.1D  > r_clock_onset_regressor_dmU.1D
+
+1dcat clock_onset_regressor_dmUn.1D > r_clock_onset_regressor_dmUn.1D'
       )      
       writeLines(str,fileConn)
       close(fileConn)
@@ -115,14 +117,14 @@ for (iD in ids){
       writeLines(str,fileConn)
       close(fileConn)
       
-      fileConn <- file(paste0(iD,'-run-',run0,'-feedback_regressor-script.tcsh'))
+      fileConn <- file(paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh'))
       
-      str <- paste0(
+      str <- paste(
         '
-#!/bin/tcsh \\ 
+#!/bin/tcsh 
 
 3dDeconvolve                                                                 \\
-    -input           ',dir2,'  \\
+    -input          ',dir2,'  \\
     -polort          -1                                                      \\
     -num_stimts      1                                                       \\
     -GOFORIT         120                                                     \\
@@ -130,7 +132,7 @@ for (iD in ids){
     -x1D             feedback_regressor_dmU.1D                                                
 \\
 3dDeconvolve                                                                 \\
-    -input           ',dir2,'  \\
+    -input          ',dir2,'  \\
     -polort          -1                                                      \\
     -num_stimts      1                                                       \\
     -GOFORIT         120                                                     \\
@@ -139,9 +141,10 @@ for (iD in ids){
 
 \\
 # simplify formatting: output number-only files \\
- \\
-1dcat feedback_regressor_dmU.1D  > r_dmU.1D \\
-1dcat feedback_regressor_dmUn.1D > r_dmUn.1D \\'
+
+1dcat feedback_regressor_dmU.1D  > r_feedback_regressor_dmU.1D
+
+1dcat feedback_regressor_dmUn.1D > r_feedback_regressor_dmUn.1D'
       )      
       writeLines(str,fileConn)
       close(fileConn)
@@ -153,6 +156,6 @@ for (iD in ids){
     # write entropy (will construct into parametric modulator using MATLAB/SPM)
     
     df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset,v_entropy)
-    write.table(df0,file.name=paste0(iD,'-run-',run0,'entropy-PM.csv'),col.names=FALSE)
+    write.table(df0,file=paste0(iD,'-run-',run0,'entropy-PM.csv'),col.names=FALSE)
   }
 }
