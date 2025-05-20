@@ -4,17 +4,20 @@
 library(tidyverse)
 
 repo_directory <- "~/clock_analysis"
-
+thread = 26
 
 demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
 HC <- demo %>% filter(registration_group == 'HC')
 ids <- HC$registration_redcapid
 
-source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
-df <- get_trial_data(repo_directory=repo_directory,dataset='explore')
-
-for (iD in ids[1]){
+par_cl <- parallel::makeCluster(spec = thread,type = "FORK")
+parallel::parLapply(par_cl,ids,function(iD){
+  
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  df <- get_trial_data(repo_directory=repo_directory,dataset='explore')
+  
   for (run0 in 1:2){
+    
     df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset, rt_csv)
     
     if (nrow(df0) > 0){
@@ -136,6 +139,7 @@ for (iD in ids[1]){
     # write entropy (will construct into parametric modulator using MATLAB/SPM)
     
     df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset,v_entropy)
-    write.table(df0,file=paste0(iD,'-run-',run0,'entropy-PM.csv'),col.names=FALSE)
+    write.table(df0,file=paste0(iD,'-run-',run0,'-entropy-PM.csv'),col.names=FALSE)
   }
-}
+})
+parallel::stopCluster(par_cl)
