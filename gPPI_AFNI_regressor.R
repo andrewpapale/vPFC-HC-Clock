@@ -42,7 +42,7 @@ for (iD in ids){
       
       checkmate::assert(length(dir2)==1)
       
-      str <- NULL; for (iD in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iD],":",df0$rt_csv[iD],' '))}
+      str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iQ],":",df0$rt_csv[iQ],' '))}
       fileConn <- file("clock_onset_regressor.1D")
       writeLines(str,fileConn)
       close(fileConn)
@@ -110,7 +110,7 @@ for (iD in ids){
       
       checkmate::assert(length(dir2)==1)
       
-      str <- NULL; for (iD in 1:nrow(df0)){str <- paste0(str,paste0(df0$feedback_onset[iD],":",0.7,' '))}
+      str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$feedback_onset[iQ],":",0.7,' '))}
       fileConn <- file("feedback_regressor.1D")
       writeLines(str,fileConn)
       close(fileConn)
@@ -148,8 +148,6 @@ for (iD in ids){
       
       system(paste0('tcsh ',paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh')))
     }
-    
-    
     
     
     # write entropy (will construct into parametric modulator using MATLAB/SPM)
