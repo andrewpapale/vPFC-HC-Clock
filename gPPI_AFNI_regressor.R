@@ -35,7 +35,7 @@ for (iD in ids[1]){
       iC <- 1
       for (iD0 in 1:length(dir1)){
         if (grepl(paste0('run-',run0),dir1[iD0])){
-          dir2[iC] <- dir0[iD0]
+          dir2[iC] <- dir1[iD0]
           iC <- iC + 1
         }
       }
