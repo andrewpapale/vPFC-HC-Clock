@@ -13,7 +13,7 @@ ids <- HC$registration_redcapid
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 df <- get_trial_data(repo_directory=repo_directory,dataset='explore')
 
-for (iD in ids){
+for (iD in ids[1]){
   for (run0 in 1:2){
     df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset, rt_csv)
     
@@ -73,9 +73,9 @@ for (iD in ids){
 \\
 # simplify formatting: output number-only files
 
-1dcat clock_onset_regressor_dmU.1D  > r_clock_onset_regressor_dmU.1D
+1dcat clock_onset_regressor_dmU.1D  > r_clock_onset_regressor_dmU_',run0,'.1D
 
-1dcat clock_onset_regressor_dmUn.1D > r_clock_onset_regressor_dmUn.1D'
+1dcat clock_onset_regressor_dmUn.1D > r_clock_onset_regressor_dmUn_',run0,'.1D'
       )      
       writeLines(str,fileConn)
       close(fileConn)
@@ -89,26 +89,6 @@ for (iD in ids){
     
     if (nrow(df0) > 0){
       
-      setwd(paste0('/Users/dnplserv/gPPI/Explore_HC_only/sub-',iD,'/func'))
-      dir0 <- list.files(pattern = 'nfas')
-      
-      dir1 <- NULL
-      iC <- 1
-      for (iD0 in 1:length(dir0)){
-        if (grepl('.nii.gz',dir0[iD0])){
-          dir1[iC] <- dir0[iD0]
-          iC <- iC + 1
-        }
-      }
-      
-      dir2 <- NULL
-      iC <- 1
-      for (iD0 in 1:length(dir1)){
-        if (grepl(paste0('run-',run0),dir1[iD0])){
-          dir2[iC] <- dir0[iD0]
-          iC <- iC + 1
-        }
-      }
       
       checkmate::assert(length(dir2)==1)
       
@@ -142,9 +122,9 @@ for (iD in ids){
 \\
 # simplify formatting: output number-only files \\
 
-1dcat feedback_regressor_dmU.1D  > r_feedback_regressor_dmU.1D
+1dcat feedback_regressor_dmU.1D  > r_feedback_regressor_dmU_',run0,'.1D
 
-1dcat feedback_regressor_dmUn.1D > r_feedback_regressor_dmUn.1D'
+1dcat feedback_regressor_dmUn.1D > r_feedback_regressor_dmUn_',run0,'.1D'
       )      
       writeLines(str,fileConn)
       close(fileConn)
