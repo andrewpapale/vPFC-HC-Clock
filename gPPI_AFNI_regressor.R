@@ -99,7 +99,7 @@ for (iD in ids[1]){
       
       fileConn <- file(paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh'))
       
-      str <- paste(
+      str <- paste0(
         '
 #!/bin/tcsh 
 
