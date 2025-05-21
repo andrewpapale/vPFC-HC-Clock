@@ -5,6 +5,9 @@ library(tidyverse)
 
 repo_directory <- "~/clock_analysis"
 thread = 26
+dofeedback = FALSE
+doclock = TRUE
+dodf = FALSE
 
 demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
 HC <- demo %>% filter(registration_group == 'HC')
@@ -21,7 +24,7 @@ parallel::parLapply(par_cl,ids,function(iD){
     df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset, rt_csv)
     
     if (nrow(df0) > 0){
-    
+      
       setwd(paste0('/Users/dnplserv/gPPI/Explore_HC_only/sub-',iD,'/func'))
       dir0 <- list.files(pattern = 'nfas')
       
@@ -45,16 +48,18 @@ parallel::parLapply(par_cl,ids,function(iD){
       
       checkmate::assert(length(dir2)==1)
       
-      str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iQ],":",df0$rt_csv[iQ],' '))}
-      
-      fileConn <- file("clock_onset_regressor.1D")
-      writeLines(str,fileConn)
-      close(fileConn)
-      
-      fileConn <- file(paste0(iD,'-run-',run0,'-clock_onset_regressor_script.tcsh'))
-      
-      str <- paste(
-        '
+      if (doclock){
+        
+        str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$clock_onset[iQ],":",df0$rt_csv[iQ],' '))}
+        
+        fileConn <- file("clock_onset_regressor.1D")
+        writeLines(str,fileConn)
+        close(fileConn)
+        
+        fileConn <- file(paste0(iD,'-run-',run0,'-clock_onset_regressor_script.tcsh'))
+        
+        str <- paste0(
+          '
 #!/bin/tcsh
 
 3dDeconvolve                                                                 \\
@@ -79,67 +84,72 @@ parallel::parLapply(par_cl,ids,function(iD){
 1dcat clock_onset_regressor_dmU.1D  > r_clock_onset_regressor_dmU_',run0,'.1D
 
 1dcat clock_onset_regressor_dmUn.1D > r_clock_onset_regressor_dmUn_',run0,'.1D'
-      )      
-      writeLines(str,fileConn)
-      close(fileConn)
+        )      
+        writeLines(str,fileConn)
+        close(fileConn)
+        
+        system(paste0('tcsh ',paste0(iD,'-run-',run0,'-clock_onset_regressor_script.tcsh')))
+      }
       
-      system(paste0('tcsh ',paste0(iD,'-run-',run0,'-clock_onset_regressor_script.tcsh')))
     }
     
-    
-    
-    df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,feedback_onset,v_entropy)
-    
-    if (nrow(df0) > 0){
+    if (dofeedback){
       
+      df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,feedback_onset,v_entropy)
       
-      checkmate::assert(length(dir2)==1)
-      
-      str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$feedback_onset[iQ],":",0.7,' '))}
-      fileConn <- file("feedback_regressor.1D")
-      writeLines(str,fileConn)
-      close(fileConn)
-      
-      fileConn <- file(paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh'))
-      
-      str <- paste0(
-        '
-#!/bin/tcsh 
+      if (nrow(df0) > 0){
+        
+        
+        checkmate::assert(length(dir2)==1)
+        
+        str <- NULL; for (iQ in 1:nrow(df0)){str <- paste0(str,paste0(df0$feedback_onset[iQ],":",0.7,' '))}
+        fileConn <- file("feedback_regressor.1D")
+        writeLines(str,fileConn)
+        close(fileConn)
+        
+        fileConn <- file(paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh'))
+        
+        str <- paste0(
+          '
+ #!/bin/tcsh 
+ 
+ 3dDeconvolve                                                                 \\
+     -input          ',dir2,'  \\
+     -polort          -1                                                      \\
+     -num_stimts      1                                                       \\
+     -GOFORIT         120                                                     \\
+     -stim_times_AM1  1 feedback_regressor.1D "dmUBLOCK(1)"                                    \\
+     -x1D             feedback_regressor_dmU.1D                                                
+ \\
+ 3dDeconvolve                                                                 \\
+     -input          ',dir2,'  \\
+     -polort          -1                                                      \\
+     -num_stimts      1                                                       \\
+     -GOFORIT         120                                                     \\
+     -stim_times_AM1  1 feedback_regressor.1D "dmUBLOCK(-1)"                                   \\
+     -x1D             feedback_regressor_dmUn.1D                                               
+ 
+ \\
+ # simplify formatting: output number-only files \\
+ 
+ 1dcat feedback_regressor_dmU.1D  > r_feedback_regressor_dmU_',run0,'.1D
 
-3dDeconvolve                                                                 \\
-    -input          ',dir2,'  \\
-    -polort          -1                                                      \\
-    -num_stimts      1                                                       \\
-    -GOFORIT         120                                                     \\
-    -stim_times_AM1  1 feedback_regressor.1D "dmUBLOCK(1)"                                    \\
-    -x1D             feedback_regressor_dmU.1D                                                
-\\
-3dDeconvolve                                                                 \\
-    -input          ',dir2,'  \\
-    -polort          -1                                                      \\
-    -num_stimts      1                                                       \\
-    -GOFORIT         120                                                     \\
-    -stim_times_AM1  1 feedback_regressor.1D "dmUBLOCK(-1)"                                   \\
-    -x1D             feedback_regressor_dmUn.1D                                               
-
-\\
-# simplify formatting: output number-only files \\
-
-1dcat feedback_regressor_dmU.1D  > r_feedback_regressor_dmU_',run0,'.1D
-
-1dcat feedback_regressor_dmUn.1D > r_feedback_regressor_dmUn_',run0,'.1D'
-      )      
-      writeLines(str,fileConn)
-      close(fileConn)
-      
-      system(paste0('tcsh ',paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh')))
+ 1dcat feedback_regressor_dmUn.1D > r_feedback_regressor_dmUn_',run0,'.1D'
+        )      
+        writeLines(str,fileConn)
+        close(fileConn)
+        
+        system(paste0('tcsh ',paste0(iD,'-run-',run0,'-feedback_regressor_script.tcsh')))
+      }
     }
     
-    
-    # write entropy (will construct into parametric modulator using MATLAB/SPM)
-    
-    df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset,v_entropy)
-    write.table(df0,file=paste0(iD,'-run-',run0,'-entropy-PM.csv'),col.names=FALSE)
+    if (dodf){
+      
+      # write entropy (will construct into parametric modulator using MATLAB/SPM)
+      
+      df0 <- df %>% filter(id == iD & run == run0) %>% select(trial,clock_onset,v_entropy)
+      write.table(df0,file=paste0(iD,'-run-',run0,'-entropy-PM.csv'),col.names=FALSE)
+    }
   }
 })
 parallel::stopCluster(par_cl)

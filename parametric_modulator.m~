@@ -1,14 +1,31 @@
 % 2025-05-15 AndyP
 % Convolve a dmUBLOCK(1) output from AFNI with a parametric modulator for
 % entropy
+% save feedback, clock onset, and entropy PM regressors for import into
+% CONN toolbox SPM wrapper.
+homedir = '/Users/dnplserv/gPPI/Explore_HC_only';
+cd(homedir)
+D = dir('sub-*');
 
-% first import test1.csv (entropy for 202200, run 1)
-
-nTR = length(rdmU1(:,3)); % 3 is dmUBLOCK(1), for now
-onsets = interp1q(1:nTR,1:nTR,test(:,4));
-parameter = test1;
-PM = zeros(nTR,1); 
-PM(onsets) = parameter / max(parameter);
-cPM = conv(rdmU1(:,3),PM);
-cPM = cPM(1:nTR);
-
+for iD = 1:length(D)
+    cd(strcat(D(iD).name),'/func');
+    
+    afni_files = 
+    df_file = dir('*
+    
+    rdmU = table2array(readtable('r_feedback_regressor_dmU_1.1D','FileType','text'));
+    df = table2array(readtable('202200-run-2-entropy-PM.csv'));
+    TR = 0.6;
+    nTR = length(rdmU(:,1));
+    onsets = interp1(1:nTR,1:nTR,df(:,3)./TR,'nearest');
+    parameter = nanzscore(df(:,4));
+    rdmUc = rdmU(:,1) - nanmean(rdmU(:,1));
+    PM = zeros(nTR,1);
+    PM(onsets) = parameter / max(parameter);
+    cPM = conv(PM,rdmUc(:,1));
+    cPM = cPM(1:nTR);
+    
+    
+    
+    cd(homedir);
+end
