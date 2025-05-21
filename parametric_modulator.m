@@ -11,6 +11,8 @@ TR = 0.6;
 for iD = 1:length(D)
     cd(strcat(D(iD).name,'/func'));
     
+    disp(D(iD).name);
+    
     clock_files = dir('*clock_onset_regressor_dmU_*.1D');
     feedback_files = dir('*feedback_regressor_dmU_*.1D');
     df_file = dir('*-entropy-PM.csv');
@@ -30,7 +32,7 @@ for iD = 1:length(D)
             df_file0 = df_file(iR).name;
         end
         
-        if ~isnan(clock_file0) & ~isnan(feedback_file0) & ~isnan(df_file0)
+        if ~all(isnan(clock_file0)) & ~all(isnan(feedback_file0)) & ~all(isnan(df_file0))
         
         clock_onset_rdmU = table2array(readtable(clock_file0,'FileType','text'));
         feedback_onset_rdmU = table2array(readtable(feedback_file0,'FileType','text'));
