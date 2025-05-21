@@ -9,7 +9,7 @@ D = dir('sub-*');
 TR = 0.6;
 
 for iD = 1:length(D)
-    cd(strcat(D(iD).name),'/func');
+    cd(strcat(D(iD).name,'/func'));
     
     clock_files = dir('*clock_onset_regressor_dmU_*.1D');
     feedback_files = dir('*feedback_regressor_dmU_*.1D');
@@ -37,7 +37,7 @@ for iD = 1:length(D)
         df = table2array(readtable(df_file0));
         
         nTR = length(clock_onset_rdmU(:,1));
-        onsets = interp1(1:nTR,1:nTR,df(:,3)./TR,'nearest');
+        onsets = interp1(1:nTR,1:nTR,df(:,3)./TR,'nearest'); % convert timing of clock onset into nearest TR, which is nearest index (time/TR)
         parameter = nanzscore(df(:,4));
         clock_onset_rdmUc = clock_onset_rdmU(:,1) - nanmean(clock_onset_rdmU(:,1));
         PM = zeros(nTR,1);
