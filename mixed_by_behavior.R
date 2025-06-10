@@ -83,24 +83,24 @@ demo2 <- rbind(demo,demo1)
 
 df <- inner_join(df,demo2,by='id')
 
-df <- df %>% filter(group=='HC')
+#df <- df %>% filter(group=='HC')
 df <- df %>% mutate(sex1 = case_when(sex == 1 ~ 'F', sex == 2 ~ 'M'))
 df <- df %>% select(!sex) %>% rename(sex=sex1)
 df$sex1 <- relevel(as.factor(df$sex),ref='F')
 df$age <- scale(df$age)
 
-fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
-fits$id<-gsub("_1","",fits$id)
+#fits <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
+#fits$id<-gsub("_1","",fits$id)
 
-df <- inner_join(df, fits,by='id')
+#df <- inner_join(df, fits,by='id')
 
 df <- df %>% mutate(dataset1='bsocial')
 df0 <- df %>% mutate(dataset1 = 'bsocial_copy')
 df <- rbind(df,df0)
 
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * run_trial0_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc:last_outcome:sex + rt_vmax_lag_sc * sex * run_trial0_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc*last_outcome*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
+decode_formula[[2]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc*last_outcome*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 
 splits = c('dataset1')
 for (j in 1:length(decode_formula)){
