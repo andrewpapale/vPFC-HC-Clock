@@ -13,9 +13,9 @@ load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection
 ddq_bsoc <- ddq
 
 
-dqRT_bsoc <- ddq_bsoc$emtrends_list$RTxO %>% filter(dataset1=='bsocial')
+dqRT_bsoc <- ddq_bsoc$emtrends_list$RT %>% filter(dataset1=='bsocial')
 dqRT_bsoc <- dqRT_bsoc %>% rename(dataset = dataset1)
-dqRT_mmc <- ddq_mmc$emtrends_list$RTxO
+dqRT_mmc <- ddq_mmc$emtrends_list$RT
 
 ddqRT <- rbind(dqRT_bsoc,dqRT_mmc)
 
