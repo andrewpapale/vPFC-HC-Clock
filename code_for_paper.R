@@ -3,6 +3,8 @@
 # building models for analysis using Michael Hallquist's mixed_by function
 # Based on code by Andrew Papale
 
+# modified 2025-06-09 AndyP HC only in Bsocial sample --> All subjects in BSocial sample
+
 # Load required libraries
 library(stringr)
 library(pracma)
@@ -469,8 +471,8 @@ Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
 Q <- Q %>% select(!sex)
 Q$age <- scale(Q$age)
-Q <- Q %>% filter(group=='HC')
-Q$group <- relevel(factor(Q$group),ref='HC')
+#Q <- Q %>% filter(group=='HC') # 2025-06-09 AndyP
+#Q$group <- relevel(factor(Q$group),ref='HC')
 
 ########################
 ##### Set up models ####
@@ -621,8 +623,8 @@ Q <- inner_join(Q,demo2,by=c('id'))
 Q$age <- scale(Q$age)
 Q <- Q %>% mutate(sex1 = case_when(sex == 1 ~ 'F', sex == 2 ~ 'M'))
 Q <- Q %>% select(!sex) %>% rename(sex=sex1)
-Q <- Q %>% filter(group=='HC')
-Q$group <- relevel(factor(Q$group),ref='HC')
+#Q <- Q %>% filter(group=='HC') 2025-06-09 AndyP
+#Q$group <- relevel(factor(Q$group),ref='HC')
 Q <- Q %>% filter(rt_csv < 4 & rt_csv > 0.2)
 Q <- Q %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
 

@@ -98,37 +98,40 @@ df <- df %>% mutate(dataset1='bsocial')
 df0 <- df %>% mutate(dataset1 = 'bsocial_copy')
 df <- rbind(df,df0)
 
+df <- df %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
+df <- df %>% filter(rt_csv < 4 & rt_csv > 0.2)
+
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc*last_outcome*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(rt_lag_sc + sex + last_outcome)^2 + rt_lag_sc*last_outcome*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+decode_formula[[1]] <- formula(~(rt_lag_sc + sex + reward_lag_rec)^2 + rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
+#decode_formula[[2]] <- formula(~(rt_lag_sc + sex + reward_lag_rec)^2 + rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 
 splits = c('dataset1')
 for (j in 1:length(decode_formula)){
   
-  ddq <- mixed_by(df, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+  ddq <- mixed_by(df, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
                   emmeans_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', 
+                    RT = list(outcome='rt_csv', model_name='model1', 
                               specs=formula(~rt_lag_sc:sex), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', 
+                    Vmax = list(outcome='rt_csv', model_name='model1', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',
-                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
+                    RTxO = list(outcome='rt_csv',model_name='model1',
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
+                    TrxVmax = list(outcome='rt_csv',model_name='model1',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                     
                   ),
                   emtrends_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
+                    RT = list(outcome='rt_csv', model_name='model1', var='rt_lag_sc', 
                               specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
+                    Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
-                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
+                    RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
+                    TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
-                    TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
+                    TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
                                     specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
                     # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
                     #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
@@ -145,63 +148,63 @@ for (j in 1:length(decode_formula)){
 }
 
 
-decode_formula <- NULL
-decode_formula[[1]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
-decode_formula[[2]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
-
-for (j in 1:length(decode_formula)){
-  
-  ddq <- mixed_by(df, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
-                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
-                  emmeans_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', 
-                              specs=formula(~rt_lag_sc:age), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', 
-                                specs=formula(~rt_vmax_lag_sc:age), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',
-                                specs=formula(~rt_lag_sc:last_outcome:age), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
-                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
-                    
-                  ),
-                  emtrends_spec = list(
-                    RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
-                              specs=formula(~rt_lag_sc:age), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
-                                specs=formula(~rt_vmax_lag_sc:age), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
-                    RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
-                                specs=formula(~rt_lag_sc:last_outcome:age), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
-                    TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
-                                   specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
-                    TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
-                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
-                    # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
-                    #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
-                  )
-  )
-  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
-  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  if (j==1){
-    save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-int','.Rdata'))
-  } else {
-    save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-slo','.Rdata')) 
-  } 
-  
-}
-
-
-df$alpha_ffx <- scale(df$alpha_ffx)
-df$gamma_ffx <- scale(df$gamma_ffx)
-df$beta_ffx <- scale(df$beta_ffx)
-df$total_earnings <- scale(df$total_earnings)
-
-df <- df %>% filter(dataset1 == 'bsocial')
-
-ma <- lm(data=df, alpha ~ age*sex)
-mg <- lm(data=df, gamma ~ age*sex)
-mb <- lm(data=df, beta ~ age*sex)
-mE <- lm(data=df, total_earnings ~ age*sex + v_entropy_wi + v_max_wi)
+# decode_formula <- NULL
+# decode_formula[[1]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
+# decode_formula[[2]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
+# 
+# for (j in 1:length(decode_formula)){
+#   
+#   ddq <- mixed_by(df, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+#                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+#                   tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+#                   emmeans_spec = list(
+#                     RT = list(outcome='rt_csv_sc', model_name='model1', 
+#                               specs=formula(~rt_lag_sc:age), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
+#                     Vmax = list(outcome='rt_csv_sc', model_name='model1', 
+#                                 specs=formula(~rt_vmax_lag_sc:age), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
+#                     RTxO = list(outcome='rt_csv_sc',model_name='model1',
+#                                 specs=formula(~rt_lag_sc:last_outcome:age), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
+#                     TrxVmax = list(outcome='rt_csv_sc',model_name='model1',
+#                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+#                     
+#                   ),
+#                   emtrends_spec = list(
+#                     RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
+#                               specs=formula(~rt_lag_sc:age), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
+#                     Vmax = list(outcome='rt_csv_sc', model_name='model1', var='rt_vmax_lag_sc', 
+#                                 specs=formula(~rt_vmax_lag_sc:age), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
+#                     RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
+#                                 specs=formula(~rt_lag_sc:last_outcome:age), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
+#                     TrxVmax = list(outcome='rt_csv_sc',model_name='model1', var = 'rt_vmax_lag_sc',
+#                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
+#                     TrxVmax1 = list(outcome='rt_csv_sc',model_name='model1', var = 'trial_neg_inv_sc',
+#                                     specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2)))#,
+#                     # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
+#                     #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+#                   )
+#   )
+#   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
+#   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+#   if (j==1){
+#     save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-int','.Rdata'))
+#   } else {
+#     save(ddq,file=paste0(curr_date,'-Bsocial-Age-clock-fmri-pred-rt-slo','.Rdata')) 
+#   } 
+#   
+# }
+# 
+# 
+# df$alpha_ffx <- scale(df$alpha_ffx)
+# df$gamma_ffx <- scale(df$gamma_ffx)
+# df$beta_ffx <- scale(df$beta_ffx)
+# df$total_earnings <- scale(df$total_earnings)
+# 
+# df <- df %>% filter(dataset1 == 'bsocial')
+# 
+# ma <- lm(data=df, alpha ~ age*sex)
+# mg <- lm(data=df, gamma ~ age*sex)
+# mb <- lm(data=df, beta ~ age*sex)
+# mE <- lm(data=df, total_earnings ~ age*sex + v_entropy_wi + v_max_wi)
 
 
 

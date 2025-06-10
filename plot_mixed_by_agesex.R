@@ -4,7 +4,7 @@
 
 
 
-load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection/2024-11-25-Sex-clock-fmri_meg-pred-rt-int-1.Rdata')
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection/2025-06-09-Sex-clock-fmri_meg-pred-rt-int-1.Rdata')
 
 ddq_mmc <- ddq
 
@@ -24,4 +24,4 @@ ddqRT <- ddqRT %>% mutate(dataset1 = case_when(dataset == 'fMRI' ~ 'Experiment 1
                                                dataset == 'bsocial' ~ 'Experiment 2')) %>% select(!dataset) %>% rename(dataset = dataset1)
 
 ggplot(data=ddqRT, aes(x=sex,y=rt_lag_sc.trend,color=sex,group=sex,ymin=rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error)) + 
-  geom_errorbar() + facet_grid(last_outcome~dataset,scales = 'free_y') + scale_y_reverse()
+  geom_errorbar() + facet_grid(~dataset,scales = 'free_y') + scale_y_reverse()

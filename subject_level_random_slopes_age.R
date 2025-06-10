@@ -15,7 +15,7 @@ do_just_age = TRUE
 do_rand_slopes = FALSE
 do_rt_pred_fmri = FALSE
 do_rt_pred_meg = FALSE
-do_BSOC = TRUE
+
 
 if (do_just_age){
 
@@ -150,6 +150,7 @@ Q3 <- Q3 %>% mutate(sex = case_when(female==0 ~ 'M',
 
 Q3 <- Q3 %>% filter(rt_csv < 4 & rt_csv > 0.2)
 Q3 <- Q3 %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
+Q3 <- Q3 %>% filter(rt_csv < 4 & rt_csv > 0.2)
 decode_formula <- NULL
 decode_formula[[1]] <- formula(~rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc*trial_neg_inv_sc*sex + rt_lag_sc*trial_neg_inv_sc*sex + (1 | id/run))
 #decode_formula[[2]] <- formula(~(trial_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * trial_neg_inv_sc * age + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
@@ -162,9 +163,9 @@ qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
 qRT <- quantile(df$rt_lag_sc,c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
 #qH <- c(1,2,3,4)
 qT <- quantile(df$trial_neg_inv_sc,c(0.1,0.9),na.rm=TRUE)
-qRS <- quantile(Q$estimate, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
+qRS <- quantile(Q3$estimate, c(0.1,0.25,0.5,0.75,0.9),na.rm=TRUE)
 splits = c('dataset')
-print(i)
+
 for (j in 1:length(decode_formula)){
   
   ddq <- mixed_by(Q3, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
@@ -176,7 +177,7 @@ for (j in 1:length(decode_formula)){
                     Vmax = list(outcome='rt_csv', model_name='model1', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at = list(rt_vmax_lag_sc=c(-2,-1,0,1,2))),
                     RTxO = list(outcome='rt_csv',model_name='model1',
-                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2))),        
                     TrxVmax = list(outcome='rt_csv',model_name='model1',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
                     
@@ -187,7 +188,7 @@ for (j in 1:length(decode_formula)){
                     Vmax = list(outcome='rt_csv', model_name='model1', var='rt_vmax_lag_sc', 
                                 specs=formula(~rt_vmax_lag_sc:sex), at=list(rt_vmax_lag_sc = c(-2,-1,0,1,2))),
                     RTxO = list(outcome='rt_csv',model_name='model1',var='rt_lag_sc',
-                                specs=formula(~rt_lag_sc:last_outcome:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
                     TrxVmax = list(outcome='rt_csv',model_name='model1', var = 'rt_vmax_lag_sc',
                                    specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:sex), at= list(trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4))),
                     TrxVmax1 = list(outcome='rt_csv',model_name='model1', var = 'trial_neg_inv_sc',
@@ -199,9 +200,9 @@ for (j in 1:length(decode_formula)){
   setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   if (j==1){
-    save(ddq,file=paste0(curr_date,'Sex-clock-fmri_meg-pred-rt-int-',i,'.Rdata'))
+    save(ddq,file=paste0(curr_date,'-Sex-clock-fmri_meg-pred-rt-int-',j,'.Rdata'))
   } else {
-    save(ddq,file=paste0(curr_date,'Sex-clock-fmri_meg-pred-rt-slo-',i,'.Rdata')) 
+    save(ddq,file=paste0(curr_date,'-Sex-clock-fmri_meg-pred-rt-slo-',j,'.Rdata')) 
   } 
   
 }
