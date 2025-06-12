@@ -22,7 +22,6 @@ vmPFC <- read_csv(file.path(repo_directory,'clock_aligned_bsocial_vmPFC.csv.gz')
 split_ksoc_bsoc <- vmPFC %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-bsoc <- rbind(bsoc,221973,221507,221842,440223)
 vmPFC_bsoc <- vmPFC %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                                   trial > 40 & trial <= 80 ~ trial-40,
                                                                                   trial > 80 & trial <=120 ~ trial-80, 
@@ -67,7 +66,6 @@ hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 split_ksoc_bsoc <- hc %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-bsoc <- rbind(bsoc,221973,221507,221842,440223)
 hc_bsoc <- hc %>% filter(id %in% bsoc$id) %>% mutate(run_trial0 = case_when(trial <= 40 ~ trial, 
                                                                             trial > 40 & trial <= 80 ~ trial-40,
                                                                             trial > 80 & trial <=120 ~ trial-80, 
@@ -111,7 +109,6 @@ df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300])
 bsoc <- data.frame(id = split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240])
-bsoc <- rbind(bsoc,221973,221507,221842,440223)
 df_bsoc <- df %>% filter(id %in% bsoc$id) %>% mutate(block = case_when(trial <= 40 ~ 1, 
                                                                     trial > 40 & trial <= 80 ~ 2,
                                                                     trial > 80 & trial <=120 ~ 3, 
@@ -197,8 +194,8 @@ demo1 <- demo1 %>% rename(sex=registration_birthsex,
 demo2 <- rbind(demo,demo1)
 Q <- inner_join(Q,demo2,by=c('id'))
 Q$female <- ifelse(Q$sex==1,1,0)
-Q <- Q %>% mutate(sex = case_when(sex==1 ~ 'M',
-                                  sex==2 ~ 'F'))
+Q <- Q %>% mutate(sex = case_when(sex==1 ~ 'F',
+                                  sex==2 ~ 'M'))
 Q$sex <- relevel(as.factor(Q$sex),ref='M')
 #Q <- Q %>% filter(age <= 50)
 Q$age <- scale(Q$age)
@@ -229,7 +226,15 @@ decode_formula <- NULL
 #decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
 #decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex*HCwithin + rt_vmax_lag_sc*sex*HCwithin + abs_pe_max_lag_sc*sex*HCwithin + rt_vmax_change_sc*sex*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
 
-decode_formula[[1]] = formula(~v_entropy_wi*HCwithin + v_max_wi*HCwithin + sex*HCwithin +sex:age:HCwithin + age*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + total_earnings*HCwithin + HCbetween + (1|id/run))
+#decode_formula[[1]] = formula(~v_entropy_wi*HCwithin + v_max_wi*HCwithin + sex*HCwithin +sex:age:HCwithin + age*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + total_earnings*HCwithin + HCbetween + (1|id/run))
+
+decode_formula[[1]] = formula(~ age*HCwithin*sex + (1|id/run))
+
+
+##############################################
+### age*sex*network test, CTR as reference ###
+##############################################
+
 
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
@@ -242,7 +247,7 @@ for (i in 1:length(decode_formula)){
   print(df0)
   ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
                   # emmeans_spec = list(
                   #   A = list(outcome='vmPFC_decon',model_name='model1',
                   #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
@@ -267,16 +272,16 @@ for (i in 1:length(decode_formula)){
                   # )
                   
                   
-                  emtrends_spec = list(
-                  #   SHhc1 = list(outcome = 'vmPFC_decon',model_name='model1',var = 'v_entropy_wi',
-                  #               specs = formula(~sex:v_entropy_wi:HCwithin),at = list(HCwithin=c(-1.5,1.5))),
-                  #   SHhc2 = list(outcome = 'vmPFC_decon',model_name='model1',var = 'HCwithin',
-                  #                specs = formula(~sex*v_entropy_wi*HCwithin), at = list(v_entropy_wi = c(-1.5,1.5)))
-                  #  TE = list(outcome = 'vmPFC_decon',model_name='model1',var='HCwithin',
-                  #            specs = formula(~total_earnings:HCwithin),at=list(total_earnings = c(-1,0,1)))
-                    agesex = list(outcome = 'vmPFC_decon',model_name='model1',var='HCwithin',
-                                   specs = formula(~HCwithin:age:sex), at=list(age = c(-1,0,1)))
-                  )
+                  # emtrends_spec = list(
+                  # #   SHhc1 = list(outcome = 'vmPFC_decon',model_name='model1',var = 'v_entropy_wi',
+                  # #               specs = formula(~sex:v_entropy_wi:HCwithin),at = list(HCwithin=c(-1.5,1.5))),
+                  # #   SHhc2 = list(outcome = 'vmPFC_decon',model_name='model1',var = 'HCwithin',
+                  # #                specs = formula(~sex*v_entropy_wi*HCwithin), at = list(v_entropy_wi = c(-1.5,1.5)))
+                  # #  TE = list(outcome = 'vmPFC_decon',model_name='model1',var='HCwithin',
+                  # #            specs = formula(~total_earnings:HCwithin),at=list(total_earnings = c(-1,0,1)))
+                  #   agesex = list(outcome = 'vmPFC_decon',model_name='model1',var='HCwithin',
+                  #                  specs = formula(~HCwithin:age:sex), at=list(age = c(-1,0,1)))
+                  # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-All-agesex-interaction-',i,'.Rdata'))

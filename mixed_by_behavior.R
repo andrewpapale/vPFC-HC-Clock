@@ -147,7 +147,32 @@ for (j in 1:length(decode_formula)){
   
 }
 
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~(rt_lag_sc + sex + reward_lag_rec)^2 + rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 | id/run))
+#decode_formula[[2]] <- formula(~(rt_lag_sc + sex + reward_lag_rec)^2 + rt_lag_sc*reward_lag_rec*sex + rt_vmax_lag_sc * sex * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
 
+splits = c('dataset1')
+for (j in 1:length(decode_formula)){
+  
+  ddq <- mixed_by(df, outcomes = "rt_csv", rhs_model_formulae = decode_formula[[j]], split_on = splits,return_models=TRUE,
+                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                  emtrends_spec = list(
+                    TE = list(outcome='total_earnings', model_name='model1', var='rt_lag_sc', 
+                              specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
+                    # TrxVmax2 = list(outcome='rt_csv_sc',model_name='model1', var = 'age',
+                    #                 specs=formula(~rt_vmax_lag_sc:trial_neg_inv_sc:age), at= list(rt_vmax_lag_sc=c(-2,-1,0,1,2),trial_neg_inv_sc=c(-0.9,-0.02,0.2,0.34,0.4)))
+                  )
+  )
+  setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection')
+  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  if (j==1){
+    save(ddq,file=paste0(curr_date,'-Bsocial-total-Earnings-clock-fmri-pred-rt-int','.Rdata'))
+  } else {
+    save(ddq,file=paste0(curr_date,'-Bsocial-total-Earnings-fmri-pred-rt-slo','.Rdata')) 
+  } 
+  
+}
 # decode_formula <- NULL
 # decode_formula[[1]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 | id/run))
 # decode_formula[[2]] <- formula(~(rt_lag_sc + age + last_outcome)^2 + rt_lag_sc:last_outcome:age + rt_vmax_lag_sc * age * trial_neg_inv_sc + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))

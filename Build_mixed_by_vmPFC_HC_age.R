@@ -1320,8 +1320,8 @@ if (do_HC2vPFC_clock){
   #decode_formula[[1]] = formula(~ sex + v_entropy_wi_change_lag*age*HCwithin + rt_vmax_lag_sc*age*HCwithin + abs_pe_max_lag_sc*age*HCwithin + rt_vmax_change_sc*age*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
   #decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex*HCwithin + rt_vmax_lag_sc*sex*HCwithin + abs_pe_max_lag_sc*sex*HCwithin + rt_vmax_change_sc*sex*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
   
-  decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
-  
+  #decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
+  decode_formula[[1]] = formula(~ sex*HCwithin + age*HCwithin + (1|id/run))
   
   qT <- c(-2.62,-0.704,0.29, 0.430)
   
@@ -1335,7 +1335,7 @@ if (do_HC2vPFC_clock){
       print(df0)
       ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = df0 , split_on = splits,
                       padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                      tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
                       # emmeans_spec = list(
                       #   H = list(outcome='vmPFC_decon', model_name='model1', 
                       #            specs=formula(~v_entropy_sc:HCwithin), at = list(v_entropy_sc=c(-1.5,1.5),HCwithin=c(-1.5,1.5))),
@@ -1344,13 +1344,13 @@ if (do_HC2vPFC_clock){
                       #   Tr = list(outcome='vmPFC_decon',model_name='model1',
                       #             specs=formula(~trial_neg_inv_sc:HCwithin), at=list(trial_neg_inv_sc=qT,HCwithin=c(-1.5,1.5)))
                       # ),
-                      emtrends_spec = list(
-                        rtvmax1rt = list(outcome='vmPFC_decon',model_name='model1', var = 'rt_vmax_lag_sc',
-                                         specs = formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5))),
-                        rtvmax2hc = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
-                                         specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),rt_vmax_lag_sc = c(-1.5,1.5))),
-                        rtvmax3age = list(outcome='vmPFC_decon',model_name='model1',var='age',
-                                          specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5)))
+                      # emtrends_spec = list(
+                      #   rtvmax1rt = list(outcome='vmPFC_decon',model_name='model1', var = 'rt_vmax_lag_sc',
+                      #                    specs = formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5))),
+                      #   rtvmax2hc = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
+                      #                    specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),rt_vmax_lag_sc = c(-1.5,1.5))),
+                      #   rtvmax3age = list(outcome='vmPFC_decon',model_name='model1',var='age',
+                      #                     specs=formula(~age:HCwithin:rt_vmax_lag_sc),at=list(age = c(-1.5,1.5),HCwithin = c(-1.5,1.5)))
                       #emtrends_spec = list(
                       #   H_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #               specs=formula(~v_entropy_sc:HCwithin), at=list(HCwithin=c(-1.5,1.5),v_entropy_sc=c(-1.5,1.5))),
@@ -1364,7 +1364,7 @@ if (do_HC2vPFC_clock){
                       #               specs=formula(~HCbetween:HCwithin),at=list(HCbetween=c(-1.5,1,5))),
                       #   RT_HC = list(outcome='vmPFC_decon',model_name='model1',var='HCwithin',
                       #                specs=formula(~rt_csv_sc:HCwithin),at=list(rt_csv_sc=c(-1.5,1.5)))
-                      )
+                      #)
       )
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (i==4){
