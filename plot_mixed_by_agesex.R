@@ -241,4 +241,56 @@ mer3 <- mer3 %>% mutate(group1 = case_when(group == 'ATT' ~ 'ATT',
 ggplot(data=mer3,aes(x=age,y=rt_vmax_lag_sc,color=interaction(group1,sex),group=interaction(group1,sex),shape=group1)) + geom_point(size=1) + facet_wrap(~dataset) + geom_smooth(method='lm')
 
 
+##################################
+### RS HCwithin vs age / sex #####
+##################################
 
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-06-16-Bsocial-vPFC-HC-network-clock-All-agesex-HCwithin-RS-2.Rdata')
+ddq_bsoc <- ddf$coef_df_reml %>% filter(effect == 'ran_vals' & term == 'HCwithin') %>% filter(group=='id') %>% rename(id = level, HCwithin = estimate)
+
+load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-06-16-MMClock-vPFC-HC-network-clock-agesex-HCwithin-RS-2.Rdata')
+ddq_mmc <- ddf$coef_df_reml %>% filter(effect == 'ran_vals' & term == 'HCwithin') %>% filter(group=='id') %>% rename(id = level, HCwithin = estimate)
+
+ddq_bsoc <- ddq_bsoc %>% mutate(dataset = 'Experiment 2')
+ddq_mmc <- ddq_mmc %>% mutate(dataset = 'Experiment 1')
+
+
+repo_directory <- "~/clock_analysis"
+rootdir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL'
+repo_directory1 <- file.path('/Volumes/Users/Andrew/MEDuSA_data_BSOC')
+
+mmcdemo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
+mmcdemo <- mmcdemo %>% rename(id=lunaid)
+mmcdemo <- mmcdemo %>% select(!adult & !scandate)
+mmcdemo$id <- as.character(mmcdemo$id)
+
+demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
+demo1 <- read_csv(file.path(repo_directory1,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+demo$id <- as.character(demo$id)
+demo1$id <- as.character(demo1$registration_redcapid)
+demo <- demo %>% rename(sex=registration_birthsex,
+                        gender=registration_gender,
+                        group=registration_group) %>%
+  select(id,group,age,sex,gender)
+demo1 <- demo1 %>% rename(sex=registration_birthsex,
+                          gender=registration_gender,
+                          group=registration_group) %>%
+  select(id,group,age,sex,gender)
+bsocdemo <- rbind(demo,demo1)
+
+bsocdemo <- bsocdemo %>% mutate(sex1 = case_when(sex == 1 ~ 'F', sex == 2 ~ 'M'))
+bsocdemo <- bsocdemo %>% select(!sex) %>% rename(sex=sex1)
+
+mmcdemo <- mmcdemo %>% mutate(sex = case_when(female==0 ~ 'M',
+                                              female==1 ~ 'F'))
+
+ddq_bsoc <- inner_join(ddq_bsoc,bsocdemo,by=c('id')) %>% select(!group.x & !group.y & !gender)
+ddq_mmc <- inner_join(ddq_mmc,mmcdemo,by=c('id')) %>% select(!group & !female)
+
+ddqmer <- rbind(ddq_bsoc,ddq_mmc)
+
+ddqmer0 <- ddqmer %>% group_by(id,dataset) %>% summarize(HCwithin_scaled = scale(HCwithin), age=age,sex=sex) %>% ungroup()
+ggplot(data=ddqmer0,aes(x=age,y=HCwithin_scaled,color=sex,group=sex)) + facet_wrap(~dataset) + geom_point(size=0.1) + geom_smooth(method = 'lm') + ylim(-0.03,0.03) + ggtitle('AH-DMN slope vs age by sex')
+
+ddqmer0 <- ddqmer %>% group_by(id,dataset) %>% summarize(HCwithin_mean = mean(HCwithin,na.rm=TRUE), age=age,sex=sex) %>% ungroup()
+ggplot(data=ddqmer0,aes(x=age,y=HCwithin_mean,color=sex,group=sex)) + facet_wrap(~dataset) + geom_point(size=0.1) + geom_smooth(method = 'lm') + ylim(-0.03,0.03) + ggtitle('AH-DMN slope vs age by sex')

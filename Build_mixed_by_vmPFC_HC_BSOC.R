@@ -226,20 +226,21 @@ decode_formula <- NULL
 #decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
 #decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex*HCwithin + rt_vmax_lag_sc*sex*HCwithin + abs_pe_max_lag_sc*sex*HCwithin + rt_vmax_change_sc*sex*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
 
-#decode_formula[[1]] = formula(~v_entropy_wi*HCwithin + v_max_wi*HCwithin + sex*HCwithin +sex:age:HCwithin + age*HCwithin + rt_lag_sc*HCwithin + last_outcome*HCwithin + total_earnings*HCwithin + HCbetween + (1|id/run))
+decode_formula[[1]] = formula(~ HCwithin + (1 + HCwithin |id) + (1|run))
 
-decode_formula[[1]] = formula(~ age*HCwithin*sex + (1|id/run))
+#decode_formula[[1]] = formula(~ age*HCwithin*sex + (1|id/run))
 
 
 ##############################################
 ### age*sex*network test, CTR as reference ###
 ##############################################
-
-
+#decode_formula[[1]] = formula(~age*sex*network + (1|id/run))
+#Q$network <- factor(Q$network,levels = c('CTR','LIM','DMN'))
+#Q$network <- relevel(Q$network,ref='CTR')
 
 qT2 <- c(-2.62,-0.544,0.372, 0.477)
 qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-splits = c('evt_time','network','HC_region')
+splits = c('evt_time','HC_region','network')
 #source("~/fmri.pipeline/R/mixed_by.R")
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -284,6 +285,6 @@ for (i in 1:length(decode_formula)){
                   # )
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-All-agesex-interaction-',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'-Bsocial-vPFC-HC-network-clock-All-agesex-HCwithin-RS-',i,'.Rdata'))
 }
 

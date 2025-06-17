@@ -1321,8 +1321,8 @@ if (do_HC2vPFC_clock){
   #decode_formula[[2]] = formula(~ age + v_entropy_wi_change_lag*sex*HCwithin + rt_vmax_lag_sc*sex*HCwithin + abs_pe_max_lag_sc*sex*HCwithin + rt_vmax_change_sc*sex*HCwithin +  + rt_lag_sc + iti_lag_sc + HCbetween + (1|id/run))
   
   #decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
-  decode_formula[[1]] = formula(~ sex*HCwithin + age*HCwithin + (1|id/run))
-  
+  #decode_formula[[1]] = formula(~ sex*HCwithin + age*HCwithin + (1|id/run))
+  decode_formula[[1]] = formula(~ HCwithin + (1 + HCwithin |id) + (1|run))
   qT <- c(-2.62,-0.704,0.29, 0.430)
   
   if (do_network){
