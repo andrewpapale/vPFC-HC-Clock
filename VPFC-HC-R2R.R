@@ -463,3 +463,11 @@ ddq <- ddq %>% mutate(entropy = case_when(v_entropy_wi==-1.5 ~ 'low entropy',
 
 ggplot(data=ddq %>% filter(last_outcome=='Reward') ,aes(x=entropy,y=rt_lag_sc.trend,ymin=rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error)) + 
   facet_wrap(~dataset,scales='free_y') + geom_errorbar(width=0.5) + scale_y_reverse() + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emtrends_list$HVrt %>% filter(v_max_wi != 0)
+ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi==-1.5 ~ 'low value max',
+                                          v_max_wi==1.5 ~ 'high value max'))
+
+ggplot(data=ddq %>% filter(last_outcome=='Omission') ,aes(x=value_maximum,y=rt_lag_sc.trend,ymin=rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error)) + 
+  facet_wrap(~dataset,scales='free_y') + geom_errorbar(width=0.5) + scale_y_reverse() + ylab('<-- less -- Exploration -- more -->')
