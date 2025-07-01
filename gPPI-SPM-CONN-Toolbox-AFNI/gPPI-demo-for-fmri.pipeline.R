@@ -2,14 +2,14 @@
 repo_directory_mmclock <- "~/clock_analysis"
 dfmmc <- get_trial_data(repo_directory=repo_directory_mmclock,dataset='mmclock_fmri')
 
-trial_df <- dfmmc %>% filter(id== c('10637','10997','11279'))
+trial_df <- dfmmc
 
 files <- list.files('/Volumes/bierka_root/datamesh/PROC/MMClock/2025-06-27-gPPI-voxelwisedecon',recursive=TRUE,full.names=TRUE)
 
 gPPI_decon_demo <- NULL;
 for (iF in 1:length(files)){
   currF <- read_csv(files[iF])
-  temp_str <- str_split(files[iF],'/')[[1]][9]
+  temp_str <- str_split(files[iF],'/')[[1]][10]
   id <- substring(temp_str,4,8)
   run <- substring(temp_str,10,13)
   if (grepl('hippocampus_l',files[iF])){
@@ -25,7 +25,12 @@ for (iF in 1:length(files)){
 hc_l_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_l_cobra_2.3mm.nii.gz',reorient=FALSE)
 mi_l <- which(hc_l_m > 0, arr.ind=TRUE)
 bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)
-gPPI_decon_demo <- gPPI_decon_demo %>% mutate(atlas_value0 = cut(atlas_value, bin_cuts_l))
+hc_r_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_r_cobra_2.3mm.nii.gz',reorient=FALSE)
+mi_l <- which(hc_l_m > 0, arr.ind=TRUE)
+bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)
+gPPI_decon_demo <- gPPI_decon_demo %>% group_by(side) %>% mutate(atlas_value0 = case_when(side == 'l' ~ cut(atlas_value, bin_cuts_l),
+                                                                                          side == 'r' ~ cut(atlas_value, bin_cuts_r))
+) %>% ungroup()
 
 uav <- sort(unique(gPPI_decon_demo$atlas_value0))
 
@@ -47,3 +52,6 @@ gPPI_decon_demo <- gPPI_decon_demo %>% mutate(bin_num=case_when(
 gPPI_decon_demo$atlas_value0 <- as.numeric(gPPI_decon_demo$atlas_value0)
 
 gPPI_decon_demo <- gPPI_decon_demo %>% mutate(HC_region = case_when(atlas_value0 < 5 ~ 'PH', atlas_value0 >=5 ~ 'AH'))
+
+setwd("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R")
+write.csv(gPPI_decon_demo, file = 'MMClock-gPPI.csv')
