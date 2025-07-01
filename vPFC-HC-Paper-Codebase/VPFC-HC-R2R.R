@@ -637,6 +637,8 @@ ddf <- mixed_by(df3, outcomes = "rt_csv", rhs_model_formulae = df0 , split_on = 
 curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
 save(ddf,file=paste0(curr_date,'-All-rt-lag-sc-random-slope-',1,'.Rdata'))
 
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-06-27-All-rt-lag-sc-random-slope-1.Rdata')
+
 ddq <- ddf$coef_df_reml %>% filter(effect == 'ran_vals' & term =='rt_lag_sc') %>% rename(id=level)
 
 # stats mmc-fmri
