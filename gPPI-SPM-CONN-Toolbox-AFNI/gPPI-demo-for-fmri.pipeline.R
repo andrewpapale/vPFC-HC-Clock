@@ -1,5 +1,6 @@
 
 repo_directory_mmclock <- "~/clock_analysis"
+source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 dfmmc <- get_trial_data(repo_directory=repo_directory_mmclock,dataset='mmclock_fmri')
 
 trial_df <- dfmmc
