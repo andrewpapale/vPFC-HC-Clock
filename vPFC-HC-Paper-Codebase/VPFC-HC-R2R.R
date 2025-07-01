@@ -268,7 +268,7 @@ dfmmc <- dfmmc %>% mutate(sex = case_when(female==1 ~ 'F',
 dfmmc$sex <- relevel(as.factor(dfmmc$sex),ref='M')
 dfmmc$age <- scale(dfmmc$age)
 
-dfmmc <- dfmmc %>% select(dataset,id,trial,age,sex,run_trial,iti_onset,rt_swing,rewFunc,ev,score_csv,feedback_onset,rt_lag_sc,rt_csv,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
+dfmmc <- dfmmc %>% select(dataset,id,trial,age,sex,score_csv,probability,run_trial,v_entropy_lag,iti_onset,rt_swing,rewFunc,ev,score_csv,feedback_onset,rt_lag_sc,rt_csv,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
 
 dfmmc_meg <- get_trial_data(repo_directory=repo_directory_mmclock,dataset='mmclock_meg')
 dfmmc_meg <- dfmmc_meg %>% mutate(dataset = 'Experiment 1 - MEG Replication')
@@ -290,7 +290,7 @@ dfmmc_meg <- dfmmc_meg %>% mutate(sex = case_when(female==1 ~ 'F',
 dfmmc_meg$sex <- relevel(as.factor(dfmmc_meg$sex),ref='M')
 dfmmc_meg$age <- scale(dfmmc_meg$age)
 dfmmc_meg <- dfmmc_meg %>% mutate(iti_onset = 0, feedback_onset = 0)
-dfmmc_meg <- dfmmc_meg %>% select(dataset,trial,run_trial,id,age,rt_swing,sex,iti_onset,ev,score_csv,rewFunc,feedback_onset,rt_csv,rt_lag_sc,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
+dfmmc_meg <- dfmmc_meg %>% select(dataset,trial,run_trial,probability,score_csv,v_entropy_lag,id,age,rt_swing,sex,iti_onset,ev,score_csv,rewFunc,feedback_onset,rt_csv,rt_lag_sc,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
 
 
 dfmer <- rbind(dfmmc,dfmmc_meg)
@@ -387,7 +387,7 @@ df_exp <- df_exp %>% mutate(run_trial = case_when(trial <= 40 ~ trial,
                                                   trial > 200 & trial <=240 ~ trial-200))
 
 
-df_exp <- df_exp %>% select(dataset,trial,id,age,sex,run_trial,rt_swing,iti_onset,score_csv,ev,rewFunc,ddate,rt_csv,feedback_onset,rt_lag_sc,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
+df_exp <- df_exp %>% select(dataset,trial,id,age,sex,probability,run_trial,v_entropy_lag,score_csv,rt_swing,iti_onset,score_csv,ev,rewFunc,ddate,rt_csv,feedback_onset,rt_lag_sc,v_entropy_wi,rt_csv_sc,rt_vmax_lag_sc,trial_neg_inv_sc,run,last_outcome,v_max_wi,total_earnings,v_max,v_entropy,ev,magnitude,probability)
 
 df3 <- rbind(df_exp,dfmer)
 
@@ -414,6 +414,8 @@ df3$trial_bin <- factor(df3$trial_bin, levels = c('1-5','6-10','11-15','16-20','
 
 df3 <- df3 %>% group_by(dataset) %>% mutate(median_split = total_earnings >= median(total_earnings,na.rm=TRUE)) %>% ungroup()
 
+df3 <- df3 %>% group_by(dataset,id,run) %>% mutate(v_entropy_wi_lag = lag(v_entropy_wi), v_max_wi_lag = lag(v_max_wi)) %>% ungroup()
+
 ggplot(data = df3 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV'), aes(x=run_trial,y=rt_swing,color=rewFunc,group=rewFunc)) + geom_smooth(method='loess',span=0.7) + facet_grid(last_outcome~dataset)
 
 
@@ -427,47 +429,241 @@ ggplot(data = df3 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV'), aes(x=run_trial
 
 df3$last_outcome <- relevel(as.factor(df3$last_outcome),ref='Reward')
 
+df3 <- df3 %>% group_by(dataset,id) %>% mutate(v_entropy_lag_sc = as.vector(scale(v_entropy_lag))) %>% ungroup()
+
+
 decode_formula <- NULL
-decode_formula[[1]] <- formula(~rt_lag_sc*v_entropy_wi*last_outcome + rt_lag_sc*v_max_wi*last_outcome + rt_lag_sc*run_trial + (1 | id/run))
+decode_formula[[1]] <- formula(~ v_entropy_lag_sc + v_max_wi_lag + run_trial + last_outcome  + (1 | id/run))
+
+splits = c('dataset')
+df0 = decode_formula[[1]]
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+ddf <- mixed_by(df3, outcomes = "rt_swing", rhs_model_formulae = df0 , split_on = splits,
+                padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                 emmeans_spec = list(
+                #   A = list(outcome='vmPFC_decon',model_name='model1',
+                #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                   W = list(outcome='rt_swing',model_name='model1',
+                            specs=formula(~v_max_wi_lag),at=list(v_max_wi_lag=c(-2,0,2))),
+                   H = list(outcome='rt_swing', model_name='model1',
+                            specs=formula(~v_entropy_lag_sc), at = list(v_entropy_lag_sc=c(-2,0,2)))
+                #   Y = list(outcome='vmPFC_decon',model_name='model1',
+                #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+                )
+                # emtrends_spec = list(
+                #   HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_entropy_wi:last_outcome),at=list(v_entropy_wi = c(-1.5,0,1.5))),
+                #   HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_max_wi:last_outcome),at=list(v_max_wi = c(-1.5,0,1.5)))
+                # )
+)
+curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+save(ddf,file=paste0(curr_date,'-All-datasets-entropy-vmax-rtlag-emtrends-',1,'.Rdata'))
+
+
+ddq <- ddf$emmeans_list$H %>% filter(v_entropy_lag_sc != 0)
+ddq <- ddq %>% mutate(entropy = case_when(v_entropy_lag_sc==-2 ~ 'low entropy',
+                                          v_entropy_lag_sc==2 ~ 'high entropy'))
+
+ggplot(data=ddq ,aes(x=entropy,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$W %>% filter(v_max_wi_lag != 0)
+ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi_lag==-2 ~ 'low value max',
+                                                v_max_wi_lag==2 ~ 'high value max'))
+
+ggplot(data=ddq ,aes(x=value_maximum,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+ggplot(df3 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV'),aes(x=run_trial,y=rt_swing,color=rewFunc,group=rewFunc)) + 
+  geom_smooth(method='loess',span = 0.5) + facet_wrap(~dataset)
+
+
+################################
+### low vs high outcomes #######
+################################
+
+df4 <- df3 %>% filter(score_csv != 0)
+df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(score_csv_wi_lag = lag(scale(score_csv))) %>% ungroup()
+
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~ score_csv_wi_lag + v_entropy_lag_sc + v_max_wi_lag + run_trial + last_outcome + (1 | id/run))
+
+splits = c('dataset')
+df0 = decode_formula[[1]]
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+ddf <- mixed_by(df4, outcomes = "rt_swing", rhs_model_formulae = df0 , split_on = splits,
+                padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                emmeans_spec = list(
+                  #   A = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                  W = list(outcome='rt_swing',model_name='model1',
+                           specs=formula(~v_max_wi_lag),at=list(v_max_wi_lag=c(-2,0,2))),
+                  H = list(outcome='rt_swing', model_name='model1',
+                           specs=formula(~v_entropy_lag_sc), at = list(v_entropy_lag_sc=c(-2,0,2))),
+                  Y = list(outcome='rt_swing',model_name='model1',
+                              specs=formula(~score_csv_wi_lag), at=list(score_csv_wi_lag=c(-2,0,2)))
+                )
+                # emtrends_spec = list(
+                #   HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_entropy_wi),at=list(v_entropy_wi = c(-1.5,0,1.5))),
+                #   HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_max_wi),at=list(v_max_wi = c(-1.5,0,1.5))),
+                #   HSrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:score_csv_sc),at=list(score_csv_sc = c(-1.5,0,1.5)))
+                # )
+)
+curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+save(ddf,file=paste0(curr_date,'-All-score_csv-vmax-rtlag-emtrends-',1,'.Rdata'))
+
+ddq <- ddf$emmeans_list$H %>% filter(v_entropy_lag_sc != 0)
+ddq <- ddq %>% mutate(entropy = case_when(v_entropy_lag_sc==-2 ~ 'low entropy',
+                                          v_entropy_lag_sc==2 ~ 'high entropy'))
+
+ggplot(data=ddq ,aes(x=entropy,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$W %>% filter(v_max_wi_lag != 0)
+ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi_lag==-2 ~ 'low value max',
+                                                v_max_wi_lag==2 ~ 'high value max'))
+
+ggplot(data=ddq ,aes(x=value_maximum,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$Y %>% filter(score_csv_wi_lag != 0)
+ddq <- ddq %>% mutate(score = case_when(score_csv_wi_lag==-2 ~ 'low score',
+                                        score_csv_wi_lag==2 ~ 'high score'))
+
+ggplot(data=ddq ,aes(x=score,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+ggplot(df4 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV'),aes(x=run_trial,y=rt_swing,color=rewFunc,group=rewFunc)) + 
+  geom_smooth(method='loess',span = 0.5) + facet_wrap(~dataset)
+
+
+
+#df5 <- df4 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV')
+
+df3 <- df3 %>% group_by(dataset,id,run) %>% mutate(prob_lag_sc = scale(lag(probability))) %>% ungroup()
+
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~ prob_lag_sc + v_entropy_lag_sc + v_max_wi_lag + run_trial + last_outcome  + (1 | id/run))
+
+splits = c('dataset')
+df0 = decode_formula[[1]]
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+ddf <- mixed_by(df3, outcomes = "rt_swing", rhs_model_formulae = df0 , split_on = splits,
+                padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                emmeans_spec = list(
+                  #   A = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                  W = list(outcome='rt_swing',model_name='model1',
+                           specs=formula(~v_max_wi_lag),at=list(v_max_wi_lag=c(-2,0,2))),
+                  H = list(outcome='rt_swing', model_name='model1',
+                           specs=formula(~v_entropy_lag_sc), at = list(v_entropy_lag_sc=c(-2,0,2))),
+                  Y = list(outcome='rt_swing',model_name='model1',
+                           specs=formula(~prob_lag_sc), at=list(prob_lag_sc=c(-2,0,2)))
+                )
+                # emtrends_spec = list(
+                #   HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_entropy_wi),at=list(v_entropy_wi = c(-1.5,0,1.5))),
+                #   HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_max_wi),at=list(v_max_wi = c(-1.5,0,1.5))),
+                #   HSrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:score_csv_sc),at=list(score_csv_sc = c(-1.5,0,1.5)))
+                # )
+)
+curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+save(ddf,file=paste0(curr_date,'-All-probability-vmax-rtlag-emtrends-',1,'.Rdata'))
+
+ddq <- ddf$emmeans_list$H %>% filter(v_entropy_lag_sc != 0)
+ddq <- ddq %>% mutate(entropy = case_when(v_entropy_lag_sc==-2 ~ 'low entropy',
+                                          v_entropy_lag_sc==2 ~ 'high entropy'))
+
+ggplot(data=ddq ,aes(x=entropy,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$W %>% filter(v_max_wi_lag != 0)
+ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi_lag==-2 ~ 'low value max',
+                                                v_max_wi_lag==2 ~ 'high value max'))
+
+ggplot(data=ddq ,aes(x=value_maximum,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$Y %>% filter(prob_lag_sc != 0)
+ddq <- ddq %>% mutate(probability = case_when(prob_lag_sc==-2 ~ 'low probability',
+                                        prob_lag_sc==2 ~ 'high probability'))
+
+ggplot(data=ddq ,aes(x=probability,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~ (1+rt_lag_sc | id) + (1|run))
 
 splits = c('dataset')
 df0 = decode_formula[[1]]
 setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
 ddf <- mixed_by(df3, outcomes = "rt_csv", rhs_model_formulae = df0 , split_on = splits,
                 padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
                 # emmeans_spec = list(
-                #   A = list(outcome='vmPFC_decon',model_name='model1',
-                #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
-                #   W = list(outcome='vmPFC_decon',model_name='model1',
-                #            specs=formula(~wtar),at=list(wtar=c(-1,-0.5,0,0.5,1))),
-                #   H = list(outcome='vmPFC_decon', model_name='model1',
-                #            specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,-1,0,1,2))),
-                #   Y = list(outcome='vmPFC_decon',model_name='model1',
-                #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
-                # )#,
-                emtrends_spec = list(
-                  HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
-                              specs = formula(~rt_lag_sc:v_entropy_wi:last_outcome),at=list(v_entropy_wi = c(-1.5,0,1.5))),
-                  HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
-                              specs = formula(~rt_lag_sc:v_max_wi:last_outcome),at=list(v_max_wi = c(-1.5,0,1.5)))
-                )
+                #   #   A = list(outcome='vmPFC_decon',model_name='model1',
+                #   #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                #   W = list(outcome='rt_swing',model_name='model1',
+                #            specs=formula(~v_max_wi_lag),at=list(v_max_wi_lag=c(-2,0,2))),
+                #   H = list(outcome='rt_swing', model_name='model1',
+                #            specs=formula(~v_entropy_lag_sc), at = list(v_entropy_lag_sc=c(-2,0,2))),
+                #   Y = list(outcome='rt_swing',model_name='model1',
+                #            specs=formula(~prob_lag_sc), at=list(prob_lag_sc=c(-2,0,2)))
+                # )
+                # emtrends_spec = list(
+                #   HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_entropy_wi),at=list(v_entropy_wi = c(-1.5,0,1.5))),
+                #   HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:v_max_wi),at=list(v_max_wi = c(-1.5,0,1.5))),
+                #   HSrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                #               specs = formula(~rt_lag_sc:score_csv_sc),at=list(score_csv_sc = c(-1.5,0,1.5)))
+                # )
 )
 curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-save(ddf,file=paste0(curr_date,'-All-datasets-entropy-vmax-rtlag-emtrends-',1,'.Rdata'))
+save(ddf,file=paste0(curr_date,'-All-rt-lag-sc-random-slope-',1,'.Rdata'))
 
+ddq <- ddf$coef_df_reml %>% filter(effect == 'ran_vals' & term =='rt_lag_sc') %>% rename(id=level)
 
-ddq <- ddf$emtrends_list$HTrt %>% filter(v_entropy_wi != 0)
-ddq <- ddq %>% mutate(entropy = case_when(v_entropy_wi==-1.5 ~ 'low entropy',
-                                          v_entropy_wi==1.5 ~ 'high entropy'))
+# stats mmc-fmri
+stats1 <- read_csv('/Users/dnplserv/clock_analysis/fmri/data/mmclock_fmri_decay_factorize_selective_psequate_mfx_sceptic_global_statistics.csv')
+stats1 <- stats1 %>% select(!dataset)
 
-ggplot(data=ddq %>% filter(last_outcome=='Reward') ,aes(x=entropy,y=rt_lag_sc.trend,ymin=rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error)) + 
-  facet_wrap(~dataset,scales='free_y') + geom_errorbar(width=0.5) + scale_y_reverse() + ylab('<-- less -- Exploration -- more -->')
+# stats mmc-meg
+stats2 <- read_csv('/Users/dnplserv/clock_analysis/meg/data/mmclock_meg_decay_factorize_selective_psequate_mfx_sceptic_global_statistics.csv')
+stats2 <- stats2 %>% select(!dataset)
+stats2 <- stats2 %>% mutate(id2 = str_extract(id, "^[0-9]+")) %>% select(!id) %>% rename(id = id2)
 
+# stats Explore
+stats3 <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/explore_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
 
-ddq <- ddf$emtrends_list$HVrt %>% filter(v_max_wi != 0)
-ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi==-1.5 ~ 'low value max',
-                                          v_max_wi==1.5 ~ 'high value max'))
+stats1 <- stats1 %>% mutate(dataset = "Experiment 1 - fMRI")
+stats2 <- stats2 %>% mutate(dataset = "Experiment 1 - MEG Replication")
+stats3 <- stats3 %>% mutate(dataset = 'Experiment 2')
 
-ggplot(data=ddq %>% filter(last_outcome=='Omission') ,aes(x=value_maximum,y=rt_lag_sc.trend,ymin=rt_lag_sc.trend-std.error,ymax=rt_lag_sc.trend+std.error)) + 
-  facet_wrap(~dataset,scales='free_y') + geom_errorbar(width=0.5) + scale_y_reverse() + ylab('<-- less -- Exploration -- more -->')
+statsall <- rbind(stats1,stats2)
+statsall <- rbind(statsall,stats3)
+
+ddq <- inner_join(ddq,statsall,by=c('dataset','id'))
+
+ddq <- ddq %>% group_by(dataset) %>% mutate(rt_lag_sc = scale(estimate),tau_ffx_sc = scale(1/beta_ffx)) %>% ungroup()
+
+ggplot(data=ddq,aes(x=tau_ffx_sc,y=rt_lag_sc)) + geom_point() + facet_wrap(~dataset) +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
+  ggpubr::stat_regline_equation(size = 3) + 
+  ggpubr::stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "*`,`~")),
+           label.x.npc = "centre",size=3)
