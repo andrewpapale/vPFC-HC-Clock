@@ -1,4 +1,6 @@
 
+library(tidyverse)
+
 repo_directory_mmclock <- "~/clock_analysis"
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 dfmmc <- get_trial_data(repo_directory=repo_directory_mmclock,dataset='mmclock_fmri')
@@ -7,7 +9,7 @@ trial_df <- dfmmc
 
 files <- list.files('/Volumes/bierka_root/datamesh/PROC/MMClock/2025-06-27-gPPI-voxelwisedecon',recursive=TRUE,full.names=TRUE)
 
-decon_df <- NULL;
+decon_df0 <- NULL;
 for (iF in 1:length(files)){
   currF <- read_csv(files[iF])
   temp_str <- str_split(files[iF],'/')[[1]][10]
@@ -18,7 +20,7 @@ for (iF in 1:length(files)){
   } else {
     currF <- currF %>% mutate(side = 'r',id = id, run=run)
   }
-  decon_df <- rbind(decon_df,currF)
+  decon_df0 <- rbind(decon_df0,currF)
   print(iF)
 }
 
@@ -29,13 +31,13 @@ bin_cuts_l <- seq(min(hc_l_m[mi_l])-5e-3,max(hc_l_m[mi_l])+5e-3,length.out=12+1)
 hc_r_m <- oro.nifti::readNIfTI('/Volumes/Users/Andrew/long_axis_r_cobra_2.3mm.nii.gz',reorient=FALSE)
 mi_r <- which(hc_r_m > 0, arr.ind=TRUE)
 bin_cuts_r <- seq(min(hc_r_m[mi_l])-5e-3,max(hc_r_m[mi_l])+5e-3,length.out=12+1)
-decon_df <- decon_df %>% group_by(side) %>% mutate(atlas_value0 = case_when(side == 'l' ~ cut(atlas_value, bin_cuts_l),
+decon_df0 <- decon_df0 %>% group_by(side) %>% mutate(atlas_value0 = case_when(side == 'l' ~ cut(atlas_value, bin_cuts_l),
                                                                                           side == 'r' ~ cut(atlas_value, bin_cuts_r))
 ) %>% ungroup()
 
 uav <- sort(unique(decon_df$atlas_value0))
 
-decon_df <- decon_df %>% mutate(bin_num=case_when(
+decon_df0 <- decon_df0 %>% mutate(bin_num=case_when(
   atlas_value0==uav[1] ~ 1,
   atlas_value0==uav[2] ~ 2,
   atlas_value0==uav[3] ~ 3,
@@ -50,11 +52,11 @@ decon_df <- decon_df %>% mutate(bin_num=case_when(
   atlas_value0==uav[12]~ 12,
 ))
 
-decon_df$atlas_value0 <- as.numeric(decon_df$atlas_value0)
+decon_df0$atlas_value0 <- as.numeric(decon_df0$atlas_value0)
 
-decon_df <- decon_df %>% mutate(HC_region = case_when(atlas_value0 < 5 ~ 'PH', atlas_value0 >=5 ~ 'AH'))
+decon_df0 <- decon_df0 %>% mutate(HC_region = case_when(atlas_value0 < 5 ~ 'PH', atlas_value0 >=5 ~ 'AH'))
 
-decon_df <- decon_df %>% group_by(id, run, time, HC_region) %>% summarize(decon = mean(decon,na.rm=TRUE)) %>% ungroup()
+decon_df <- decon_df0 %>% group_by(id, run, time, HC_region) %>% summarize(decon = mean(decon,na.rm=TRUE)) %>% ungroup()
 
 setwd("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R")
 write.csv(decon_df, file = 'MMClock-gPPI.csv')

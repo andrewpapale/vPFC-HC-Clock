@@ -669,3 +669,79 @@ ggplot(data=ddq,aes(x=tau_ffx_sc,y=rt_lag_sc)) + geom_point() + facet_wrap(~data
   ggpubr::stat_regline_equation(size = 3) + 
   ggpubr::stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "*`,`~")),
            label.x.npc = "centre",size=3)
+
+
+
+################################
+### rt ~ rt_lag correlations ###
+################################
+
+library(tseries)
+
+decode_formula <- NULL
+decode_formula[[1]] <- formula(~ v_entropy_wi:rt_lag_sc + v_max_wi:rt_lag_sc + rt_lag_sc + run_trial + last_outcome  + (1 | id/run))
+
+splits = c('dataset')
+df0 = decode_formula[[1]]
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+ddf <- mixed_by(df3, outcomes = "rt_csv", rhs_model_formulae = df0 , split_on = splits,
+                padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+                #emmeans_spec = list(
+                  #   A = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~age),at=list(age=c(-1,-0.5,0,0.5,1))),
+                  # W = list(outcome='rt_csv',model_name='model1',
+                  #          specs=formula(~v_max_wi),at=list(v_max_wi=c(-2,0,2))),
+                  # H = list(outcome='rt_csv', model_name='model1',
+                  #          specs=formula(~v_entropy_wi), at = list(v_entropy_wi=c(-2,0,2)))
+                  #   Y = list(outcome='vmPFC_decon',model_name='model1',
+                  #            specs=formula(~education_yrs), at=list(education_yrs=c(-1,-0.5,0,0.5,1)))
+               # )
+                emtrends_spec = list(
+                  HTrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                              specs = formula(~rt_lag_sc:v_entropy_wi:last_outcome),at=list(v_entropy_wi = c(-1.5,0,1.5))),
+                  HVrt = list(outcome='rt_csv',model_name='model1', var = 'rt_lag_sc',
+                              specs = formula(~rt_lag_sc:v_max_wi:last_outcome),at=list(v_max_wi = c(-1.5,0,1.5)))
+                )
+)
+curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+save(ddf,file=paste0(curr_date,'-All-datasets-entropy-vmax-rt-rtlag-emtrends-',1,'.Rdata'))
+
+
+ddq <- ddf$emmeans_list$H %>% filter(v_entropy_wi != 0)
+ddq <- ddq %>% mutate(entropy = case_when(v_entropy_wi==-1.5 ~ 'low entropy',
+                                          v_entropy_wi==1.5 ~ 'high entropy'))
+
+ggplot(data=ddq ,aes(x=entropy,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+
+ddq <- ddf$emmeans_list$W %>% filter(v_max_wi_lag != 0)
+ddq <- ddq %>% mutate(value_maximum = case_when(v_max_wi_lag==-2 ~ 'low value max',
+                                                v_max_wi_lag==2 ~ 'high value max'))
+
+ggplot(data=ddq ,aes(x=value_maximum,y=estimate,ymin=estimate-std.error,ymax=estimate+std.error)) + 
+  facet_wrap(~dataset) + geom_errorbar(width=0.5) + ylab('<-- less -- Exploration -- more -->')
+
+ggplot(df3 %>% filter(rewFunc == 'IEV' | rewFunc=='DEV'),aes(x=run_trial,y=rt_swing,color=rewFunc,group=rewFunc)) + 
+  geom_smooth(method='loess',span = 0.5) + facet_wrap(~dataset)
+
+
+dfrt <- df3 %>% select(dataset,id,run,rt_csv)
+
+df_acf <- dfrt %>% 
+  group_by(dataset,id,run) %>%
+  nest() %>% 
+  mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
+  mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,], .x$acf[2,,], .x$acf[3,,], .x$acf[4,,], .x$acf[5,,], .x$acf[6,,], .x$acf[7,,], .x$acf[8,,], .x$acf[9,,], .x$acf[10,,])))) %>%
+  unnest(data)
+
+df_acf_lag <- dfrt %>% 
+  group_by(dataset,id,run) %>%
+  nest() %>% 
+  mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
+  mutate(data = map(data, ~as.data.frame(rbind(.x$lag[1,,], .x$lag[1,,], .x$lag[2,,], .x$lag[3,,], .x$lag[4,,], .x$lag[5,,], .x$lag[6,,], .x$lag[7,,], .x$lag[8,,], .x$lag[9,,], .x$lag[10,,])))) %>%
+  unnest(data)
+
+df_acf <- df_acf %>% arrange(dataset,id,run)
+
