@@ -82,7 +82,7 @@ subject_df <- data.frame(mr_dir = mr_dir, id=id) %>% filter(id %in% c(10637, 109
 
 gpa <- setup_glm_pipeline(
   analysis_name = "ppi_demo", scheduler = "local",
-  output_directory = "/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/MMClock/gPPI-output",
+  output_directory = "/Users/dnplserv/MMC-gPPI",
   subject_data = subject_df, trial_data = trial_df, run_data = NULL, ppi_data = ppi_data,
   tr = 1.0, drop_volumes = 0,
   n_expected_runs = 8,
@@ -118,3 +118,11 @@ gpa$run_data <- gpa$run_data %>% mutate(run_nifti = run_nifti,exclude_run = FALS
 
 gpa$parallel$l1_setup_cores <- 24 # fallback to serial for debugging
 gpa <- setup_l1_models(gpa)
+gpa <- build_l2_models(gpa)
+gpa$run_data <- gpa$run_data %>% mutate(exlude_run = FALSE, exclude_subject = FALSE)
+gpa <- setup_l2_models(gpa)
+
+gpa <- build_l3_models(gpa)
+
+
+gpa <- run_glm_pipeline(gpa)
