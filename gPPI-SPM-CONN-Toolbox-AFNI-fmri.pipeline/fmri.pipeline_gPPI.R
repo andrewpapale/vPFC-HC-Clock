@@ -19,10 +19,12 @@ ppi_data <- physio_data %>% group_by(id, run, time, HC_region) %>% summarize(dec
 # ppi_data <- physio_data %>%
 #     select(id, run)
 
-elig_files <- list.files("/Volumes/bierka_root/datamesh/RAW/MMClock/MR_Proc", pattern = "nfaswuktm_clock[1-8]_5_drop2_trunc[0-9]+\\.nii\\.gz$",
-                         #elig_files <- list.files("/proj/mnhallqlab/projects/mmy3_gppi_prototype/MMClock/MR_Proc", pattern = "nfaswuktm_clock.*", 
-                         full.names = TRUE, recursive=TRUE
-)
+run_nifti <- list.files('/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/MMClock/MR_Proc', pattern = "nfaswuktm_clock[1-8]_5_drop2_trunc[0-9]+\\.nii\\.gz$", full.names=TRUE,recursive=TRUE)
+
+#elig_files <- list.files("/Volumes/bierka_root/datamesh/RAW/MMClock/MR_Proc", pattern = "nfaswuktm_clock[1-8]_5_drop2_trunc[0-9]+\\.nii\\.gz$",
+#                         #elig_files <- list.files("/proj/mnhallqlab/projects/mmy3_gppi_prototype/MMClock/MR_Proc", pattern = "nfaswuktm_clock.*", 
+#                         full.names = TRUE, recursive=TRUE
+#)
 
 # build_info <- function(input) {
 #     require(RNifti)
@@ -46,6 +48,10 @@ elig_files <- list.files("/Volumes/bierka_root/datamesh/RAW/MMClock/MR_Proc", pa
 
 # real data
 #ppi_data <- fread("/proj/mnhallqlab/projects/mmy3_gppi_prototype/MMClock_HippoDecon_27Jun2025.csv.gz")
+
+
+elig_files <- read.csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-07-03-MMClock-MRProc.csv')
+
 ppi_data$volume <- ppi_data$time + 1
 ppi_data$time <- NULL
 ppi_data <- ppi_data %>%
@@ -55,11 +61,22 @@ ppi_data <- ppi_data %>%
 
 source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
 trial_df <- get_trial_data(repo_directory = "/Users/dnplserv/clock_analysis/", dataset = "mmclock_fmri", groupfixed = TRUE) %>%
-  dplyr::rename(run_number = "run")
+  dplyr::rename(run_number = "run") %>% mutate(feedback_duration = iti_onset - feedback_onset)
 
-subject_df <- readRDS("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/mmclock_subject_data.rds") %>%
-  mutate(mr_dir=paste0(mr_dir, "/mni_5mm_aroma")) %>% #make sure we're looking in the right folder
-  filter(id %in% c(10637, 10997, 11279))
+ subject_df <- readRDS("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/mmclock_subject_data.rds") %>%
+   mutate(mr_dir=paste0(mr_dir, "/mni_5mm_aroma")) %>% #make sure we're looking in the right folder
+   filter(id %in% c(10637, 10997, 11279))
+
+ 
+subject_df0 <- list.dirs("/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/MMClock/MR_Proc",recursive = FALSE, full.names=TRUE)  
+mr_dir <- NULL
+id <- NULL
+run <- NULL
+for (iD in 1:length(subject_df0)){
+  mr_dir <- rbind(paste0(subject_df0[[iD]][1],'/mni_5mm_aroma'),mr_dir)
+  id <- rbind(id,str_split(str_split(subject_df0[[iD]][1],'/')[[1]][8],'_')[[1]][1])
+}
+subject_df <- data.frame(mr_dir = mr_dir, id=id) %>% filter(id %in% c(10637, 10997, 11279))
 
 # run_df <- readRDS("/proj/mnhallqlab/users/michael/fmri.pipeline/inst/example_files/mmclock_run_data.rds")
 
@@ -90,8 +107,14 @@ gpa <- setup_glm_pipeline(
   )
 )
 
+
+#gpa <- build_l1_models(gpa, from_spec_file = '/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/AI_level1_ExploreHC_Andrew.yaml')
+
 gpa <- build_l1_models(gpa)
 
-gpa <- finalize_pipeline_configuration(gpa)
-gpa$parallel$l1_setup_cores <- 1 # fallback to serial for debugging
+#gpa <- finalize_pipeline_configuration(gpa)
+
+gpa$run_data <- gpa$run_data %>% mutate(run_nifti = run_nifti,exclude_run = FALSE)
+
+gpa$parallel$l1_setup_cores <- 24 # fallback to serial for debugging
 gpa <- setup_l1_models(gpa)
