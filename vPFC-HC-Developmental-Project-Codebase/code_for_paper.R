@@ -254,7 +254,7 @@ for(i in 1:length(decode_formula)){
 
 for(j in 1:length(decode_formula)){
   setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
-  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-randslopeHCwithin',j,'.Rdata'))
+  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-randslopeHCwithin10.Rdata'))
   
   setwd(file.path(rootdir,'fmri/validate_mixed_by_clock_HC_interaction/'))
   
@@ -430,7 +430,6 @@ df <- df %>% select(outcome,rt_lag, rt_lag_sc, rt_csv_sc,rt_csv,id, run, run_tri
 
 df$id <- as.character(df$id)
 Q2 <- df;
-Q$female <- relevel(as.factor(Q$female),ref='0')
 
 Qmeg <- inner_join(Q2,demo,by=c('id'))
 #Qmeg$female <- relevel(as.factor(Qmeg$female),ref='0')
@@ -443,6 +442,10 @@ Q3$race <- Q3 %>% select("AmerIndianAlaskan":"White") %>% rowSums()
 
 Q3 <- Q3 %>% filter(rt_csv < 4 & rt_csv > 0.2)
 Q3 <- Q3 %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
+
+modelfits <- read.csv(file.path(rootdir,'trial_data/mmclock_fmri_decay_factorize_selective_psequate_fixedparams_ffx_sceptic_global_statistics.txt'))
+modelfits$id <- as.character(modelfits$id)
+Q3 <- inner_join(Q3,modelfits[,c("id","beta")],by="id")
 
 # look at total earnings by sex
 earnings_fmri <- Q3[Q3$dataset=="fMRI",c("id","sex","total_earnings")] %>% distinct(id,sex,total_earnings)
@@ -598,6 +601,238 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=data
   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
   facet_wrap(~sex1) + 
   ylab("RT Swing (RT ~ previous RT)") + xlab("Prior Trial Outcome")
+
+#########################################################################################################
+#########################################################################################################
+
+# Now, we can do the same for age!
+setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+
+# set some baseline variables
+ncores = 20
+
+# split out by network
+rm(decode_formula)
+decode_formula <- NULL
+
+# age only
+decode_formula[[1]] <- formula(~rt_lag_sc*age + (1 | id/run))
+
+# matching base model from MEDuSA
+decode_formula[[2]] <- formula(~rt_lag_sc*age + rt_lag_sc*trial_neg_inv_sc + (1 | id/run))
+
+# now adding sex
+decode_formula[[3]] = formula(~rt_lag_sc*age + rt_lag_sc*sex + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# age by sex interaction
+decode_formula[[4]] = formula(~rt_lag_sc*sex*age + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# now adding race and ethnicity
+decode_formula[[5]] = formula(~rt_lag_sc*age + rt_lag_sc*race + rt_lag_sc*Hispanic + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# highest level of education
+decode_formula[[6]] = formula(~rt_lag_sc*age + rt_lag_sc*edu + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# now adding vmax
+decode_formula[[7]] = formula(~rt_lag_sc*age + rt_lag_sc*v_max_wi + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# interaction of age with vmax
+decode_formula[[8]] = formula(~rt_lag_sc*age*v_max_wi + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# now adding entropy
+decode_formula[[9]] = formula(~rt_lag_sc*age + rt_lag_sc*v_entropy_wi + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+# interaction of age with entropy
+decode_formula[[10]] = formula(~rt_lag_sc*age*v_entropy_wi + rt_lag_sc*trial_neg_inv_sc + (1 | id/run)) 
+
+for (j in 1:length(decode_formula)){
+  
+  ddq <- mixed_by(Q3, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = "dataset",return_models=TRUE,
+                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                  emmeans_spec = list(
+                    RT = list(outcome='rt_csv_sc', model_name='model1', 
+                              specs=formula(~rt_lag_sc:age), at = list(age=c(-1.5,1.5),rt_lag_sc=c(-2,-1,0,1,2)))
+                  ),
+                  emtrends_spec = list(
+                    RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
+                              specs=formula(~rt_lag_sc:age), at=list(age=c(-1.5,1.5),rt_lag_sc = c(-2,-1,0,1,2)))
+                  )
+  )
+  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-withrandslope',j,'.Rdata'))
+}
+
+# plot emtrends for sex
+load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-withrandslope4.Rdata'))
+ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
+ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
+
+tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
+  group_by(sex,dataset) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
+g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex),group=sex)
+g + geom_point(stat="identity",position=position_dodge(width=0.5), aes(color=sex)) +
+  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex),position=position_dodge(width=0.5)) +
+  facet_wrap(~dataset) + scale_y_reverse() + theme(legend.position = "none") +
+  ylab("RT Swing (RT ~ previous RT)")
+
+# look at differences by last_outcome
+rm(decode_formula)
+decode_formula <- NULL
+
+# sex only
+decode_formula[[1]] <- formula(~rt_lag_sc*sex*reward_lag_rec + (1 | id/run))
+
+# matching base model from MEDuSA
+decode_formula[[2]] <- formula(~rt_lag_sc*sex*reward_lag_rec + rt_lag_sc*trial_neg_inv_sc*reward_lag_rec + (1 | id/run))
+
+# now adding age
+decode_formula[[3]] = formula(~rt_lag_sc*sex*reward_lag_rec + rt_lag_sc*age*reward_lag_rec + rt_lag_sc*trial_neg_inv_sc*reward_lag_rec + (1 | id/run)) 
+
+# now adding race and ethnicity
+decode_formula[[4]] = formula(~rt_lag_sc*sex*reward_lag_rec + rt_lag_sc*race*reward_lag_rec + rt_lag_sc*Hispanic*reward_lag_rec + rt_lag_sc*trial_neg_inv_sc*reward_lag_rec + (1 | id/run)) 
+
+# highest level of education
+decode_formula[[5]] = formula(~rt_lag_sc*sex*reward_lag_rec + rt_lag_sc*edu*reward_lag_rec + rt_lag_sc*trial_neg_inv_sc*reward_lag_rec + (1 | id/run)) 
+
+for (j in 1:length(decode_formula)){
+  
+  ddq <- mixed_by(Q3, outcomes = "rt_csv_sc", rhs_model_formulae = decode_formula[[j]], split_on = "dataset",return_models=TRUE,
+                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+                  tidy_args = list(effects=c("fixed","ran_vals"),conf.int=TRUE),
+                  emmeans_spec = list(
+                    RT = list(outcome='rt_csv_sc', model_name='model1', 
+                              specs=formula(~rt_lag_sc:sex), at = list(rt_lag_sc=c(-2,-1,0,1,2))),
+                    RTxO = list(outcome='rt_csv_sc',model_name='model1',
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc=c(-2,-1,0,1,2)))
+                    
+                  ),
+                  emtrends_spec = list(
+                    RT = list(outcome='rt_csv_sc', model_name='model1', var='rt_lag_sc', 
+                              specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2))),
+                    RTxO = list(outcome='rt_csv_sc',model_name='model1',var='rt_lag_sc',
+                                specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
+                  )
+  )
+  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope',j,'.Rdata'))
+}
+
+load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope1.Rdata'))
+ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
+ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
+
+# by sex and last outcome: won't work for models without outcome
+tab <- as.data.frame(ddq$emtrends_list$RTxO) %>% select(!c(model_name,rhs,outcome)) %>%
+  group_by(sex,dataset,reward_lag_rec) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
+tab$last_outcome <- ifelse(tab$reward_lag_rec==-0.5, "Omission","Reward")
+tab$sex1 <- ifelse(tab$sex==0,"Female","Male")
+
+g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex1),group=dataset)
+g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
+  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
+  facet_wrap(~last_outcome) + scale_y_reverse()
+
+g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=last_outcome),group=dataset)
+g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
+  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
+  facet_wrap(~sex1) + 
+  ylab("RT Swing (RT ~ previous RT)") + xlab("Prior Trial Outcome")
+
+#########################################################################################################
+#########################################################################################################
+
+# Let's look at beta
+setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+
+# since these are global stats per participant, we don't need lmer models
+m1 <- lm(beta ~ sex, data = Q3[Q3$dataset=="fMRI"])
+summary(m1)
+
+# matching base model from MEDuSA
+m2 <- lm(beta ~ sex + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m2)
+
+# now adding age
+m3 <- lm(beta ~ sex + age + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m3)
+
+# age by sex interaction
+m4 <- lm(beta ~ sex*age + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m4)
+
+# now adding race and ethnicity
+m5 <- lm(beta ~ sex + race + Hispanic + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m5)
+
+# highest level of education
+m6 <- lm(beta ~ sex + edu + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m6)
+
+# now adding vmax
+m7 <- lm(beta ~ sex + v_max_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m7)
+
+# interaction of sex with vmax
+m8 <- lm(beta ~ sex*v_max_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m8)
+
+# now adding entropy
+m9 <- lm(beta ~ sex + v_entropy_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m9)
+
+# interaction of sex with entropy
+m10 <- lm(beta ~ sex*v_entropy_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m10)
+
+
+#########################################################################################################
+#########################################################################################################
+
+# Beta by age
+setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+
+# since these are global stats per participant, we don't need lmer models
+m1 <- lm(beta ~ age, data = Q3[Q3$dataset=="fMRI"])
+summary(m1)
+
+# matching base model from MEDuSA
+m2 <- lm(beta ~ age + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m2)
+
+# now adding sex
+m3 <- lm(beta ~ age + sex + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m3)
+
+# age by sex interaction
+m4 <- lm(beta ~ age*sex + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m4)
+
+# now adding race and ethnicity
+m5 <- lm(beta ~ age + race + Hispanic + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m5)
+
+# highest level of education
+m6 <- lm(beta ~ age + edu + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m6)
+
+# now adding vmax
+m7 <- lm(beta ~ age + v_max_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m7)
+
+# interaction of age with vmax
+m8 <- lm(beta ~ age*v_max_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m8)
+
+# now adding entropy
+m9 <- lm(beta ~ age + v_entropy_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m9)
+
+# interaction of age with entropy
+m10 <- lm(beta ~ age*v_entropy_wi + trial_neg_inv_sc, data = Q3[Q3$dataset=="fMRI"])
+summary(m10)
 
 ######################################################################################################
 ######################################################################################################
@@ -1000,6 +1235,10 @@ for(j in 1:length(decode_formula)){
 #############################
 #############################
 
+rootdir <- '/ix/cladouceur/DNPL/BSOC'
+repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
+setwd(rootdir)
+
 # Get task behav data
 df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
@@ -1088,6 +1327,11 @@ Q <- Q %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5
 # in case we want to look only at healthy controls:
 #Q <- Q %>% filter(group=='HC')
 #Q$group <- relevel(factor(Q$group),ref='HC')
+
+# add in beta
+modelfits <- read.csv(file.path(rootdir,'fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_ffx_sceptic_global_statistics.csv'))
+modelfits$id <- sub("_1$", "", modelfits$id)
+Q <- inner_join(Q,modelfits[,c("id","beta")],by="id")
 
 # Remove some participants:
 # individuals > 50 years old
@@ -1245,3 +1489,96 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=sex1
   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex1),position=position_dodge(width=0.5)) +
   facet_wrap(~sex1) + 
   ylab("RT Swing (RT ~ previous RT)") + xlab("Prior Trial Outcome")
+
+#########################################################################################################
+#########################################################################################################
+
+# Let's look at beta
+setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+
+# since these are global stats per participant, we don't need lmer models
+m1 <- lm(beta ~ sex, data = Q)
+summary(m1)
+
+# matching base model from MEDuSA
+m2 <- lm(beta ~ sex + trial_neg_inv_sc, data = Q)
+summary(m2)
+
+# now adding age
+m3 <- lm(beta ~ sex + age + trial_neg_inv_sc, data = Q)
+summary(m3)
+
+# age by sex interaction
+m4 <- lm(beta ~ sex*age + trial_neg_inv_sc, data = Q)
+summary(m4)
+
+# now adding race and ethnicity
+m5 <- lm(beta ~ sex + race + Hispanic + trial_neg_inv_sc, data = Q)
+summary(m5)
+
+# highest level of education
+m6 <- lm(beta ~ sex + edu + trial_neg_inv_sc, data = Q)
+summary(m6)
+
+# now adding vmax
+m7 <- lm(beta ~ sex + v_max_wi + trial_neg_inv_sc, data = Q)
+summary(m7)
+
+# interaction of sex with vmax
+m8 <- lm(beta ~ sex*v_max_wi + trial_neg_inv_sc, data = Q)
+summary(m8)
+
+# now adding entropy
+m9 <- lm(beta ~ sex + v_entropy_wi + trial_neg_inv_sc, data = Q)
+summary(m9)
+
+# interaction of sex with entropy
+m10 <- lm(beta ~ sex*v_entropy_wi + trial_neg_inv_sc, data = Q)
+summary(m10)
+
+
+#########################################################################################################
+#########################################################################################################
+
+# Beta by age
+setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+
+# since these are global stats per participant, we don't need lmer models
+m1 <- lm(beta ~ age, data = Q)
+summary(m1)
+
+# matching base model from MEDuSA
+m2 <- lm(beta ~ age + trial_neg_inv_sc, data = Q)
+summary(m2)
+
+# now adding sex
+m3 <- lm(beta ~ age + sex + trial_neg_inv_sc, data = Q)
+summary(m3)
+
+# age by sex interaction
+m4 <- lm(beta ~ age*sex + trial_neg_inv_sc, data = Q)
+summary(m4)
+
+# now adding race and ethnicity
+m5 <- lm(beta ~ age + race + Hispanic + trial_neg_inv_sc, data = Q)
+summary(m5)
+
+# highest level of education
+m6 <- lm(beta ~ age + edu + trial_neg_inv_sc, data = Q)
+summary(m6)
+
+# now adding vmax
+m7 <- lm(beta ~ age + v_max_wi + trial_neg_inv_sc, data = Q)
+summary(m7)
+
+# interaction of age with vmax
+m8 <- lm(beta ~ age*v_max_wi + trial_neg_inv_sc, data = Q)
+summary(m8)
+
+# now adding entropy
+m9 <- lm(beta ~ age + v_entropy_wi + trial_neg_inv_sc, data = Q)
+summary(m9)
+
+# interaction of age with entropy
+m10 <- lm(beta ~ age*v_entropy_wi + trial_neg_inv_sc, data = Q)
+summary(m10)
