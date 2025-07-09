@@ -585,17 +585,18 @@ for (j in 1:length(decode_formula)){
 }
 
 # plot emtrends for sex
-load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-4.Rdata'))
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
-
-tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
-  group_by(sex,dataset) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
-g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex),group=sex)
-g + geom_point(stat="identity",position=position_dodge(width=0.5), aes(color=sex)) +
-  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex),position=position_dodge(width=0.5)) +
-  facet_wrap(~dataset) + scale_y_reverse() + theme(legend.position = "none") +
-  ylab("RT Swing (RT ~ previous RT)")
+# setwd(out_dir)
+# load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-4.Rdata'))
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
+# 
+# tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
+#   group_by(sex,dataset) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
+# g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex),group=sex)
+# g + geom_point(stat="identity",position=position_dodge(width=0.5), aes(color=sex)) +
+#   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex),position=position_dodge(width=0.5)) +
+#   facet_wrap(~dataset) + scale_y_reverse() + theme(legend.position = "none") +
+#   ylab("RT Swing (RT ~ previous RT)")
 
 # look at differences by last_outcome
 rm(decode_formula)
@@ -735,18 +736,18 @@ for (j in 1:length(decode_formula)){
   save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-',j,'.Rdata'))
 }
 
-# plot emtrends for sex
-load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-4.Rdata'))
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
-
-tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
-  group_by(sex,dataset) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
-g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex),group=sex)
-g + geom_point(stat="identity",position=position_dodge(width=0.5), aes(color=sex)) +
-  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex),position=position_dodge(width=0.5)) +
-  facet_wrap(~dataset) + scale_y_reverse() + theme(legend.position = "none") +
-  ylab("RT Swing (RT ~ previous RT)")
+# # plot emtrends for sex
+# load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-4.Rdata'))
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
+# 
+# tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
+#   group_by(sex,dataset) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
+# g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex),group=sex)
+# g + geom_point(stat="identity",position=position_dodge(width=0.5), aes(color=sex)) +
+#   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=sex),position=position_dodge(width=0.5)) +
+#   facet_wrap(~dataset) + scale_y_reverse() + theme(legend.position = "none") +
+#   ylab("RT Swing (RT ~ previous RT)")
 
 # look at differences by last_outcome
 rm(decode_formula)
@@ -795,26 +796,26 @@ for (j in 1:length(decode_formula)){
   save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-',j,'.Rdata'))
 }
 
-load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-1.Rdata'))
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
-ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
-
-# by sex and last outcome: won't work for models without outcome
-tab <- as.data.frame(ddq$emtrends_list$RTxO) %>% select(!c(model_name,rhs,outcome)) %>%
-  group_by(sex,dataset,reward_lag_rec) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
-tab$last_outcome <- ifelse(tab$reward_lag_rec==-0.5, "Omission","Reward")
-tab$sex1 <- ifelse(tab$sex==0,"Female","Male")
-
-g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex1),group=dataset)
-g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
-  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
-  facet_wrap(~last_outcome) + scale_y_reverse()
-
-g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=last_outcome),group=dataset)
-g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
-  geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
-  facet_wrap(~sex1) + 
-  ylab("RT Swing (RT ~ previous RT)") + xlab("Prior Trial Outcome")
+# load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-1.Rdata'))
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
+# ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
+# 
+# # by sex and last outcome: won't work for models without outcome
+# tab <- as.data.frame(ddq$emtrends_list$RTxO) %>% select(!c(model_name,rhs,outcome)) %>%
+#   group_by(sex,dataset,reward_lag_rec) %>% summarize(rt_lag_sc.trend = mean(rt_lag_sc.trend), SE = mean(std.error))
+# tab$last_outcome <- ifelse(tab$reward_lag_rec==-0.5, "Omission","Reward")
+# tab$sex1 <- ifelse(tab$sex==0,"Female","Male")
+# 
+# g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=sex1),group=dataset)
+# g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
+#   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
+#   facet_wrap(~last_outcome) + scale_y_reverse()
+# 
+# g <- ggplot(tab,aes(y=rt_lag_sc.trend,x=last_outcome),group=dataset)
+# g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=dataset)) +
+#   geom_errorbar(aes(ymin = rt_lag_sc.trend - SE,ymax = rt_lag_sc.trend + SE,color=dataset),position=position_dodge(width=0.5)) +
+#   facet_wrap(~sex1) + 
+#   ylab("RT Swing (RT ~ previous RT)") + xlab("Prior Trial Outcome")
 
 #########################################################################################################
 #########################################################################################################

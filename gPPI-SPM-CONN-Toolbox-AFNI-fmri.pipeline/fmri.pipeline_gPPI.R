@@ -10,6 +10,10 @@ library(fmri.pipeline)
 library(readr)
 library(stringr)
 
+Sys.unsetenv("FSLDIR")
+Sys.setenv(FSLDIR = paste("/Users/dnplserv/fsl", Sys.getenv("FSLDIR")))
+Sys.setenv(PATH = paste("/Users/dnplserv/abin", Sys.getenv("PATH"), sep = ":"))
+
 #physio_data <- data.table::fread("/proj/mnhallqlab/projects/mmy3_gppi_prototype/2025-05-29-HC_MEDuSA-gPPI-Prototype.csv")
 physio_data <- data.table::fread("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-06-27-gPPI-demo.csv")
 str(physio_data)
@@ -109,15 +113,16 @@ gpa <- setup_glm_pipeline(
 )
 
 
-#gpa <- build_l1_models(gpa, from_spec_file = '/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/AI_level1_ExploreHC_Andrew.yaml')
+gpa <- build_l1_models(gpa, from_spec_file = '/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/AI_level1_ExploreHC_Andrew.yaml')
 
-gpa <- build_l1_models(gpa)
+#gpa <- build_l1_models(gpa)
 
-#gpa <- finalize_pipeline_configuration(gpa)
+#rm(gpa)
+#load('/Users/dnplserv/MMC-gPPI/AH-ventropywi-gPPI-test.Rdata')
 
 gpa$run_data <- gpa$run_data %>% mutate(run_nifti = run_nifti,exclude_run = FALSE)
 
-gpa$parallel$l1_setup_cores <- 24 # fallback to serial for debugging
+gpa$parallel$l1_setup_cores <- 1 # fallback to serial for debugging
 gpa <- setup_l1_models(gpa)
 gpa <- build_l2_models(gpa)
 gpa$run_data <- gpa$run_data %>% mutate(exlude_run = FALSE, exclude_subject = FALSE)
@@ -125,5 +130,6 @@ gpa <- setup_l2_models(gpa)
 
 gpa <- build_l3_models(gpa)
 
+gpa <- finalize_pipeline_configuration(gpa)
 
 gpa <- run_glm_pipeline(gpa)
