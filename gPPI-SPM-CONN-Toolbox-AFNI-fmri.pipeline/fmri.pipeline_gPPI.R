@@ -8,6 +8,7 @@ library(tidyr)
 library(dplyr)
 library(fmri.pipeline)
 library(readr)
+library(stringr)
 
 #physio_data <- data.table::fread("/proj/mnhallqlab/projects/mmy3_gppi_prototype/2025-05-29-HC_MEDuSA-gPPI-Prototype.csv")
 physio_data <- data.table::fread("/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-06-27-gPPI-demo.csv")
