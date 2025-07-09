@@ -19,18 +19,34 @@ library(ggplot2)
 library(dplyr)
 library(purrr)
 
-# set root directory - change for your needs
-rootdir <- '/ix/cladouceur/DNPL'
-repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
+sysinfo <- Sys.info()
 
-# load some source code that we'll need to use
-setwd(rootdir)
-source('get_trial_data.R')
+# set root directory - change for your needs
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  out_dir <- '/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection'
+  bsoc_dir <- ''
+  mmc_dir <- ''
+  code_dir <- ''
+  clock_repo <- '~/clock_analysis/'
+  source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
+  source('/Users/dnplserv/vmPFC/Plotting-Scripts/plot_mixed_by_vmPFC_HC.R')
+  #repo_directory <- 
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  rootdir <- '/ix/cladouceur/DNPL'
+  repo_directory <- file.path(rootdir,'HC_vPFC_repo/vPFC-HC-Clock')
+  setwd(rootdir)
+  # load some source code that we'll need to use
+  source('get_trial_data.R')
+}
+
+
 
 # load mixed_by function for analyses
-source(file.path(repo_directory,"/mixed_by.R"))
-source(file.path(rootdir,"/plot_mixed_by_vmPFC_HC.R"))
-
+#source(file.path(repo_directory,"/mixed_by.R")) # this should not be necessary, mixed_by is a function of fmri.pipeline
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  source(file.path(rootdir,"/plot_mixed_by_vmPFC_HC.R"))
+}
 ######################################################################################################
 ######################################################################################################
 #########################################   STUDY 1   ################################################
@@ -43,7 +59,11 @@ source(file.path(rootdir,"/plot_mixed_by_vmPFC_HC.R"))
 ##################################
 
 # load the vmPFC data, filter to within 5s of RT, and select vars of interest
-load('MMclock_clock_Aug2023.Rdata')
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/MMclock_clock_Aug2023.Rdata')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  load('MMclock_clock_Aug2023.Rdata')
+}
 vmPFC <- clock_comb
 vmPFC <- vmPFC %>% filter(evt_time > -5 & evt_time < 5)
 rm(clock_comb)
@@ -51,7 +71,11 @@ vmPFC <- vmPFC %>% select(id,run,run_trial,decon_mean,atlas_value,evt_time,symme
 vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 
 # load in the hippocampus data, filter to within 5s of RT
-load('/ix/cladouceur/DNPL/HC_clock_Aug2023.Rdata')
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/HC_clock_Aug2023.Rdata')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  load('/ix/cladouceur/DNPL/HC_clock_Aug2023.Rdata')
+}
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 
 # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
@@ -72,8 +96,11 @@ Q <- Q %>% select(!decon1)
 
 # Get task behav data
 # (had to download it from UNCDEPENdlab github first)
-df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_fmri')
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  df <- get_trial_data(repo_directory=clock_repo,dataset='mmclock_fmri')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_fmri')
+}
 # select and scale variables of interest
 df <- df %>% 
   group_by(id, run) %>% 
@@ -95,7 +122,11 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
-demo <- read.csv(file=file.path(rootdir, 'fmri/data/MMC_demog.csv'),header=TRUE)
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  demo <- read.csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/MMC_demog.csv',header=TRUE)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  demo <- read.csv(file=file.path(rootdir, 'fmri/data/MMC_demog.csv'),header=TRUE)
+}
 demo <- demo %>% select(!adult & !scandate)
 Q <- inner_join(Q,demo,by=c('id'))
 Q$female <- relevel(as.factor(Q$female),ref='0')
@@ -109,9 +140,10 @@ Q$race <- Q %>% select("AmerIndianAlaskan":"White") %>% rowSums()
 ########################
 ##### Set up models ####
 ########################
-
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # set some baseline variables
 ncores = 20
 
@@ -174,21 +206,8 @@ plot_aic_comparison <- function(model_list) {
 
 # can compare models 1, 2, 4, 8; 1, 3, 4, 8; 1, 5, 6, 8; 1, 5, 7, 8; 1, 3, 7, 8; 1, 5, 7, 8 (not all models are nested)
 
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf4 = ddf4)
-models <- list(ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf4 = ddf4, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf5 = ddf5)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf7 = ddf7)
+models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf3 = ddf3, ddf4 = ddf4, ddf5 = ddf5, ddf6 = ddf6, ddf7 = ddf7, ddf8 = ddf8)
+save(models, file='MMClock-model-comparison-sex.Rdata')
 plot_aic_comparison(models)
 
 # No evidence that including trial or avg hippocampus activity changes model fit. Including ITI worsens it.
@@ -241,9 +260,13 @@ for(i in 1:length(decode_formula)){
                                                  specs=formula(~sex:HCwithin), at = list(HCwithin=c(-1.5,1.5)))),
   )
   # write to file
-  setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-randslopeHCwithin',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-',i,'.Rdata'))
   
 }
 #####################
@@ -253,13 +276,21 @@ for(i in 1:length(decode_formula)){
 # load in data already run
 
 for(j in 1:length(decode_formula)){
-  setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
-  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-randslopeHCwithin10.Rdata'))
   
-  setwd(file.path(rootdir,'fmri/validate_mixed_by_clock_HC_interaction/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  }
+  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-',j,'.Rdata'))
   
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    # my version of plotting script sets paths automatically
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/validate_mixed_by_clock_HC_interaction/'))
+  }
   # Save all plots as pdf - Using Andrew's plot_mixed_by function
-  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'MMClock',totest='censored-withrandslopeHCwithin',toalign='clock',
+  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'MMClock',totest='censored-withrandslope',toalign='clock',
                        toprocess='network-by-HC',CTRflag = "FALSE",hc_LorR = 'LR',flipy = 'FALSE',model_iter = j)
 }
 
@@ -267,11 +298,17 @@ for(j in 1:length(decode_formula)){
 #########################################################################################################
 
 # Now, we can do the same for age!
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # set some baseline variables
-ncores = 20
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  ncores = 26
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  ncores = 20
+}
 # split out by network
 splits = c('evt_time','network','HC_region')
 
@@ -312,21 +349,8 @@ for(i in 1:length(basemodel_formula)){
 
 # can compare models 1, 2, 4, 8; 1, 3, 4, 8; 1, 5, 6, 8; 1, 5, 7, 8; 1, 3, 7, 8; 1, 5, 7, 8 (not all models are nested)
 
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf4 = ddf4)
-models <- list(ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf4 = ddf4, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf5 = ddf5)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf7 = ddf7)
+models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf3 = ddf3, ddf4 = ddf4, ddf5 = ddf5, ddf6 = ddf6, ddf7 = ddf7, ddf8 = ddf8)
+save(models, file='MMClock-model-comparison-age.Rdata')
 plot_aic_comparison(models)
 
 # Once again: no evidence that including trial or avg hippocampus activity changes model fit. Including ITI worsens it.
@@ -361,7 +385,7 @@ decode_formula[[6]] = formula(~age*HCwithin + rt_lag_sc*HCwithin + trial_neg_inv
 decode_formula[[7]] = formula(~age*HCwithin + v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + HCbetween + (1 | id/run)) 
 
 # interaction of age with vmax
-decode_formula[[8]] = formula(~age*vmax_wi*HCwithin + trial_neg_inv_sc*HCwithin + HCbetween + (1 | id/run)) 
+decode_formula[[8]] = formula(~age*v_max_wi*HCwithin + trial_neg_inv_sc*HCwithin + HCbetween + (1 | id/run)) 
 
 # now adding entropy
 decode_formula[[9]] = formula(~age*HCwithin + v_entropy_wi*HCwithin + trial_neg_inv_sc*HCwithin + HCbetween + (1 | id/run)) 
@@ -380,7 +404,7 @@ for(i in 1:length(decode_formula)){
   )
   # write to file
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-agemodels-randslopeHCwithin',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-agemodels-',i,'.Rdata'))
   
 }
 
@@ -391,16 +415,25 @@ for(i in 1:length(decode_formula)){
 # load in data already run
 
 for(j in 1:length(decode_formula)){
-  setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
-  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-agemodels-randslopeHCwithin',j,'.Rdata'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  }
+  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study1-agemodels-',j,'.Rdata'))
   
-  setwd(file.path(rootdir,'fmri/validate_mixed_by_clock_HC_interaction/'))
-  
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/validate_mixed_by_clock_HC_interaction/'))
+  }
   # Save all plots as pdf - Using Andrew's plot_mixed_by function
-  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'MMClock',totest='censored-withrandslopeHCwithin',toalign='clock',
+  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'MMClock',totest='censored-',toalign='clock',
                          toprocess='network-by-HC',CTRflag = "FALSE",hc_LorR = 'LR',flipy = 'FALSE',model_iter = j)
-  
-  setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(paste0(rootdir,'/fmri/mixed_by_output/'))
+  }
 }
 
 #############################
@@ -412,12 +445,20 @@ for(j in 1:length(decode_formula)){
 #############################
 
 # using mixed-by: load in fMRI and MEG data and split by dataset
-df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_fmri')
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  df <- get_trial_data(repo_directory=clock_repo,dataset='mmclock_fmri')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_fmri')
+}
 df <- df %>% select(outcome,rt_lag, rt_lag_sc, rt_csv_sc,rt_csv,id, run, run_trial, last_outcome,v_max_wi,v_entropy_wi,trial_neg_inv_sc,total_earnings)
 
 df$id <- as.character(df$id)
 Q2 <- df;
-demo <- read.csv(file=file.path(rootdir, 'fmri/data/MMC_demog.csv'),header=TRUE)
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  demo <- read.csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/MMC_demog.csv',header=TRUE)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  demo <- read.csv(file=file.path(rootdir, 'fmri/data/MMC_demog.csv'),header=TRUE)
+}
 demo <- demo %>% select(!adult & !scandate)
 demo$sex <- ifelse(demo$female==0,1,
                 ifelse(demo$female==1,0,NA))
@@ -425,7 +466,11 @@ demo$id <- as.character(demo$id)
 Qfmri <- inner_join(Q2,demo,by=c('id'))
 Qfmri$age <- scale(Qfmri$age)
 
-df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_meg')
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  df <- get_trial_data(repo_directory=clock_repo,dataset='mmclock_meg')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  df <- get_trial_data(repo_directory=rootdir,dataset='mmclock_meg')
+}
 df <- df %>% select(outcome,rt_lag, rt_lag_sc, rt_csv_sc,rt_csv,id, run, run_trial, last_outcome,v_max_wi,v_entropy_wi, trial_neg_inv_sc,total_earnings)
 
 df$id <- as.character(df$id)
@@ -443,7 +488,11 @@ Q3$race <- Q3 %>% select("AmerIndianAlaskan":"White") %>% rowSums()
 Q3 <- Q3 %>% filter(rt_csv < 4 & rt_csv > 0.2)
 Q3 <- Q3 %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5, last_outcome=="Omission" ~ -0.5))
 
-modelfits <- read.csv(file.path(rootdir,'trial_data/mmclock_fmri_decay_factorize_selective_psequate_fixedparams_ffx_sceptic_global_statistics.txt'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  modelfits <- read.csv('/Users/dnplserv/clock_analysis/fmri/data/mmclock_fmri_decay_factorize_selective_psequate_fixedparams_ffx_sceptic_global_statistics.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  modelfits <- read.csv(file.path(rootdir,'trial_data/mmclock_fmri_decay_factorize_selective_psequate_fixedparams_ffx_sceptic_global_statistics.txt'))
+}
 modelfits$id <- as.character(modelfits$id)
 Q3 <- inner_join(Q3,modelfits[,c("id","beta")],by="id")
 
@@ -467,11 +516,17 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=sex)
   facet_wrap(~dataset) + theme(legend.position = "none")
 
 # set up mixed_by models
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # set some baseline variables
-ncores = 20
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  ncores = 26
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  ncores = 20
+}
 # split out by network
 rm(decode_formula)
 decode_formula <- NULL
@@ -520,13 +575,17 @@ for (j in 1:length(decode_formula)){
                               specs=formula(~rt_lag_sc:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-',j,'.Rdata'))
 }
 
 # plot emtrends for sex
-load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-withrandslope4.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-4.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
 
@@ -576,12 +635,16 @@ for (j in 1:length(decode_formula)){
                                 specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-',j,'.Rdata'))
 }
 
-load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope1.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-1.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
 
@@ -606,10 +669,14 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=data
 #########################################################################################################
 
 # Now, we can do the same for age!
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+  ncores = 26
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+  ncores = 20
+}
 
-# set some baseline variables
-ncores = 20
 
 # split out by network
 rm(decode_formula)
@@ -659,13 +726,17 @@ for (j in 1:length(decode_formula)){
                               specs=formula(~rt_lag_sc:age), at=list(age=c(-1.5,1.5),rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-',j,'.Rdata'))
 }
 
 # plot emtrends for sex
-load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-withrandslope4.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-mmclock-fmri-meg-pred-rt-4.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
 
@@ -715,12 +786,16 @@ for (j in 1:length(decode_formula)){
                                 specs=formula(~rt_lag_sc:reward_lag_rec:sex), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fmri/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-',j,'.Rdata'))
 }
 
-load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-withrandslope1.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-Study1-fmri-meg-pred-rt-lastoutcome-1.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="MEG" & p.value < 0.05)
 ddq$coef_df_reml %>% filter(effect=="fixed" & dataset=="fMRI" & p.value < 0.05)
 
@@ -745,8 +820,11 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=data
 #########################################################################################################
 
 # Let's look at beta
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # since these are global stats per participant, we don't need lmer models
 m1 <- lm(beta ~ sex, data = Q3[Q3$dataset=="fMRI"])
 summary(m1)
@@ -792,8 +870,11 @@ summary(m10)
 #########################################################################################################
 
 # Beta by age
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # since these are global stats per participant, we don't need lmer models
 m1 <- lm(beta ~ age, data = Q3[Q3$dataset=="fMRI"])
 summary(m1)
@@ -844,13 +925,16 @@ summary(m10)
 ##### Load in and format data ####
 #####     Clock-aligned     ######
 ##################################
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  vmPFC <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/clock_aligned_bsocial_vmPFC.csv.gz')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  rootdir <- '/ix/cladouceur/DNPL/BSOC'
+  repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
+  setwd(rootdir)
+  # load the vmPFC data, filter to within 5s of RT, and select vars of interest
+  vmPFC <- read_csv(file.path(rootdir,'clock_aligned_bsocial_vmPFC.csv.gz'))
+}
 
-rootdir <- '/ix/cladouceur/DNPL/BSOC'
-repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
-setwd(rootdir)
-
-# load the vmPFC data, filter to within 5s of RT, and select vars of interest
-vmPFC <- read_csv(file.path(rootdir,'clock_aligned_bsocial_vmPFC.csv.gz'))
 
 # calculate some variables
 vmPFC <- vmPFC %>% group_by(id, run) %>% mutate(run_trial = trial - min(trial) + 1) %>% ungroup()
@@ -876,7 +960,11 @@ vmPFC <- vmPFC %>% rename(vmPFC_decon = decon_mean)
 
 # now load in HC data
 # load in the hippocampus data, filter to within 5s of RT
-load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  load('/Volumes/Users/Andrew/MEDuSA_data_BSOC/BSOC_HC_clock_TRdiv2.Rdata')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  load(file.path(rootdir,'BSOC_HC_clock_TRdiv2.Rdata'))
+}
 hc <- hc %>% filter(evt_time > -5 & evt_time < 5)
 
 # Compress data from 12 bins to 2 by averaging across anterior 6 bins and posterior 6 bins to create
@@ -896,7 +984,11 @@ Q <- inner_join(vmPFC,hc,by=c("id","run","run_trial","evt_time"))
 Q <- Q %>% select(!decon1)
 
 # Get task behav data
-df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  df <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/bsocial_clock_trial_df.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
+}
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300]
 bsoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240]
@@ -965,8 +1057,13 @@ Q$HCwithin[Q$evt_time < -(Q$iti_prev)] = NA;
 Q$HCbetween[Q$evt_time < -(Q$iti_prev)] = NA;
 
 # add in age and sex variables
-demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
-demo1 <- read_csv(file.path(rootdir,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  demo <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/bsoc_clock_N171_dfx_demoonly.csv')
+  demo1 <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/2025-06-23-Partial-demo-pull-KSOC.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
+  demo1 <- read_csv(file.path(rootdir,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+}
 demo$id <- as.character(demo$id)
 demo1$id <- as.character(demo1$registration_redcapid)
 demo$race <- demo %>% select(registration_race___1:registration_race___999) %>% rowSums()
@@ -998,20 +1095,23 @@ Q$age <- scale(Q$age)
 Q <- Q[!Q$id %in% c(203521, 219084, 220562, 220886, 221193, 440111, 440151),]
 
 # scanner timing was off for this individual
-Q <- Q[!Q$id==221193,]
-
+#Q <- Q[!Q$id==221193,]
+Q <- Q %>% filter(id != 221193 & (id != 440010 & run !=1))
 # this one run failed preprocessing: 440010 run 1
-Q <- Q[!Q$id==440010 & !Q$run==1,]
+#Q <- Q[!(Q$id==440010 & Q$run==1),]
 
 
 ########################
 ##### Set up models ####
 ########################
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+  ncores = 26
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fMRI/mixed_by_output'))
+  ncores = 20
+}
 
-setwd(paste0(rootdir,'/fMRI/mixed_by_output'))
-
-# set some baseline variables
-ncores = 20
 
 # split out by network
 splits = c('evt_time','network','HC_region')
@@ -1072,21 +1172,8 @@ plot_aic_comparison <- function(model_list) {
 
 # can compare models 1, 2, 4, 8; 1, 3, 4, 8; 1, 5, 6, 8; 1, 5, 7, 8; 1, 3, 7, 8; 1, 5, 7, 8 (not all models are nested)
 
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf4 = ddf4)
-models <- list(ddf4 = ddf4, ddf8 = ddf8)
-models <- list(ddf4 = ddf4, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf4 = ddf4)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf6 = ddf6)
-models <- list(ddf1 = ddf1, ddf5 = ddf5)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7)
-models <- list(ddf1 = ddf1, ddf3 = ddf3, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf5 = ddf5, ddf7 = ddf7, ddf8 = ddf8)
-models <- list(ddf1 = ddf1, ddf7 = ddf7)
+models <- list(ddf1 = ddf1, ddf2 = ddf2, ddf3 = ddf3, ddf4 = ddf4, ddf5 = ddf5, ddf6 = ddf6, ddf7=ddf7,ddf8 = ddf8)
+save(models, file='BSocial-model-comparison-sex.Rdata')
 plot_aic_comparison(models)
 
 # same pattern as Study 1, so will use the same base model
@@ -1136,7 +1223,7 @@ for(i in 1:length(decode_formula)){
   )
   # write to file
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-randslopeHCwithin',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-',i,'.Rdata'))
   
 }
 #####################
@@ -1146,22 +1233,30 @@ for(i in 1:length(decode_formula)){
 # load in data already run
 
 for(j in 1:length(decode_formula)){
-  setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
-  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-randslopeHCwithin',j,'.Rdata'))
-  
-  setwd(file.path(rootdir,'fMRI/validate_mixed_by_clock_HC_interaction/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
+  }
+  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-',j,'.Rdata'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fMRI/validate_mixed_by_clock_HC_interaction/'))
+  }
   
   # Save all plots as pdf - Using Andrew's plot_mixed_by function
-  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'BSOC',totest='censored-withrandslopeHCwithin',toalign='clock',
+  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'BSOC',totest='censored',toalign='clock',
                          toprocess='network-by-HC',CTRflag = "FALSE",hc_LorR = 'LR',flipy = 'FALSE',model_iter = j)
 }
 
 ##############################################################################################################################
 ##############################################################################################################################
 # Repeating for age
-
-setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
+}
 # store models in a data-frame so they can be bulk run later.
 rm(decode_formula)
 decode_formula <- NULL
@@ -1207,7 +1302,7 @@ for(i in 1:length(decode_formula)){
   )
   # write to file
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-agemodels-randslopeHCwithin',i,'.Rdata'))
+  save(ddf,file=paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-agemodels-',i,'.Rdata'))
   
 }
 #####################
@@ -1217,13 +1312,19 @@ for(i in 1:length(decode_formula)){
 # load in data already run
 
 for(j in 1:length(decode_formula)){
-  setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
-  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-agemodels-randslopeHCwithin',j,'.Rdata'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
+  }
+  load(paste0(curr_date,'_censored-vmPFC-HC-network-clock-Study2-agemodels-',j,'.Rdata'))
   
-  setwd(file.path(rootdir,'fMRI/validate_mixed_by_clock_HC_interaction/'))
-  
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fMRI/validate_mixed_by_clock_HC_interaction/'))
+  }
   # Save all plots as pdf - Using Andrew's plot_mixed_by function
-  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'BSOC',totest='censored-withrandslopeHCwithin-agemodels',toalign='clock',
+  plot_mixed_by_vmPFC_HC(ddf=ddf,behavmodel = 'BSOC',totest='censored-agemodels',toalign='clock',
                          toprocess='network-by-HC',CTRflag = "FALSE",hc_LorR = 'LR',flipy = 'FALSE',model_iter = j)
 }
 
@@ -1235,12 +1336,19 @@ for(j in 1:length(decode_formula)){
 #############################
 #############################
 
-rootdir <- '/ix/cladouceur/DNPL/BSOC'
-repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
-setwd(rootdir)
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  rootdir <- '/ix/cladouceur/DNPL/BSOC'
+  repo_directory <- file.path('/ix/cladouceur/DNPL/HC_vPFC_repo/vPFC-HC-Clock')
+  setwd(rootdir)
+}
 
 # Get task behav data
-df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  df <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/bsocial_clock_trial_df.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  df <- read_csv(file.path(rootdir,'bsocial_clock_trial_df.csv'))
+}
 split_ksoc_bsoc <- df %>% group_by(id) %>% summarize(maxT = max(trial)) %>% ungroup()
 ksoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==300]
 bsoc <- split_ksoc_bsoc$id[split_ksoc_bsoc$maxT==240]
@@ -1301,8 +1409,13 @@ behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(r
 Q <- behav
 
 # add in age and sex variables
-demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
-demo1 <- read_csv(file.path(rootdir,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  demo <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/bsoc_clock_N171_dfx_demoonly.csv')
+  demo1 <- read_csv('/Volumes/Users/Andrew/MEDuSA_data_BSOC/2025-06-23-Partial-demo-pull-KSOC.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  demo <- read_csv(file.path(rootdir,'bsoc_clock_N171_dfx_demoonly.csv'))
+  demo1 <- read_csv(file.path(rootdir,'2025-02-27-Partial-demo-pull-KSOC.csv'))
+}
 demo$id <- as.character(demo$id)
 demo1$id <- as.character(demo1$registration_redcapid)
 demo$race <- demo %>% select(registration_race___1:registration_race___999) %>% rowSums()
@@ -1329,7 +1442,11 @@ Q <- Q %>% dplyr::mutate(reward_lag_rec = case_when(last_outcome=="Reward" ~ 0.5
 #Q$group <- relevel(factor(Q$group),ref='HC')
 
 # add in beta
-modelfits <- read.csv(file.path(rootdir,'fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_ffx_sceptic_global_statistics.csv'))
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  modelfits <- read.csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/BSOCIAL/fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  modelfits <- read.csv(file.path(rootdir,'fMRIEmoClock_decay_factorize_selective_psequate_fixedparams_fmri_ffx_sceptic_global_statistics.csv'))
+}
 modelfits$id <- sub("_1$", "", modelfits$id)
 Q <- inner_join(Q,modelfits[,c("id","beta")],by="id")
 
@@ -1338,10 +1455,10 @@ Q <- inner_join(Q,modelfits[,c("id","beta")],by="id")
 Q <- Q[!Q$id %in% c(203521, 219084, 220562, 220886, 221193, 440111, 440151),]
 
 # scanner timing was off for this individual
-Q <- Q[!Q$id==221193,]
+#Q <- Q[!Q$id==221193,]
 
 # this one run failed preprocessing: 440010 run 1
-Q <- Q[!Q$id==440010 & !Q$run==1,]
+Q <- Q %>% filter(id != 221193 & !(id == 440010 & run == 1))
 
 
 # look at total earnings by sex
@@ -1362,7 +1479,11 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=sex1
 ########################
 
 # set some baseline variables
-ncores = 20
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  ncores = 26
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  ncores = 20
+}
 
 # split out by network
 rm(decode_formula)
@@ -1412,13 +1533,17 @@ for (j in 1:length(decode_formula)){
                               specs=formula(~rt_lag_sc:sex1), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'/fMRI/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'/fMRI/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-study2-pred-rt-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-study2-pred-rt-',j,'.Rdata'))
 }
 
 # plot emtrends for sex
-load(paste0(curr_date,'-Age-Sex-clock-study2-pred-rt-withrandslope6.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-study2-pred-rt-6.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & p.value < 0.05)
 
 tab <- as.data.frame(ddq$emtrends_list$RT) %>% select(!c(model_name,rhs,outcome)) %>%
@@ -1466,12 +1591,16 @@ for (j in 1:length(decode_formula)){
                                 specs=formula(~rt_lag_sc:reward_lag_rec:sex1), at=list(rt_lag_sc = c(-2,-1,0,1,2)))
                   )
   )
-  setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
+  if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+    setwd(out_dir)
+  } else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+    setwd(file.path(rootdir,'fMRI/mixed_by_output/'))
+  }
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study2-pred-rt-lastoutcome-withrandslope',j,'.Rdata'))
+  save(ddq,file=paste0(curr_date,'-Age-Sex-clock-Study2-pred-rt-lastoutcome-',j,'.Rdata'))
 }
 
-load(paste0(curr_date,'-Age-Sex-clock-Study2-pred-rt-lastoutcome-withrandslope5.Rdata'))
+load(paste0(curr_date,'-Age-Sex-clock-Study2-pred-rt-lastoutcome-5.Rdata'))
 ddq$coef_df_reml %>% filter(effect=="fixed" & p.value < 0.05)
 
 # by sex and last outcome: won't work for models without outcome
@@ -1494,8 +1623,11 @@ g + geom_point(stat="identity",position=position_dodge(width=0.5),aes(color=sex1
 #########################################################################################################
 
 # Let's look at beta
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # since these are global stats per participant, we don't need lmer models
 m1 <- lm(beta ~ sex, data = Q)
 summary(m1)
@@ -1541,8 +1673,11 @@ summary(m10)
 #########################################################################################################
 
 # Beta by age
-setwd(paste0(rootdir,'/fmri/mixed_by_output'))
-
+if (grepl('OAC-TOLMAN',sysinfo[[4]])){ # Andrew
+  setwd(out_dir)
+} else if (grepl('crc.pitt.edu',sysinfo[[4]]) & grepl('westbroo',sysinfo[[7]])){ #Ceci
+  setwd(paste0(rootdir,'/fmri/mixed_by_output'))
+}
 # since these are global stats per participant, we don't need lmer models
 m1 <- lm(beta ~ age, data = Q)
 summary(m1)
