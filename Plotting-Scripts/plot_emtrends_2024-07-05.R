@@ -6,9 +6,9 @@ library(ggplot2)
 
 # 2024-06-27 AndyP
 # Plotting emmeans and emtrends for B2B
-do_vPFC_entropy = FALSE
+do_vPFC_entropy = TRUE
 do_vPFC_vmax = FALSE
-do_vPFC_HC_entropy = TRUE
+do_vPFC_HC_entropy = FALSE
 do_vPFC_HC_vmax = FALSE
 do_vPFC_HC = FALSE
 
@@ -23,8 +23,8 @@ if (do_vPFC_entropy){
   emt_mmclock_meg <- ddq$emtrends_list
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-01-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
+  #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2025-07-28-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-offline-only-1.Rdata')
   emt_explore <- ddq$emtrends_list
-  
   
   RTxO_mmclock_fmri <- emt_mmclock_fmri$RTxO %>% mutate(dataset = 'Experiment 1 fMRI')
   RTxO_mmclock_meg <- emt_mmclock_meg$RTxO %>% mutate(dataset = 'Experiment 1 MEG')

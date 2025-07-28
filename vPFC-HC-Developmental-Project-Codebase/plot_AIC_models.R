@@ -23,7 +23,8 @@ all_df <- plot_aic_comparison(models)
 all_df0 <- all_df %>% filter(evt_time==0)
 
 ggplot(data=all_df0,aes(x=name,y=AIC,color=HC_region,group=HC_region)) + 
-  geom_point(size=2) + geom_line() + facet_wrap(~network,scales='free_y') + ggtitle('MMClock sex')
+  geom_point(size=2) + geom_line() + facet_wrap(~network,scales='free_y') + ggtitle('MMClock sex Model Comparison') +
+  scale_x_discrete(guide=guide_axis(angle=90))
 
 
 load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Age_vPFC_HC_model_selection/Bsocial-model-comparison-sex.Rdata')
@@ -32,4 +33,5 @@ all_df <- plot_aic_comparison(models)
 all_df0 <- all_df %>% filter(evt_time==0)
 
 ggplot(data=all_df0,aes(x=name,y=AIC,color=HC_region,group=HC_region)) + 
-  geom_point(size=2) + geom_line() + facet_wrap(~network,scales='free_y') + ggtitle('BSocial sex')
+  geom_point(size=2) + geom_line() + facet_wrap(~network,scales='free_y') + ggtitle('BSocial sex Model Comparison') +
+  scale_x_discrete(guide=guide_axis(angle=90))

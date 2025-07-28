@@ -113,12 +113,12 @@ gpa <- setup_glm_pipeline(
 )
 
 
-gpa <- build_l1_models(gpa, from_spec_file = '/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/AI_level1_ExploreHC_Andrew.yaml')
+#gpa <- build_l1_models(gpa, from_spec_file = '/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/AI_level1_ExploreHC_Andrew.yaml')
 
-#gpa <- build_l1_models(gpa)
+gpa <- build_l1_models(gpa)
 
 #rm(gpa)
-#load('/Users/dnplserv/MMC-gPPI/AH-ventropywi-gPPI-test.Rdata')
+load('/Users/dnplserv/MMC-gPPI/AH-ventropywi-gPPI-test.Rdata')
 
 gpa$run_data <- gpa$run_data %>% mutate(run_nifti = run_nifti,exclude_run = FALSE)
 
@@ -129,6 +129,10 @@ gpa$run_data <- gpa$run_data %>% mutate(exlude_run = FALSE, exclude_subject = FA
 gpa <- setup_l2_models(gpa)
 
 gpa <- build_l3_models(gpa)
+gpa$subject_data <- gpa$subject_data  %>% mutate(exclude_subject = FALSE)
+gpa <- setup_l3_models(gpa)
+
+source('/Volumes/Users/Andrew/2025-05-29-MMC-gPPI-Prototype-forMNH/glm_helper_functions.R')
 
 gpa <- finalize_pipeline_configuration(gpa)
 

@@ -8,6 +8,10 @@ library(wesanderson)
 library(tidyverse)
 library(ggnewscale)
 library(quest)
+library(fmri.pipeline)
+library(parallel)
+library(doParallel)
+library(lmerTest)
 
 # start with vmPFC simple, add in term by term, eventually add HC interaction
 repo_directory <- "~/clock_analysis"
@@ -152,7 +156,7 @@ if (do_rand_slopes){
   decode_formula[[2]] = formula(~ age + last_outcome + run_trial0_neg_inv_sc + rt_lag_sc + iti_lag_sc + (1 + v_max_wi |id) + (1|run))
   #decode_formula[[3]] = formula(~ age + last_outcome + rt_lag_sc + iti_lag_sc + v_max_wi + v_entropy_wi + (1 + v_entropy_wi + v_max_wi |id) + (1|run))
   splits = c('evt_time','network')
-  source("~/fmri.pipeline/R/mixed_by.R")
+  #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
     df0 <- decode_formula[[i]]
@@ -167,7 +171,7 @@ if (do_rand_slopes){
 }
 
 if (do_rt_pred_fmri){
-  for (i in 1:2){
+  for (i in 1){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/')
     model_str <- paste0('-vPFC-network-',toalign,'-Explore-ranslopes-HConly-trial_mod-trial1-10included-nofixedeffect-',i,'.Rdata')
     model_str <- Sys.glob(paste0('*',model_str))
@@ -189,7 +193,7 @@ if (do_rt_pred_fmri){
     qdf$id <- as.integer(qdf$id)
     #qdf <- qdf %>% select(!outcome)
     #qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate = estimate1)
-    qdf <- qdf %>% group_by(id,network) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
+    qdf <- qdf %>% group_by(id,network) %>% filter(evt_time < -0.6) %>% summarize(estimate = mean(estimate,na.rm=TRUE)) %>% ungroup()
     qdf <- qdf %>% group_by(network) %>% mutate(estimate1 = scale(estimate)) %>% ungroup() %>% select(!estimate) %>% rename(estimate=estimate1)
     #qdf %>% group_by(evt_time) %>% mutate(estimate = quest::winsor(estimate,z.min=2,z.max=2,to.na=TRUE)) %>% ungroup()
     source('/Users/dnplserv/clock_analysis/fmri/keuka_brain_behavior_analyses/dan/get_trial_data.R')
@@ -305,7 +309,7 @@ if (do_rt_pred_fmri){
       #decode_formula[[2]] <- formula(~(run_trial0_neg_inv_sc + rt_lag_sc + v_max_wi_lag + v_entropy_wi + subj_level_rand_slope + last_outcome)^2 + rt_lag_sc:last_outcome:subj_level_rand_slope + rt_vmax_lag_sc * run_trial0_neg_inv_sc * subj_level_rand_slope + (1 + rt_vmax_lag_sc + rt_lag_sc | id/run))
     }
     splits = c('network')
-    source('~/fmri.pipeline/R/mixed_by.R')
+   #source('~/fmri.pipeline/R/mixed_by.R')
     print(i)
     for (j in 1:length(decode_formula)){
       if (!simple_model && !trial_mod_model){
@@ -413,9 +417,9 @@ if (do_rt_pred_fmri){
       setwd('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
       curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
       if (j==1){
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-offline-only-',i,'.Rdata'))
       } else {
-        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-',i,'.Rdata'))
+        save(ddq,file=paste0(curr_date,'-vmPFC-network-ranslopes-',toalign,'-Explore-pred-rt_csv_sc-slo-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-offline-only-',i,'.Rdata'))
       }
     }
   }
