@@ -790,19 +790,53 @@ ggplot(data=ddq ,aes(x=score,y=rt_lag_sc.trend,ymin=rt_lag_sc.trend-std.error,ym
 
 dfrt <- df3 %>% select(dataset,id,run,rt_csv)
 
-df_acf <- dfrt %>% 
-  group_by(dataset,id,run) %>%
-  nest() %>% 
-  mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
-  mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,], .x$acf[2,,], .x$acf[3,,], .x$acf[4,,], .x$acf[5,,], .x$acf[6,,], .x$acf[7,,], .x$acf[8,,], .x$acf[9,,], .x$acf[10,,])))) %>%
-  unnest(data)
+# df_acf <- dfrt %>% 
+#   group_by(dataset,id,run) %>%
+#   nest() %>% 
+#   mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
+#   mutate(data = map(data, ~as.data.frame(rbind(.x$acf[1,,], .x$acf[2,,], .x$acf[3,,], .x$acf[4,,], .x$acf[5,,], .x$acf[6,,], .x$acf[7,,], .x$acf[8,,], .x$acf[9,,], .x$acf[10,,])))) %>%
+#   unnest(data)
+# 
+# df_acf_lag <- dfrt %>% 
+#   group_by(dataset,id,run) %>%
+#   nest() %>% 
+#   mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
+#   mutate(data = map(data, ~as.data.frame(rbind(.x$lag[1,,], .x$lag[1,,], .x$lag[2,,], .x$lag[3,,], .x$lag[4,,], .x$lag[5,,], .x$lag[6,,], .x$lag[7,,], .x$lag[8,,], .x$lag[9,,], .x$lag[10,,])))) %>%
+#   unnest(data)
+# 
+# df_acf <- df_acf %>% arrange(dataset,id,run)
+# df_acf_lag <- df_acf_lag %>% arrange(dataset,id,run)
 
-df_acf_lag <- dfrt %>% 
-  group_by(dataset,id,run) %>%
-  nest() %>% 
-  mutate(data = map(data, ~acf(., lag.max=10, type="correlation", plot=F))) %>%
-  mutate(data = map(data, ~as.data.frame(rbind(.x$lag[1,,], .x$lag[1,,], .x$lag[2,,], .x$lag[3,,], .x$lag[4,,], .x$lag[5,,], .x$lag[6,,], .x$lag[7,,], .x$lag[8,,], .x$lag[9,,], .x$lag[10,,])))) %>%
-  unnest(data)
+################################################
+### Plot changing v_max_wi and v_entropy_wi ####
+################################################
 
-df_acf <- df_acf %>% arrange(dataset,id,run)
-df_acf_lag <- df_acf_lag %>% arrange(dataset,id,run)
+ggplot(data=df3 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=v_max,color=rewFunc,group=rewFunc)) + geom_smooth(method='loess',span=0.15) + facet_grid(~dataset)
+ggplot(data=df3 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=run_trial,y=v_entropy,color=rewFunc,group=rewFunc)) + geom_smooth(method='loess',span=0.15) + facet_grid(~dataset)
+
+
+################################################
+#### plot model stats, regen data frame. #######
+################################################
+
+stats_mmcfmri <- read_csv('/Users/dnplserv/clock_analysis/fmri/data/mmclock_fmri_decay_factorize_selective_psequate_mfx_sceptic_global_statistics.csv')
+stats_mmcfmri <- stats_mmcfmri %>% select(!dataset)
+stats_mmcfmri <- stats_mmcfmri %>% mutate(dataset = 'Experiment 1 - fMRI')
+
+stats_mmcmeg <- read_csv('/Users/dnplserv/clock_analysis/meg/data/mmclock_meg_decay_factorize_selective_psequate_mfx_sceptic_global_statistics.csv')
+stats_mmcmeg <- stats_mmcmeg %>% select(!dataset)
+stats_mmcmeg <- stats_mmcmeg %>% mutate(id2 = str_extract(id, "^[0-9]+")) %>% select(!id) %>% rename(id = id2)
+stats_mmcmeg <- stats_mmcmeg %>% mutate(dataset = 'Experiment 1 - MEG Replication')
+
+stats_exp <- read_csv('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/Explore_HC/explore_decay_factorize_selective_psequate_fixedparams_fmri_mfx_sceptic_global_statistics.csv')
+stats_exp <- stats_exp %>% select(!dataset)
+stats_exp <- stats_exp %>% mutate(dataset = 'Experiment 2')
+demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
+demo <- demo %>% select(!id) %>% select(registration_redcapid,registration_group) %>% rename(id=registration_redcapid,group=registration_group)
+stats_exp <- inner_join(stats_exp,demo,by=c('id'))
+stats_exp <- stats_exp %>% filter(group=='HC') %>% select(!group)
+
+
+jstats <- rbind(stats_mmcfmri,stats_mmcmeg)
+jstats <- rbind(jstats,stats_exp)
+
