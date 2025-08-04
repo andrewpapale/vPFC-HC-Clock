@@ -26,12 +26,16 @@ nF = length(elig_files)
 for (iF in 1:nF){
   id <- str_split(elig_files[iF],'/')[[1]][8]
   run <- str_split(elig_files[iF],'/')[[1]][10]
+  file <- str_split(elig_files[iF],'/')[[1]][11]
   for (iD in 1:length(dirs_new)){
     if (id==dirs_new[iD]){
       dir.create(paste0(dirs_new_full[iD],'/mni_5mm_aroma/',run))
-      file.copy(elig_files[iF],paste0(dirs_new_full[iD],'/mni_5mm_aroma/',run))
+      if (!file.exists(paste0(dirs_new_full[iD],'/mni_5mm_aroma/',run,'/',file))){
+        file.copy(elig_files[iF],paste0(dirs_new_full[iD],'/mni_5mm_aroma/',run))
+      }
       break;
     }
   }
+  print(id)
 }
 
