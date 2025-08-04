@@ -6,7 +6,7 @@ library(pracma)
 
 ncores = 26
 do_vPFC = TRUE
-do_network = TRUE
+do_network = FALSE
 do_symmetry = FALSE
 do_HC = FALSE
 do_vPFC_HC = TRUE
@@ -107,7 +107,7 @@ Q <- Q %>% mutate(network = case_when(
 Q <- Q %>% rename(vmPFC_decon = decon_mean)
 Q <- Q %>% arrange(id,run,trial,evt_time)
 Q <- Q %>% filter(evt_time > -4 & evt_time < 4)
-
+Q <- Q %>% filter(!(id %in% c(210290, 440311, 440336)))
 
 Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
 Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
@@ -189,7 +189,7 @@ if (do_network){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-scannersplit-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vmPFC-network-clock-HConly-trial1-10included-RTcorrected-QCfailed-removed-N=40-',i,'.Rdata'))
   }
 }
 if (do_symmetry){
@@ -364,7 +364,7 @@ if (do_HC){
   decode_formula[[3]] = formula(~v_max_wi +  (1|id/run))
   decode_formula[[4]] = formula(~v_entropy_wi +  (1|id/run))
   qT <- c(-0.8,0.46)
-  splits = c('evt_time','HC_region','scan_which')
+  splits = c('evt_time','HC_region')
   #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -374,7 +374,7 @@ if (do_HC){
                     padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                     tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE))#,
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-RTcorrected-scannersplit-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-HC-region-clock-HConly-trial1-10included-RTcorrected-',i,'.Rdata'))
   }
 }
 
@@ -596,7 +596,7 @@ if (do_vPFC_HC){
   
   qT2 <- c(-2.62,-0.544,0.372, 0.477)
   qT1 <- c(-2.668, -0.12, 0.11, 0.258, 0.288, 0.308, 0.323, 0.348)
-  splits = c('evt_time','network','HC_region','scan_which')
+  splits = c('evt_time','network','HC_region')
   #source("~/fmri.pipeline/R/mixed_by.R")
   for (i in 1:length(decode_formula)){
     setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
@@ -629,7 +629,7 @@ if (do_vPFC_HC){
                       # )
       )
     curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-RTcorrected-scannersplit-',i,'.Rdata'))
+    save(ddf,file=paste0(curr_date,'-Explore-vPFC-HC-network-clock-HConly-trial_and_run_trial0-RTcorrected-QCfailed-removed-N=40-',i,'.Rdata'))
   }
   
   
@@ -792,6 +792,7 @@ if (do_vPFC_HC_fb){
   
   Q$rt_bin <- relevel(as.factor(Q$rt_bin),ref='-0.5')
   Q$trial_bin <- relevel(as.factor(Q$trial_bin),ref='Middle')
+  Q <- Q %>% filter(!(id %in% c(210290, 440311, 440336)))
   
   demo <- readRDS('/Volumes/Users/Andrew/MEDuSA_data_Explore/explore_n146.rds')
   demo <- demo %>% select(registration_redcapid,age,gender,registration_group,wtar,education_yrs)

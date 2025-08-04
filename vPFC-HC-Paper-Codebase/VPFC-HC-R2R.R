@@ -840,3 +840,42 @@ stats_exp <- stats_exp %>% filter(group=='HC') %>% select(!group)
 jstats <- rbind(stats_mmcfmri,stats_mmcmeg)
 jstats <- rbind(jstats,stats_exp)
 
+ggplot(data=jstats, aes(x=alpha_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('alpha - learning rate')
+ggplot(data=jstats, aes(x=beta_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('beta - inverse temperature')
+ggplot(data=jstats, aes(x=gamma_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('gamma - selective maintenance')
+ggplot(data=jstats, aes(x=R2)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('model R^2 fits')
+
+#############################################
+### entropy vs Npeaks and avg prominence ####
+#############################################
+
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/mmclock_fmri_peaks.Rdata')
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/explore_peaks.Rdata')
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-07-vPFC-HC-Behavior.Rdata')
+
+
+explore_peaks <- explore_peaks %>% filter(!is.infinite(peaks.prominence)) %>% 
+  group_by(id,trial) %>% 
+  summarize(nP = length(peaks.peak), maxProm = max(peaks.prominence,na.rm=TRUE)) %>% 
+  ungroup()
+
+mmclock_fmri_peaks <- mmclock_fmri_peaks %>% filter(!is.infinite(peaks.prominence)) %>% 
+  group_by(id,trial) %>% 
+  summarize(nP = length(peaks.peak), maxProm = max(peaks.prominence,na.rm=TRUE)) %>% 
+  ungroup()
+
+mmclock_fmri_peaks <- mmclock_fmri_peaks %>% mutate(dataset = 'Experiment 1 - fMRI')
+explore_peaks <- explore_peaks %>% mutate(dataset = 'Experiment 2')
+mmclock_fmri_peaks$id <- as.character(mmclock_fmri_peaks$id)
+explore_peaks$id <- as.character(explore_peaks$id)
+
+peaks_fmri <- rbind(mmclock_fmri_peaks,explore_peaks)
+
+df3 <- df3 %>% filter(dataset != 'Experiment 1 - MEG Replication')
+
+df4 <- inner_join(df3,peaks_fmri,by=c('dataset','id','trial'))
+
+df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(zmaxProm = scale(maxProm), qzmaxProm = ntile(zmaxProm,5)) %>% ungroup()
+
+ggplot(df4, aes(x=nP,y=v_entropy,group=nP)) + geom_boxplot(notch=TRUE) + facet_wrap(~dataset) + xlab('Number of Peaks')
+#ggplot(df4, aes(x=v_max,y=v_entropy,group=rewFunc)) + geom_point() + facet_wrap(~dataset) 
