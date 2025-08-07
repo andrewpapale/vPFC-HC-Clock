@@ -662,7 +662,7 @@ statsall <- rbind(statsall,stats3)
 
 ddq <- inner_join(ddq,statsall,by=c('dataset','id'))
 
-ddq <- ddq %>% group_by(dataset) %>% mutate(rt_lag_sc = scale(estimate),tau_ffx_sc = scale(1/beta_ffx)) %>% ungroup()
+ddq <- ddq %>% group_by(dataset) %>% mutate(rt_lag_sc = scale(estimate),tau_ffx_sc = scale(1/beta_transformed_ffx)) %>% ungroup()
 
 ggplot(data=ddq,aes(x=tau_ffx_sc,y=rt_lag_sc)) + geom_point() + facet_wrap(~dataset) +
   geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
@@ -844,6 +844,8 @@ ggplot(data=jstats, aes(x=alpha_transformed_ffx)) + geom_histogram(bins=30) + fa
 ggplot(data=jstats, aes(x=beta_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('beta - inverse temperature')
 ggplot(data=jstats, aes(x=gamma_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('gamma - selective maintenance')
 ggplot(data=jstats, aes(x=R2)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('model R^2 fits')
+
+ggplot(data=jstats, aes(x=1/beta_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('1/beta - temperature')
 
 #############################################
 ### entropy vs Npeaks and avg prominence ####
