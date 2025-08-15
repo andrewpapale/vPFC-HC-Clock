@@ -98,3 +98,45 @@ for (iF in 1:nF){
   }
   print(id)
 }
+
+nF <- length(motion_files0)
+nD <- length(elig_files)
+ix2rem_conf <- NULL
+ix2rem_motion <- NULL
+for (iF in 1:nF){
+  motion_temp_id <- str_split(motion_files0[iF],'/')[[1]][8]
+  motion_temp_run <- str_split(motion_files0[iF],'/')[[1]][10]
+  conf_temp_id <- str_split(conf_files0[iF],'/')[[1]][8]
+  conf_temp_run <- str_split(conf_files0[iF],'/')[[1]][10]
+  in_the_set <- FALSE
+  for (iD in 1:nD){
+    mri_temp_id <- str_split(elig_files[iD],'/')[[1]][8]
+    mri_temp_run <- str_split(elig_files[iD],'/')[[1]][10]
+    if (conf_temp_id==mri_temp_id && conf_temp_run==mri_temp_run){
+      in_the_set <- TRUE
+    }
+  }
+  if (in_the_set==FALSE){
+    ix2rem_conf <- rbind(ix2rem_conf,iF)
+  }
+  in_the_set <- FALSE
+  for (iD in 1:nD){
+    mri_temp_id <- str_split(elig_files[iD],'/')[[1]][8]
+    mri_temp_run <- str_split(elig_files[iD],'/')[[1]][10]
+    if (motion_temp_id==mri_temp_id && motion_temp_run==mri_temp_run){
+      in_the_set <- TRUE
+    }
+  }
+  if (in_the_set==FALSE){
+    ix2rem_motion <- rbind(ix2rem_motion,iF)
+  }  
+}
+
+save(ix2rem_motion, file='ix2rem_motion.Rdata')
+save(ix2rem_conf, file='ix2rem_conf.Rdata')
+
+conf_files0 <- conf_files0[-ix2rem_conf]
+motion_files0 <- motion_files0[-ix2rem_motion]
+
+save(motion_files0,file='motion_files.Rdata')
+save(conf_files0,file='confound_files.Rdata')

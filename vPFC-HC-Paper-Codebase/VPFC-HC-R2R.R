@@ -165,13 +165,23 @@ df3 <- df3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
 
 df3$trial_bin <- factor(df3$trial_bin, levels = c('1-5','6-10','11-15','16-20','21-25','26-30','30-35','36-40','40-45','46-50','51-55','55-63'))
 
+
 df0 <- df3 %>% group_by(id,dataset,rewFunc,trial_bin) %>% summarize(rt_csv = mean(rt_csv,na.rm=TRUE)) %>% ungroup()
 df0 <- df0 %>% pivot_wider(names_from='rewFunc',values_from='rt_csv') %>% mutate(rt_diff_IEV = IEV - (CEV+CEVR)/2, rt_diff_DEV = DEV - (CEV+CEVR)/2, rt_unlearnable = (CEV+CEVR)/2 - mean((CEV+CEVR)/2,na.rm=TRUE)) %>% pivot_longer(cols = c('rt_diff_IEV','rt_diff_DEV','rt_unlearnable'))
 df0 <- df0 %>% select(!DEV & !IEV & !CEV & !CEVR) %>% filter(dataset != 'Experiment 2')
 ggplot(df0,aes(x=trial_bin,y=value)) + geom_smooth(aes(group=name,color=name)) + facet_wrap(~dataset) + theme(axis.text.x = element_text(angle = 45, vjust=0.5,hjust=0.5)) + ylab('RT difference')
 
 
-df0 <- df3 %>% group_by(id,dataset,rewFunc) %>% summarize(score = sum(score_csv,na.rm=TRUE)/max(run_trial)) %>% ungroup()
+df1 <- df3 %>% group_by(id,dataset,rewFunc) %>% summarize(score = sum(score_csv,na.rm=TRUE)/max(run_trial)) %>% ungroup()
+
+pal <- NULL
+pal[2] <- '#009B72'
+pal[1] <- '#D65B26'
+pal[3] <- '#6F6AB0'
+pal[4] <- '#E50886'
+
+ggplot(df1, aes(x=score,fill=rewFunc)) + geom_histogram(bins=30,color="black") + facet_grid(rewFunc~dataset) + theme_minimal() + scale_fill_manual(values = pal)
+
 df0 <- df0 %>% group_by(dataset) %>% pivot_wider(names_from='rewFunc',values_from='score') %>% mutate(score_diff_IEV = IEV - (CEV+CEVR)/2, score_diff_DEV = DEV - (CEV+CEVR)/2) %>% pivot_longer(cols = c('score_diff_IEV','score_diff_DEV')) %>% ungroup()
 df0 <- df0 %>% select(!DEV & !IEV & !CEV & !CEVR) %>% filter(dataset != 'Experiment 2')
 df0$name <- factor(df0$name,levels=c('score_diff_DEV','score_diff_IEV'))
@@ -881,3 +891,17 @@ df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(zmaxProm = scale(maxProm), qz
 
 ggplot(df4, aes(x=nP,y=v_entropy,group=nP)) + geom_boxplot(notch=TRUE) + facet_wrap(~dataset) + xlab('Number of Peaks')
 #ggplot(df4, aes(x=v_max,y=v_entropy,group=rewFunc)) + geom_point() + facet_wrap(~dataset) 
+
+
+
+#########################
+### Explore demo ########
+#########################
+
+exp <- read_csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/explore_clock_with_income.csv') %>% rename(id = registration_redcapid)
+exp <- exp %>% filter(registration_group == 'HC')
+
+income <- readxl::read_excel('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/ explore_clock_income.xlsx') %>% rename(id = registration_redcapid)
+
+exp <- inner_join(exp,income,by=c('id'))
+exp <- exp %>% filter(registration_group.x == 'HC') %>% select(!registration_group.y) %>% rename(group = registration_group.x)
