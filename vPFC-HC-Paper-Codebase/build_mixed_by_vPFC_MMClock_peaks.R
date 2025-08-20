@@ -125,26 +125,27 @@ decode_formula[[2]] = formula(~ age + sex + num_peaks + trial_neg_inv_sc + last_
 
 qT <- c(-0.7,0.43)
 
-splits = c('evt_time','network')
-#source("~/fmri.pipeline/R/mixed_by.R")
-for (i in 1:length(decode_formula)){
-  setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
-  print(decode_formula[[i]])
-  ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
-                  padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                  emmeans_spec = list(
-                     P = list(outcome='vmPFC_decon',model_name='model1',
-                              specs=formula(~num_peaks)))
-  )
-  curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
-  save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-numpeaks-',i,'.Rdata'))
-}
+# splits = c('evt_time','network')
+# #source("~/fmri.pipeline/R/mixed_by.R")
+# for (i in 1:length(decode_formula)){
+#   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
+#   print(decode_formula[[i]])
+#   ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+#                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
+#                   tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
+#                   emmeans_spec = list(
+#                      P = list(outcome='vmPFC_decon',model_name='model1',
+#                               specs=formula(~num_peaks)))
+#   )
+#   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
+#   save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-numpeaks-',i,'.Rdata'))
+# }
 
+Q1 <- Q %>% filter(last_outcome == 'Reward')
 rm(decode_formula)
 decode_formula <- NULL
 decode_formula[[1]] = formula(~ ev_lag_sc + score_lag_sc + v_max_wi + (1|id/run))
-decode_formula[[2]] = formula(~ age + sex + ev_lag_sc + score_lag_sc + v_max_wi + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
+decode_formula[[2]] = formula(~ age + sex + ev_lag_sc + score_lag_sc + v_max_wi + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc +  (1 |id/run))
 #decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
 #decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
 #decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
@@ -159,7 +160,7 @@ splits = c('evt_time','network')
 for (i in 1:length(decode_formula)){
   setwd('~/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection')
   print(decode_formula[[i]])
-  ddf <- mixed_by(Q, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
+  ddf <- mixed_by(Q1, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
                   tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
                   emmeans_spec = list(
