@@ -165,18 +165,84 @@ df3 <- df3 %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
 
 df3$trial_bin <- factor(df3$trial_bin, levels = c('1-5','6-10','11-15','16-20','21-25','26-30','30-35','36-40','40-45','46-50','51-55','55-63'))
 
+
 df0 <- df3 %>% group_by(id,dataset,rewFunc,trial_bin) %>% summarize(rt_csv = mean(rt_csv,na.rm=TRUE)) %>% ungroup()
 df0 <- df0 %>% pivot_wider(names_from='rewFunc',values_from='rt_csv') %>% mutate(rt_diff_IEV = IEV - (CEV+CEVR)/2, rt_diff_DEV = DEV - (CEV+CEVR)/2, rt_unlearnable = (CEV+CEVR)/2 - mean((CEV+CEVR)/2,na.rm=TRUE)) %>% pivot_longer(cols = c('rt_diff_IEV','rt_diff_DEV','rt_unlearnable'))
 df0 <- df0 %>% select(!DEV & !IEV & !CEV & !CEVR) %>% filter(dataset != 'Experiment 2')
 ggplot(df0,aes(x=trial_bin,y=value)) + geom_smooth(aes(group=name,color=name)) + facet_wrap(~dataset) + theme(axis.text.x = element_text(angle = 45, vjust=0.5,hjust=0.5)) + ylab('RT difference')
 
 
-df0 <- df3 %>% group_by(id,dataset,rewFunc) %>% summarize(score = sum(score_csv,na.rm=TRUE)/max(run_trial)) %>% ungroup()
-df0 <- df0 %>% group_by(dataset) %>% pivot_wider(names_from='rewFunc',values_from='score') %>% mutate(score_diff_IEV = IEV - (CEV+CEVR)/2, score_diff_DEV = DEV - (CEV+CEVR)/2) %>% pivot_longer(cols = c('score_diff_IEV','score_diff_DEV')) %>% ungroup()
+df1 <- df3 %>% group_by(id,dataset,rewFunc) %>% summarize(score = sum(score_csv,na.rm=TRUE)/max(run_trial)) %>% ungroup()
+
+pal <- NULL
+pal[2] <- '#009B72'
+pal[1] <- '#D65B26'
+pal[3] <- '#6F6AB0'
+pal[4] <- '#E50886'
+
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+pdf('Figure_S1A.pdf',height = 8, width = 14)
+gg1 <- ggplot(df1, aes(x=score,fill=rewFunc)) + geom_histogram(bins=30,color="black") + 
+  facet_grid(rewFunc~dataset) + 
+  theme_minimal(base_size = 18) + theme(axis.text.x = element_text(size = 18,angle = 45, hjust = 0.75),
+                          axis.text.y = element_text(size = 18),
+                          axis.title.x = element_text(size = 18),
+                          axis.title.y = element_text(size = 18),
+                          strip.text.x = element_text(size = 18),
+                          strip.text.y = element_text(size = 18),
+                          legend.text = element_text(size = 18),
+                          legend.spacing.y = unit(20.0, 'cm'),
+                          legend.title = element_blank()) + 
+  scale_fill_manual(values = pal) +
+  xlab('Average Reward Per Trial')
+print(gg1)
+dev.off()
+
+df0 <- df1 %>% group_by(dataset) %>% pivot_wider(names_from='rewFunc',values_from='score') %>% mutate(IEV_minus_unlearnable = IEV - (CEV+CEVR)/2, DEV_minus_unlearnable = DEV - (CEV+CEVR)/2) %>% pivot_longer(cols = c('IEV_minus_unlearnable','DEV_minus_unlearnable')) %>% ungroup()
 df0 <- df0 %>% select(!DEV & !IEV & !CEV & !CEVR) %>% filter(dataset != 'Experiment 2')
-df0$name <- factor(df0$name,levels=c('score_diff_DEV','score_diff_IEV'))
+df0 <- df0 %>% mutate(name1 = case_when(name == 'DEV_minus_unlearnable' ~ 'DEV-Unlearnable',
+                                        name == 'IEV_minus_unlearnable' ~ 'IEV-Unlearnable'))
+
+df0$name1 <- factor(df0$name1,levels=c('DEV-unlearnable','IEV-unlearnable'))
 ggplot(df0,aes(x=value,group=name,color=name)) + geom_histogram() + facet_grid(name~dataset) + theme(axis.text.x = element_text(angle = 45, vjust=0.5,hjust=0.5)) + scale_y_continuous(breaks = c(0,25,50,75,100,125,150))
+
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+pdf('Figure_S1B.pdf',height = 8, width = 14)
+gg1 <- ggplot(df0, aes(x=value,group=name1,fill=name1)) + geom_histogram(bins=30,color="black") + 
+  facet_grid(name1~dataset) + 
+  theme_minimal(base_size = 18) + theme(axis.text.x = element_text(size = 18,angle = 45, hjust = 0.75),
+                                        axis.text.y = element_text(size = 18),
+                                        axis.title.x = element_text(size = 18),
+                                        axis.title.y = element_text(size = 18),
+                                        strip.text.x = element_text(size = 18),
+                                        strip.text.y = element_text(size = 18),
+                                        legend.text = element_text(size = 18),
+                                        legend.spacing.y = unit(20.0, 'cm'),
+                                        legend.title = element_blank()) + 
+  scale_fill_manual(values = pal) +
+  xlab('Score Difference')
+print(gg1)
+dev.off()
+
   
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+pdf('Figure_S1C.pdf',height = 8, width = 14)
+gg1 <- ggplot(df1 %>% filter(rewFunc == 'IEV' | rewFunc == 'DEV'), aes(x=score,fill=rewFunc)) + geom_histogram(bins=30,color="black") + 
+  facet_grid(rewFunc~dataset) + 
+  theme_minimal(base_size = 18) + theme(axis.text.x = element_text(size = 18,angle = 45, hjust = 0.75),
+                                        axis.text.y = element_text(size = 18),
+                                        axis.title.x = element_text(size = 18),
+                                        axis.title.y = element_text(size = 18),
+                                        strip.text.x = element_text(size = 18),
+                                        strip.text.y = element_text(size = 18),
+                                        legend.text = element_text(size = 18),
+                                        legend.spacing.y = unit(20.0, 'cm'),
+                                        legend.title = element_blank()) + 
+  scale_fill_manual(values = pal) +
+  xlab('Average Reward Per Trial')
+print(gg1)
+dev.off()
+
 bins <- seq(from = 0.5, to = 65, by = 5)
 #bin labels for each interval (1-5, 6-10, ..., 36-40)
 bin_labels <- paste(seq(1, 60, by = 5), seq(5, 60, by = 5), sep = "-")
@@ -662,7 +728,7 @@ statsall <- rbind(statsall,stats3)
 
 ddq <- inner_join(ddq,statsall,by=c('dataset','id'))
 
-ddq <- ddq %>% group_by(dataset) %>% mutate(rt_lag_sc = scale(estimate),tau_ffx_sc = scale(1/beta_ffx)) %>% ungroup()
+ddq <- ddq %>% group_by(dataset) %>% mutate(rt_lag_sc = scale(estimate),tau_ffx_sc = scale(1/beta_transformed_ffx)) %>% ungroup()
 
 ggplot(data=ddq,aes(x=tau_ffx_sc,y=rt_lag_sc)) + geom_point() + facet_wrap(~dataset) +
   geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
@@ -845,6 +911,8 @@ ggplot(data=jstats, aes(x=beta_transformed_ffx)) + geom_histogram(bins=30) + fac
 ggplot(data=jstats, aes(x=gamma_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('gamma - selective maintenance')
 ggplot(data=jstats, aes(x=R2)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('model R^2 fits')
 
+ggplot(data=jstats, aes(x=1/beta_transformed_ffx)) + geom_histogram(bins=30) + facet_wrap(~dataset) + xlab('1/beta - temperature')
+
 #############################################
 ### entropy vs Npeaks and avg prominence ####
 #############################################
@@ -877,5 +945,28 @@ df4 <- inner_join(df3,peaks_fmri,by=c('dataset','id','trial'))
 
 df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(zmaxProm = scale(maxProm), qzmaxProm = ntile(zmaxProm,5)) %>% ungroup()
 
-ggplot(df4, aes(x=nP,y=v_entropy,group=nP)) + geom_boxplot(notch=TRUE) + facet_wrap(~dataset) + xlab('Number of Peaks')
-#ggplot(df4, aes(x=v_max,y=v_entropy,group=rewFunc)) + geom_point() + facet_wrap(~dataset) 
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R')
+
+pdf('entropy_vs_Npeaks.pdf',height=6,width=8)
+gg1 <- ggplot(df4, aes(x=nP,y=v_entropy,group=nP)) + 
+  geom_boxplot(notch=TRUE) + facet_wrap(~dataset) + 
+  xlab('Number of Peaks') +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal(base_size = 18) +
+  # Remove the legend title
+  guides(color = guide_legend(title = NULL))
+print(gg1)
+dev.off()
+
+
+#########################
+### Explore demo ########
+#########################
+
+exp <- read_csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/explore_clock_with_income.csv') %>% rename(id = registration_redcapid)
+exp <- exp %>% filter(registration_group == 'HC')
+
+income <- readxl::read_excel('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/ explore_clock_income.xlsx') %>% rename(id = registration_redcapid)
+
+exp <- inner_join(exp,income,by=c('id'))
+exp <- exp %>% filter(registration_group.x == 'HC') %>% select(!registration_group.y) %>% rename(group = registration_group.x)
