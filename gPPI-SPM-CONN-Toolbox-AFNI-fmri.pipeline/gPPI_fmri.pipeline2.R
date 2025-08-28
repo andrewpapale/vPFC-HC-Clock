@@ -293,3 +293,10 @@ for (iF in 1:nF){
 conf_files <- conf_files[-ix2rem_conf]
 motion_files <- motion_files[-ix2rem_motion]
 
+gpa$run_data$run_nifti <- run_nifti
+gpa$run_data$confound_input_file <- conf_files
+gpa$run_data$motion_params_file <- motion_files
+
+gpa$trial_data$id <- as.numeric(gpa$trial_data$id)
+
+save(gpa, file="/ix1/adombrovski/papalea/2025-07-07-gPPI/gPPI-output8/MMClock-2025-08-22-ppi.Rdata")
