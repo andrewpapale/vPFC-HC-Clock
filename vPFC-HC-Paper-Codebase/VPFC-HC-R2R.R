@@ -970,3 +970,22 @@ income <- readxl::read_excel('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2
 
 exp <- inner_join(exp,income,by=c('id'))
 exp <- exp %>% filter(registration_group.x == 'HC') %>% select(!registration_group.y) %>% rename(group = registration_group.x)
+
+
+################################
+### Explore model comparison ###
+################################
+
+
+dm <- data.frame(EP = c(0,1,4E-5),MF=c(0.0120,0.8401,0.1479), dMF = c(0.0202,0.0681,0.0659),model = c('Full RL','SCEPTIC','Value + Uncertainty'))
+dbor <- 3.6954e-07
+
+setwd('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/')
+pdf('Explore HC(N=27) Models.pdf',height=6,width=8)
+gg1 <-ggplot(dm, aes(x=MF,y=model,xmin=MF-dMF,xmax=MF+dMF)) + geom_errorbar(width=0.2) + geom_point(size=5) +
+  xlab('Model Frequency') +
+  theme_minimal(base_size = 18) + annotate("text",x=0.6,y=1,label=paste0('BOR = ',as.character(signif(dbor,1))),size=8,color="black") +
+  annotate("rect",xmin=0.4,xmax=0.8,ymin=0.8,ymax=1.2,alpha=0.2) +
+  annotate("text",x=0.6,y=2,label="EP=1",size=8,color="black")
+print(gg1)
+dev.off()
