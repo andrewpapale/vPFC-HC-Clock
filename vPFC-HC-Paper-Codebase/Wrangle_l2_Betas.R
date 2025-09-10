@@ -73,14 +73,14 @@ ITI_zstat <- read.csv('/Users/andypapale/Downloads/L1m-gPPI.ITI2/Schaeffer_2018_
     atlas_value==55 | atlas_value==160 | atlas_value==56 | atlas_value==159 ~ 'LIM')) %>%
   mutate(event = 'ITI')
 
-clock <- inner_join(clock_beta,clock_betavar,by=c('id','session','l1_cope_name','atlas_value'))
-clock <- inner_join(clock,clock_zstat,by=c('id','session','l1_cope_name','atlas_value'))
+clock <- inner_join(clock_beta,clock_betavar,by=c('id','session','l1_cope_name','atlas_value','network','event'))
+clock <- inner_join(clock,clock_zstat,by=c('id','session','l1_cope_name','atlas_value','network','event'))
 
-feedback <- inner_join(feedback_beta,feedback_betavar,by=c('id','session','l1_cope_name','atlas_value'))
-feedback <- inner_join(feedback,feedback_zstat,by=c('id','session','l1_cope_name','atlas_value'))
+feedback <- inner_join(feedback_beta,feedback_betavar,by=c('id','session','l1_cope_name','atlas_value','network','event'))
+feedback <- inner_join(feedback,feedback_zstat,by=c('id','session','l1_cope_name','atlas_value','network','event'))
 
-ITI <- inner_join(ITI_beta,ITI_betavar,by=c('id','session','l1_cope_name','atlas_value'))
-ITI <- inner_join(ITI,ITI_zstat,by=c('id','session','l1_cope_name','atlas_value'))
+ITI <- inner_join(ITI_beta,ITI_betavar,by=c('id','session','l1_cope_name','atlas_value','network','event'))
+ITI <- inner_join(ITI,ITI_zstat,by=c('id','session','l1_cope_name','atlas_value','network','event'))
 
 gPPI_l2_betas <- rbind(clock,feedback,ITI)
 
