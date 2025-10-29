@@ -1296,11 +1296,90 @@ if (do_HC2vPFC_clock){
   demo <- read.table(file=file.path(repo_directory, 'fmri/data/mmy3_demographics.tsv'),sep='\t',header=TRUE)
   demo <- demo %>% rename(id=lunaid)
   demo <- demo %>% select(!adult & !scandate)
+  demo2 <- read_csv('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/MMC_demog.csv')
+  demo2 <- demo2 %>% select(id, age, level_occsp,level_occs,level_occm,level_occf)
+  demo2 <- demo2 %>% mutate(SES = case_when(id == 10637 ~ '50-75k',
+                                            id == 10638 ~ '50-75k',
+                                            id == 10711 ~ '<25k',
+                                            id == 10717 ~ '>75k',
+                                            id == 10767 ~ '<25k',
+                                            id == 10772 ~ '>75k',
+                                            id == 10811 ~ '50-75k',
+                                            id == 10814 ~ '25-50k',
+                                            id == 10822 ~ '>75k',
+                                            id == 10873 ~ '>75k',
+                                            id == 10891 ~ '50-75k',
+                                            id == 10895 ~ '<25k',
+                                            id == 10997 ~ NA,
+                                            id == 11162 ~ '25-50k',
+                                            id == 11178 ~ '25-50k',
+                                            id == 11215 ~ '25-50k',
+                                            id == 11216 ~ '<25k', # dependent over 18, no individual income, both parents earning <25k
+                                            id == 11228 ~ '>75k', # dependent over 18, no individual income, both parents earning 50-75k
+                                            id == 11229 ~ '50-75k',
+                                            id == 11250 ~ '<25k',
+                                            id == 11252 ~ '<25k',
+                                            id == 11253 ~ '25-50k',
+                                            id == 11255 ~ '25-50k',
+                                            id == 11256 ~ NA,
+                                            id == 11258 ~ '25-50k',
+                                            id == 11262 ~ '<25k',
+                                            id == 11263 ~ '25-50k',
+                                            id == 11265 ~ '25-50k', # married, wife earns < 25k
+                                            id == 11274 ~ '>75k',
+                                            id == 11275 ~ '>75k', # married, wife earns 25-50k, subject earns 50-75k
+                                            id == 11277 ~ NA,
+                                            id == 11278 ~ '50-75k',
+                                            id == 11279 ~ '25-50k',
+                                            id == 11280 ~ '<25k',
+                                            id == 11281 ~ '25-50k', # married, wife earns 25-50k, subject earns <25k
+                                            id == 11282 ~ NA,
+                                            id == 11287 ~ NA,
+                                            id == 11288 ~ '25-50k',
+                                            id == 11298 ~ '<25k',
+                                            id == 11302 ~ '<25k',
+                                            id == 11304 ~ '<25k',
+                                            id == 11305 ~ '<25k',
+                                            id == 11310 ~ NA,
+                                            id == 11311 ~ '<25k',
+                                            id == 11313 ~ NA,
+                                            id == 11314 ~ '>75k',
+                                            id == 11315 ~ '>75k',
+                                            id == 11316 ~ '25-50k',
+                                            id == 11317 ~ '50-75k', # married, wife earns 50-75k, subject earns <25k
+                                            id == 11318 ~ '25-50k',
+                                            id == 11319 ~ '50-75k', # married, wife earns <25k, subject earns 50-75k
+                                            id == 11321 ~ '25-50k',
+                                            id == 11322 ~ '25-50k', # adult dependent, father earns 25-50k, mother <25k
+                                            id == 11323 ~ '>75k',
+                                            id == 11324 ~ '<25k', # adult dependent, both parents earn <25k
+                                            id == 11325 ~ '25-50k',
+                                            id == 11326 ~ '>75k',
+                                            id == 11328 ~ '<25k',
+                                            id == 11329 ~ '25-50k',
+                                            id == 11311 ~ '<25k', # both parents earn >100k though
+                                            id == 11335 ~ '>75k',
+                                            id == 11336 ~ '>75k',
+                                            id == 11337 ~ '25-50k',
+                                            id == 11338 ~ '50-75k',
+                                            id == 11342 ~ '>75k',
+                                            id == 11343 ~ NA,
+                                            id == 11344 ~ '25-50k',
+                                            id == 11345 ~ '>75k',
+                                            id == 11346 ~ '<25k', # both parents earn <25k
+                                            id == 11347 ~ '50-75k',
+                                            id == 11350 ~ NA,
+                                            id == 11353 ~ NA,
+                                            id == 11366 ~ '>75k'
+  ))
+  demo2 <- demo2 %>% select(!age)
   Q <- inner_join(Q,demo,by=c('id'))
+  Q <- inner_join(Q,demo2,by=c('id'))
   Q$female <- relevel(as.factor(Q$female),ref='0')
   Q <- Q %>% mutate(sex = case_when(female==1 ~ 'F',
                                     female==0 ~ 'M'))
   Q$sex <- relevel(as.factor(Q$sex),ref='M')
+  Q$SES <- relevel(as.factor(Q$SES),ref = '50-75k')
   Q$age <- scale(Q$age)
   if (remove_1to10){
     Q <- Q %>% filter(trial > 10)
@@ -1322,7 +1401,9 @@ if (do_HC2vPFC_clock){
   
   #decode_formula[[1]] = formula(~ sex + group + rt_vmax_lag_sc*age*HCwithin + run_trial0_neg_inv_sc*HCwithin + v_entropy_wi*HCwithin + v_max_wi*HCwithin + rt_lag_sc*HCwithin + iti_lag_sc*HCwithin + HCbetween + (1|id/run))
   #decode_formula[[1]] = formula(~ sex*HCwithin + age*HCwithin + (1|id/run))
-  decode_formula[[1]] = formula(~ HCwithin + (1 + HCwithin |id) + (1|run))
+  #decode_formula[[1]] = formula(~ HCwithin + (1 + HCwithin |id) + (1|run))
+  decode_formula[[1]] = formula(~sex*HCwithin + last_outcome*HCwithin + iti_lag_sc*HCwithin + rt_lag_sc*HCwithin + trial_neg_inv_sc*HCwithin + v_max_wi*HCwithin + v_entropy_wi*HCwithin + SES*HCwithin + (1|id/run))
+  decode_formula[[2]] = formula(~sex*HCwithin + SES*HCwithin + (1|id/run))
   qT <- c(-2.62,-0.704,0.29, 0.430)
   
   if (do_network){
@@ -1370,7 +1451,7 @@ if (do_HC2vPFC_clock){
       if (i==4){
         save(ddf,file=paste0(curr_date,'-vmPFC-HC-network-clock-pe_max_lag_sc-',i,'.Rdata'))
       } else {
-        save(ddf,file=paste0(curr_date,'MMClock-vPFC-HC-network-clock-alternate-regressors-agesex-emtrends-',i,'.Rdata'))
+        save(ddf,file=paste0(curr_date,'MMClock-vPFC-HC-network-clock-sex-SES-',i,'.Rdata'))
       }
     }
     

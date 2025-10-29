@@ -7,6 +7,7 @@ library(pracma)
 library(wesanderson)
 library(tidyverse)
 library(fmri.pipeline)
+library(zoo)
 
 
 repo_directory <- "~/clock_analysis"
@@ -82,7 +83,9 @@ df <- df %>% group_by(id,run) %>% mutate(trial_bin = (case_when(
   run_trial >=30 ~ 'Late',
 )))
 #df <- df %>% filter(!is.na(rt_vmax_change_bin) | !is.na(v_entropy_wi_change_lag_bin))
-df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,rt_vmax_change_sc,abs_pe_max_lag_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag, rt_vmax_lag_sc,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+df <- df %>% select(id,run,trial,run_trial,rt_lag_sc,rt_vmax_change_sc,score_csv,abs_pe_max_lag_sc,v_entropy_wi,outcome,v_entropy_wi_change_lag, rt_vmax_lag_sc,iti_ideal, iti_prev, rt_csv, trial_bin,rewFunc,v_entropy_sc,expl_longer,rt_csv_sc, trial_neg_inv_sc,expl_shorter,rt_bin,trial_bin,last_outcome,v_max_wi,v_entropy_wi_change_lag,score_lag_sc,iti_sc,iti_lag_sc,ev_lag_sc)
+
+df <- df %>% group_by(id,run) %>% mutate(avscore3 = rollapply(score_csv,3,mean,align='right',fill=NA)) %>% mutate(avsc3sc = scale(avscore3)) %>% ungroup()
 Q <- merge(df, vmPFC, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
 Q$vmPFC_decon[Q$evt_time < -(Q$iti_prev)] = NA;
@@ -145,7 +148,8 @@ Q1 <- Q %>% filter(last_outcome == 'Reward')
 rm(decode_formula)
 decode_formula <- NULL
 decode_formula[[1]] = formula(~ ev_lag_sc + score_lag_sc + v_max_wi + (1|id/run))
-decode_formula[[2]] = formula(~ age + sex + ev_lag_sc + score_lag_sc + v_max_wi + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc +  (1 |id/run))
+decode_formula[[2]] = formula(~ age + sex + ev_lag_sc + avsc3sc + v_max_wi + trial_neg_inv_sc + rt_lag_sc + iti_lag_sc +  (1 |id/run))
+decode_formula[[3]] = formula(~ score_lag_sc + (1|id/run))
 #decode_formula[[3]] = formula(~ age + sex + v_entropy_wi*sex + v_max_wi*sex + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
 #decode_formula[[4]] = formula(~ age + sex + v_entropy_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc + (1|id/run))
 #decode_formula[[5]] = formula(~ age + sex + v_max_wi*age + trial_neg_inv_sc + last_outcome + rt_lag_sc + iti_lag_sc +  (1 |id/run))
@@ -162,10 +166,10 @@ for (i in 1:length(decode_formula)){
   print(decode_formula[[i]])
   ddf <- mixed_by(Q1, outcomes = "vmPFC_decon", rhs_model_formulae = decode_formula[[i]] , split_on = splits,
                   padjust_by = "term", padjust_method = "fdr", ncores = ncores, refit_on_nonconvergence = 3,
-                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE),
-                  emmeans_spec = list(
-                    Vmax = list(outcome='vmPFC_decon',model_name='model1',
-                             specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))))
+                  tidy_args = list(effects=c("fixed","ran_vals","ran_pars","ran_coefs"),conf.int=TRUE)#,
+                  #emmeans_spec = list(
+                    #Vmax = list(outcome='vmPFC_decon',model_name='model1',
+                    #         specs=formula(~v_max_wi), at=list(v_max_wi=c(-1.5,1.5))))
   )
   curr_date <- strftime(Sys.time(),format='%Y-%m-%d')
   save(ddf,file=paste0(curr_date,'-vmPFC-network-clock-value-test-ev-score-',i,'.Rdata'))

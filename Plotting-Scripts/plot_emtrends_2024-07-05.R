@@ -19,7 +19,7 @@ if (do_vPFC_entropy){
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-1.Rdata')
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-14-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
   emt_mmclock_fmri <- ddq$emtrends_list
-  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-14-vmPFC-network-ranslopes-clock-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
+  load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-14-vmPFC-network-ranslopes-clock-replication-pred-rt_csv_sc-int-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
   emt_mmclock_meg <- ddq$emtrends_list
   #load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-07-10-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-1.Rdata')
   load('/Users/dnplserv/vmPFC/MEDUSA Schaefer Analysis/vmPFC_HC_model_selection/2024-08-01-vmPFC-network-ranslopes-clock-Explore-pred-rt_csv_sc-int-HConly-trial_mod-trial1-10included-notimesplit-nofixedeffect-rtvmax_by_trial-1.Rdata')
@@ -49,8 +49,8 @@ if (do_vPFC_entropy){
                                          p_fdr < .01 & p_fdr > .001 ~ '3',
                                          p_fdr <.001 ~ '4')))
   
-  PFC_merged <- PFC_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 STD',
-                                                          subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 STD'))
+  PFC_merged <- PFC_merged %>% mutate(entropy = case_when(subj_level_rand_slope==-std_of_subject_level_rand_slope ~ '-1 SD',
+                                                          subj_level_rand_slope==std_of_subject_level_rand_slope ~ '+1 SD'))
   
   
   
@@ -67,8 +67,8 @@ if (do_vPFC_entropy){
   pal[2] = pal3[1]
   pal[3] = pal3[3]
   
-  pdf('RT-Pred-Entropy-PFC-emtrends.pdf',height=8,width=10)
-  gg1<- ggplot(PFC_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+  pdf('RT-Pred-Entropy-PFC-emtrends-omission.pdf',height=8,width=10)
+  gg1<- ggplot(PFC_summary %>% filter(last_outcome == 'Omission'), aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
     geom_point(size=5, position=position_dodge(width=0.5), aes(shape = entropy)) + 
     geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
     facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
@@ -601,8 +601,8 @@ if (do_vPFC_HC_entropy){
   pal[2] = pal3[1]
   pal[3] = pal3[3]
   
-  pdf('RT-Pred-Entropy-AH-emtrends.pdf',height=8,width=10)
-  gg1 <- ggplot(AH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+  pdf('RT-Pred-Entropy-AH-emtrends-reward.pdf',height=8,width=10)
+  gg1 <- ggplot(AH_summary %>% filter(last_outcome == 'Reward'), aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
     geom_point(size=8, position=position_dodge(width=0.5), aes(shape = entropy)) + 
     geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
     facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
@@ -621,9 +621,30 @@ if (do_vPFC_HC_entropy){
           axis.text.x = element_text(angle = -45, vjust = 0.6, hjust=0.1, size=22))
   print(gg1)
   dev.off()
-  
-  pdf('RT-Pred-Entropy-PH-emtrends.pdf',height=8,width=10)
-  gg1<- ggplot(PH_summary, aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+
+  pdf('RT-Pred-Entropy-AH-emtrends-omission.pdf',height=8,width=10)
+  gg1 <- ggplot(AH_summary %>% filter(last_outcome == 'Omission'), aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+    geom_point(size=8, position=position_dodge(width=0.5), aes(shape = entropy)) + 
+    geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
+    facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
+    scale_shape_manual(values = c(1,16)) +
+    ylab('<- less - Exploration - more ->') + scale_y_reverse() +
+    theme_bw(base_size=13) +
+    xlab('Network') +
+    ggtitle('Anterior Hippocampus') +
+    theme(legend.title = element_blank(),
+          axis.title.y = element_text(margin=margin(r=6),size=22),
+          axis.title.x = element_text(margin=margin(t=6),size=22),
+          legend.text = element_text(size=22),
+          axis.text.y = element_text(size=22),
+          panel.spacing = unit(0.25,"lines"),
+          strip.text = element_text(size=22),
+          axis.text.x = element_text(angle = -45, vjust = 0.6, hjust=0.1, size=22))
+  print(gg1)
+  dev.off()
+    
+  pdf('RT-Pred-Entropy-PH-emtrends-reward.pdf',height=8,width=10)
+  gg1<- ggplot(PH_summary %>% filter(last_outcome == 'Reward'), aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
     geom_point(size=8, position=position_dodge(width=0.5), aes(shape = entropy)) + 
     geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
     facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
@@ -643,7 +664,28 @@ if (do_vPFC_HC_entropy){
   print(gg1)
   dev.off()
   
+  pdf('RT-Pred-Entropy-PH-emtrends-omission.pdf',height=8,width=10)
+  gg1<- ggplot(PH_summary %>% filter(last_outcome == 'Omission'), aes(x=network,y=mean_trend,ymin = mean_trend-mean_sd,ymax=mean_trend+mean_sd,color=network, group=entropy)) + 
+    geom_point(size=8, position=position_dodge(width=0.5), aes(shape = entropy)) + 
+    geom_errorbar(width=0.1, position=position_dodge(width=0.5),color = 'black') + 
+    facet_grid(last_outcome~dataset,labeller = label_wrap_gen(width=16), scales='free_y') + scale_color_manual(values = pal) + 
+    scale_shape_manual(values = c(1,16)) +
+    ylab('<- less - Exploration - more ->') + scale_y_reverse() +
+    theme_bw(base_size=13) +
+    xlab('Network') +
+    ggtitle('Posterior Hippocampus') +
+    theme(legend.title = element_blank(),
+          axis.title.y = element_text(margin=margin(r=6),size=22),
+          axis.title.x = element_text(margin=margin(t=6),size=22),
+          legend.text = element_text(size=22),
+          axis.text.y = element_text(size=22),
+          panel.spacing = unit(0.25,"lines"),
+          strip.text = element_text(size=22),
+          axis.text.x = element_text(angle = -45, vjust = 0.6, hjust=0.1, size=22))
+  print(gg1)
+  dev.off()
   
+   
   RT_mmclock_fmri <- emt_mmclock_fmri$RT %>% mutate(dataset = 'Experiment 1 fMRI')
   RT_mmclock_meg <- emt_mmclock_meg$RT %>% mutate(dataset = 'Experiment 1 MEG')
   RT_explore <- emt_explore$RT %>% mutate(dataset = 'Experiment 2')

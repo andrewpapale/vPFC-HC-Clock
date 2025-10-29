@@ -959,6 +959,34 @@ print(gg1)
 dev.off()
 
 
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/mmclock_fmri_peaks.Rdata')
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/explore_peaks.Rdata')
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-07-vPFC-HC-Behavior.Rdata')
+
+texp <- seq(from=0,to=5,length.out=24)
+tmmc <- seq(from=0,to=4,length.out=24)
+
+explore_peaks <- explore_peaks %>% mutate(rtpeak = texp[peaks.ix])
+mmclock_fmri_peaks <- mmclock_fmri_peaks %>% mutate(rtpeak = tmmc[peaks.ix])
+
+explore_peaks <- explore_peaks %>% group_by(id,trial) %>% mutate(rows = row_number()) %>% select(!peaks.ix & !peaks.prominence) %>% pivot_wider(names_from=rows,values_from=c('peaks.peak','rtpeak')) %>% ungroup()
+mmclock_fmri_peaks <- mmclock_fmri_peaks %>% group_by(id,trial) %>% mutate(rows = row_number()) %>% select(!peaks.ix & !peaks.prominence) %>% pivot_wider(names_from=rows,values_from=c('peaks.peak','rtpeak')) %>% ungroup()
+
+mmclock_fmri_peaks <- mmclock_fmri_peaks %>% mutate(dataset = 'Experiment 1 - fMRI')
+explore_peaks <- explore_peaks %>% mutate(dataset = 'Experiment 2')
+mmclock_fmri_peaks$id <- as.character(mmclock_fmri_peaks$id)
+explore_peaks$id <- as.character(explore_peaks$id)
+
+peaks_fmri <- rbind(mmclock_fmri_peaks,explore_peaks)
+
+df3 <- df3 %>% filter(dataset != 'Experiment 1 - MEG Replication')
+
+df4 <- inner_join(df3,peaks_fmri,by=c('dataset','id','trial'))
+
+df4 <- df4 %>% group_by(dataset,id,run,trial) %>% mutate(maxpeak = max(c(peaks.peak_1,peaks.peak_2,peaks.peak_3,peaks.peak_4),na.rm=TRUE)) %>% ungroup()
+df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(zmaxpeak = scale(maxpeak), zrtp1 = scale(rtpeak_1), zrtp2 = scale(rtpeak_2),zrtp3 = scale(rtpeak_3),zrtp4 = scale(rtpeak_4)) %>% ungroup()
+
+df4 <- df4 %>% group_by(dataset,id,run) %>% mutate(zrtp1_lag = lag(zrtp1), zrtp2_lag = lag(zrtp2), zrtp3_lag = lag(zrtp3), zrtp4_lag = lag(zrtp4)) %>% ungroup()
 #########################
 ### Explore demo ########
 #########################
@@ -970,3 +998,46 @@ income <- readxl::read_excel('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2
 
 exp <- inner_join(exp,income,by=c('id'))
 exp <- exp %>% filter(registration_group.x == 'HC') %>% select(!registration_group.y) %>% rename(group = registration_group.x)
+
+#############################################################################
+### test if people are keeping track of largest single magnitude in a run ###
+#############################################################################
+
+load('/Volumes/Users/Andrew/v19-2025-05-27-JNeuro-postR2R/2025-07-vPFC-HC-Behavior.Rdata')
+
+nD <- unique(df3$dataset)
+maxMR = NULL
+rtmaxmr = NULL
+for (iD in nD){
+  tempD <- df3 %>% filter(dataset == iD)
+  nS <- unique(tempD$id)
+  for (iS in nS){
+    tempS <- tempD %>% filter(id == iS)
+    nR <- unique(tempS$run)
+    for (iR in nR){
+      maxMRtemp <- NULL
+      rtmaxmrtemp <- NULL
+      tempR <- tempS %>% filter(run == iR)
+      nT <- length(unique(tempR$trial))
+      for (iT in 1:nT){
+        if (iT==1){
+          maxMRtemp = tempR$magnitude[iT]
+          rtmaxmrtemp = tempR$rt_csv[iT]
+        }
+        if (iT > 1 && !is.na(tempR$magnitude[iT])){
+          if (tempR$magnitude[iT] > maxMRtemp){
+            maxMRtemp <- tempR$magnitude[iT]
+            rtmaxmrtemp <- tempR$rt_csv[iT]
+          }
+        }
+        maxMR <- rbind(maxMR,maxMRtemp)
+        rtmaxmr <- rbind(rtmaxmr,rtmaxmrtemp)
+      }
+    }
+  }
+}
+
+df3 <- df3 %>% mutate(maxMR = maxMR, rtmaxmr = rtmaxmr) %>% group_by(dataset,id,run) %>% mutate(rtmaxmr_lag_sc = scale(lag(rtmaxmr)),maxMR_lag_sc = scale(lag(maxMR))) %>% ungroup()
+
+df3 <- df3 %>% group_by(dataset,id,run) %>% mutate(avscore5 = rollapply(score_csv,5,mean,align='right',fill=NA), avscore4 = rollapply(score_csv,4,mean,align='right',fill=NA), avscore3 = rollapply(score_csv,3,mean,align='right',fill=NA)) %>% ungroup()
+df3 <- df3 %>% group_by(dataset,id,run) %>% mutate(avsc5sc = scale(avscore5), avsc4sc = scale(avscore4), avsc3sc = scale(avscore3)) %>% ungroup()
