@@ -3,6 +3,9 @@
 # building models for analysis using Michael Hallquist's mixed_by function
 # Based on code by Andrew Papale
 
+# 2026-09-04 AndyP
+# corrected run_trial bug, use run_trial0 and rename
+
 # Load required libraries
 library(stringr)
 library(pracma)
@@ -1042,12 +1045,15 @@ df <- df %>%
          rt_swing_sc = scale(rt_swing)) %>% ungroup()
 
 # select only vars of interest and merge into MRI data
-behav <- df %>% select(id,scanner_run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+behav <- df %>% select(id,scanner_run,trial0,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev)
-behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
-                                                                                                     trial > 150 ~ trial - 150))
-Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial","evt_time")
+# 2026-09-04 AndyP
+# The correct run_trial has been computed above as run_trial0, rename and merge with this variable
+#behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
+#                                                                                                     trial > 150 ~ trial - 150))
+behav <- behav %>% rename(run_trial = run_trial0)
+Q <- inner_join(behav, Q, by = c("id", "run", "run_trial")) %>% arrange("id","run","run_trial0","evt_time")
 
 # censor out previous and next trials
 Q$vmPFC_decon[Q$evt_time > Q$rt_csv + Q$iti_ideal] = NA;
@@ -1402,11 +1408,14 @@ df <- df %>%
          rt_swing_sc = scale(rt_swing)) %>% ungroup()
 
 # select only vars of interest and merge into MRI data
-behav <- df %>% select(id,scanner_run,trial,run_trial,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
+behav <- df %>% select(id,scanner_run,trial,run_trial0,v_chosen_sc,score_sc,iti_sc,iti_lag_sc,v_max_sc,rt_vmax_sc,
                        rt_lag_sc,rt_vmax_lag_sc,v_entropy_sc,rt_swing_sc,trial_neg_inv_sc,last_outcome,
                        v_entropy_wi,v_max_wi,rt_csv_sc,rt_csv,iti_ideal,iti_prev,total_earnings)
-behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
-                                                                                                     trial > 150 ~ trial - 150))
+#behav <- behav %>% rename(run = scanner_run) %>% select(!run_trial) %>% mutate(run_trial = case_when(trial <= 150 ~ trial,
+#                                                                                                     trial > 150 ~ trial - 150))
+# 2026-09-04 AndyP 
+# use run_trial0, computed above as the run_trial variable
+behav <- behav %>% rename(run_trial = run_trial0)
 Q <- behav
 
 # add in age and sex variables
